@@ -13,6 +13,11 @@ export default async function DashboardPage() {
   }
 
   const projects = await prisma.project.findMany({
+    include: {
+      images: true,
+      documents: true,
+      videos: true,
+    },
     orderBy: {
       updatedAt: 'desc',
     },
