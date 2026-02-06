@@ -316,10 +316,19 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                     ${isSidebarCollapsed ? "lg:w-20" : "lg:w-64"}
                     w-72 shadow-2xl lg:shadow-none`}
             >
-                {/* Logo Section & Toggle (Desktop) / Close (Mobile) */}
-                <div className="flex items-center justify-between h-16 px-4 border-b border-gray-100 dark:border-gray-700 shrink-0">
-                    <div className="lg:hidden flex items-center gap-2">
-                         <span className="text-base font-black text-indigo-600 dark:text-indigo-400 tracking-tight uppercase">Site Matière</span>
+                {/* Branding Header: Logo + Site Name */}
+                <div className="flex items-center justify-between px-4 h-20 border-b border-gray-100 dark:border-gray-700 shrink-0">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <img
+                            src="/Matiere_logo_512.png"
+                            alt="Matière Logo"
+                            className="w-10 h-10 object-contain shrink-0"
+                        />
+                        {!isSidebarCollapsed && (
+                            <span className="text-xl font-black text-indigo-600 dark:text-indigo-400 tracking-tight uppercase truncate">
+                                Matière
+                            </span>
+                        )}
                     </div>
                     <button
                         onClick={() => {
@@ -329,20 +338,23 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                                 setIsSidebarCollapsed(!isSidebarCollapsed);
                             }
                         }}
-                        className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 transition-colors mx-auto lg:mx-0 shrink-0"
+                        className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 transition-colors shrink-0 ${isSidebarCollapsed ? "hidden" : ""}`}
                     >
-                        <div className="hidden lg:block">
-                            {isSidebarCollapsed ? <PanelLeftOpen className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
-                        </div>
-                        <div className="lg:hidden">
-                            <CloseIcon className="w-5 h-5" />
-                        </div>
+                        <PanelLeftClose className="w-5 h-5" />
                     </button>
+                    {isSidebarCollapsed && (
+                        <button
+                            onClick={() => setIsSidebarCollapsed(false)}
+                            className="absolute -right-3 top-7 p-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full shadow-sm text-gray-400 hover:text-indigo-600 transition-all z-10"
+                        >
+                            <ChevronRight className="w-3 h-3" />
+                        </button>
+                    )}
                 </div>
 
-                {/* User Section */}
+                {/* User Section (Connection Info) */}
                 <div className={`p-4 ${isSidebarCollapsed ? "flex flex-col items-center" : ""}`}>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 w-full bg-gray-50/50 dark:bg-gray-800/50 p-3 rounded-2xl border border-gray-100 dark:border-gray-700 transition-all group hover:border-indigo-200 dark:hover:border-indigo-900/50">
                         <UserBadge
                             username={user.username || null}
                             name={user.name || null}
@@ -359,13 +371,6 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                     </div>
                 </div>
 
-                {/* Site Name Section (Under Admin) */}
-                {!isSidebarCollapsed && (
-                    <div className="px-4 py-2 text-center">
-                        <span className="text-xl font-black text-indigo-600 dark:text-indigo-400 tracking-tight uppercase block w-full">Site Matière</span>
-                    </div>
-                )}
-
 
 
                 {/* Navigation Menus */}
@@ -378,30 +383,32 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                         </button>
                     </div>
 
-                    <div className="space-y-1">
-                        {!isSidebarCollapsed && <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-3 mb-2 block">Administration</span>}
-                        <button
-                            onClick={() => setIsUserManagementOpen(true)}
-                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400 transition-all group"
-                        >
-                            <Users className={`w-5 h-5 ${isSidebarCollapsed ? "mx-auto" : ""}`} />
-                            {!isSidebarCollapsed && <span className="text-sm font-medium group-hover:text-gray-900 dark:group-hover:text-white">Gestion Utilisateurs</span>}
-                        </button>
-                        <button
-                            onClick={() => setIsProjectManagementOpen(true)}
-                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400 transition-all group"
-                        >
-                            <FolderOpen className={`w-5 h-5 ${isSidebarCollapsed ? "mx-auto" : ""}`} />
-                            {!isSidebarCollapsed && <span className="text-sm font-medium group-hover:text-gray-900 dark:group-hover:text-white">Gestion Projets</span>}
-                        </button>
-                        <button
-                            onClick={() => setIsFileManagementOpen(true)}
-                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400 transition-all group"
-                        >
-                            <FileStack className={`w-5 h-5 ${isSidebarCollapsed ? "mx-auto" : ""}`} />
-                            {!isSidebarCollapsed && <span className="text-sm font-medium group-hover:text-gray-900 dark:group-hover:text-white">Gestion Fichiers</span>}
-                        </button>
-                    </div>
+                    {user.role === 'ADMIN' && (
+                        <div className="space-y-1">
+                            {!isSidebarCollapsed && <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-3 mb-2 block">Administration</span>}
+                            <button
+                                onClick={() => setIsUserManagementOpen(true)}
+                                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400 transition-all group"
+                            >
+                                <Users className={`w-5 h-5 ${isSidebarCollapsed ? "mx-auto" : ""}`} />
+                                {!isSidebarCollapsed && <span className="text-sm font-medium group-hover:text-gray-900 dark:group-hover:text-white">Gestion Utilisateurs</span>}
+                            </button>
+                            <button
+                                onClick={() => setIsProjectManagementOpen(true)}
+                                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400 transition-all group"
+                            >
+                                <FolderOpen className={`w-5 h-5 ${isSidebarCollapsed ? "mx-auto" : ""}`} />
+                                {!isSidebarCollapsed && <span className="text-sm font-medium group-hover:text-gray-900 dark:group-hover:text-white">Gestion Projets</span>}
+                            </button>
+                            <button
+                                onClick={() => setIsFileManagementOpen(true)}
+                                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400 transition-all group"
+                            >
+                                <FileStack className={`w-5 h-5 ${isSidebarCollapsed ? "mx-auto" : ""}`} />
+                                {!isSidebarCollapsed && <span className="text-sm font-medium group-hover:text-gray-900 dark:group-hover:text-white">Gestion Fichiers</span>}
+                            </button>
+                        </div>
+                    )}
                 </nav>
 
                 {/* Sidebar Actions Footer */}
@@ -936,6 +943,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
 
             <FileManagementDialog
                 isOpen={isFileManagementOpen}
+                isAdmin={user.role === "ADMIN"}
                 onClose={() => setIsFileManagementOpen(false)}
             />
 

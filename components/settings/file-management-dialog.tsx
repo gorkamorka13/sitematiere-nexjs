@@ -5,10 +5,11 @@ import { useState, useEffect } from "react";
 
 interface FileManagementDialogProps {
     isOpen: boolean;
+    isAdmin: boolean;
     onClose: () => void;
 }
 
-export default function FileManagementDialog({ isOpen, onClose }: FileManagementDialogProps) {
+export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileManagementDialogProps) {
     // Statut fictif pour l'ébauche - En production, on chargerait les vraies données
     const stats = {
         totalImages: 124,
@@ -20,7 +21,8 @@ export default function FileManagementDialog({ isOpen, onClose }: FileManagement
 
     const progressPercentage = (450 / 1024) * 100;
 
-    if (!isOpen) return null;
+    // Sécurité : Ne pas afficher si pas ouvert OU si pas admin
+    if (!isOpen || !isAdmin) return null;
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -120,11 +122,8 @@ export default function FileManagementDialog({ isOpen, onClose }: FileManagement
                             <div>
                                 <h4 className="text-sm font-bold text-indigo-900 dark:text-indigo-200 mb-1">Informations Administration</h4>
                                 <p className="text-xs text-indigo-700/80 dark:text-indigo-300/60 leading-relaxed italic">
-                                    Cette section permettra de gérer les fichiers qui ont été téléversés mais qui n'apparaissent plus dans la base de données.
-                                    En phase de développement, cela facilitera la maintenance du bucket Vercel Blob.
-                                </p>
-                                <p className="text-xs text-indigo-700/80 dark:text-indigo-300/60 mt-2">
-                                    Statut: <span className="font-bold text-indigo-600 dark:text-indigo-400">Bêta / Maquette</span>
+                                    Cette section permet de gérer les fichiers qui ont été téléversés mais qui n'apparaissent plus dans la base de données.
+                                    Elle est strictement réservée au rôle Administrateur.
                                 </p>
                             </div>
                         </div>
