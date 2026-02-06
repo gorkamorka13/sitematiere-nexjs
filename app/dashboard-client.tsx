@@ -196,7 +196,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
         setSelectedProject(project);
         setSelectedCountry(project.country || "");
         setSelectedName(project.name);
-        setSearchQuery(project.name);
+        // On ne met plus à jour searchQuery ici pour le laisser vide
 
         // Forcer le recentrage de la carte individuelle
         setMapNonce(Date.now());
@@ -236,10 +236,14 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
     const handleSearchSelect = (project: Project) => {
         const isSameCountry = project.country === selectedCountry;
 
-        setSearchQuery(project.name);
+        setSearchQuery(""); // On vide le champ après sélection (style command palette)
         setSelectedName(project.name);
         setSelectedCountry(project.country || "");
         setSelectedProject(project);
+
+        // Synchroniser les filtres pour éviter que le projet ne soit filtré immédiatement
+        if (project.status) setSelectedStatuses([project.status]);
+        if (project.type) setSelectedTypes([project.type]);
 
         // Centrage de la carte globale
         if (isSameCountry) {
@@ -518,7 +522,6 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                                             if (projectsInCountry.length > 0) {
                                                 const firstProject = projectsInCountry[0];
                                                 setSelectedName(firstProject.name);
-                                                setSearchQuery(firstProject.name);
                                                 setSelectedProject(firstProject);
                                                 if (firstProject.status) setSelectedStatuses([firstProject.status]);
                                                 if (firstProject.type) setSelectedTypes([firstProject.type]);
@@ -549,7 +552,6 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                                             const project = initialProjects.find(p => p.name === projectName);
                                             if (project) {
                                                 setSelectedProject(project);
-                                                setSearchQuery(project.name);
                                                 if (project.status) setSelectedStatuses([project.status]);
                                                 if (project.type) setSelectedTypes([project.type]);
                                             } else {

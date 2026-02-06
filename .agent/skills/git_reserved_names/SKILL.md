@@ -11,6 +11,16 @@ On Windows, certain names are reserved by the system (e.g., `nul`, `con`, `prn`,
 
 To remove these entries, you must use the Win32 namespace prefix `\\?\` which tells the Windows API to disable all string parsing and send the path directly to the file system.
 
+### Common Error Message
+If Git fails to index a reserved file like `nul`, you will see:
+```text
+error: short read while indexing nul
+error: nul: failed to insert into database
+error: unable to index file 'nul'
+fatal: adding files failed
+```
+This happens because Git tries to read the content of the "device", which Windows forbids.
+
 ### Steps to Remove
 
 1. **Identify the Type**: Determine if it's a file or a folder.
@@ -38,7 +48,8 @@ git rm --cached nul
 git rm -f nul
 ```
 
-#### Add to .gitignore to prevent future tracking
+#### Add to .gitignore to prevent future tracking (Recommended for quick unblock)
+Adding the reserved name directly to `.gitignore` allows Git to bypass the file entirely without needing to read it, which unblocks the `git add` and `git commit` commands.
 ```bash
 echo nul >> .gitignore
 ```

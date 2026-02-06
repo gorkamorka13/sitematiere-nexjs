@@ -116,7 +116,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, isA
 
   const handleSearchSelect = (project: Project) => {
     setSelectedProjectId(project.id);
-    setSearchQuery(project.name);
+    setSearchQuery(""); // On vide après sélection
     setShowSuggestions(false);
     setFocusedSuggestionIndex(-1);
   };
@@ -246,8 +246,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, isA
                 value={selectedProjectId}
                 onChange={(e) => {
                   setSelectedProjectId(e.target.value);
-                  const proj = projects.find(p => p.id === e.target.value);
-                  if (proj) setSearchQuery(proj.name);
+                  // On ne synchronise plus searchQuery ici pour le laisser vide
                 }}
                 className="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all dark:text-white"
                 required
