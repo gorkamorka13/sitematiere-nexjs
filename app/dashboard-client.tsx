@@ -245,6 +245,9 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
         if (project.status) setSelectedStatuses([project.status]);
         if (project.type) setSelectedTypes([project.type]);
 
+        // Centrage de la carte individuelle
+        setMapNonce(Date.now());
+
         // Centrage de la carte globale
         if (isSameCountry) {
             triggerGlobalCenter(project.latitude, project.longitude);
@@ -646,6 +649,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                                         projectName={selectedProject.name}
                                         country={selectedProject.country || ""}
                                         popupText={selectedProject.name}
+                                        status={selectedProject.status}
                                         nonce={mapNonce}
                                     />
                                 ) : (

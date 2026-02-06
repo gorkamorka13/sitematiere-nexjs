@@ -5,6 +5,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
+import { getIcon } from "@/lib/map-icons";
 
 // Sub-component to handle map view changes
 function ChangeView({ latitude, longitude, zoom, nonce }: { latitude: number; longitude: number; zoom: number; nonce?: number }) {
@@ -15,25 +16,18 @@ function ChangeView({ latitude, longitude, zoom, nonce }: { latitude: number; lo
     return null;
 }
 
-// ... Fix for default Leaflet marker icons ...
-// [retaining icon definition]
-const icon = L.icon({
-    iconUrl: "/images/pin/pin_done.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -32],
-});
 
 type MapProps = {
     latitude: number;
     longitude: number;
+    status?: string | null;
     projectName?: string;
     country?: string;
     popupText?: string;
     nonce?: number;
 };
 
-export default function ProjectMap({ latitude, longitude, projectName, country, popupText, nonce }: MapProps) {
+export default function ProjectMap({ latitude, longitude, status, projectName, country, popupText, nonce }: MapProps) {
     const { theme, resolvedTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
 
@@ -58,7 +52,7 @@ export default function ProjectMap({ latitude, longitude, projectName, country, 
                 attribution={attribution}
                 url={tileUrl}
             />
-            <Marker position={[latitude, longitude]} icon={icon}>
+            <Marker position={[latitude, longitude]} icon={getIcon(status)}>
                 <Popup>
                     <div className="text-center">
                         <strong className="block mb-1">{projectName || "Projet"}</strong>

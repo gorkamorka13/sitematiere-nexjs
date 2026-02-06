@@ -13,6 +13,7 @@ type Props = {
     projectName?: string;
     country?: string;
     popupText?: string;
+    status?: string | null;
     nonce?: number;
 };
 
