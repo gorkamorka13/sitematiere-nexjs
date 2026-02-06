@@ -1,21 +1,81 @@
-import type { NextConfig } from "next";
+import { PHASE_PRODUCTION_BUILD, PHASE_DEVELOPMENT_SERVER } from "next/constants";
 import { execSync } from "child_process";
+import fs from "fs";
+import path from "path";
+import type { NextConfig } from "next";
 
-// Get git commit hash (short)
-let gitCommit = "no-git";
-try {
-  gitCommit = execSync("git rev-parse --short HEAD").toString().trim();
-} catch (e) {
-  console.warn("Could not fetch git commit hash");
-}
+// Function to increment version in package.json
+const autoIncrementVersion = (phase: string) => {
+  const pkgPath = path.join(process.cwd(), "package.json");
 
-const nextConfig: NextConfig = {
-  env: {
-    NEXT_PUBLIC_APP_VERSION: process.env.npm_package_version || "0.1.0",
-    NEXT_PUBLIC_GIT_COMMIT: gitCommit,
-    NEXT_PUBLIC_BUILD_DATE: new Date().toLocaleDateString("fr-FR"),
-    NEXT_PUBLIC_CREDIT: "Michel ESPARSA",
-  },
+  try {
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
+
+    // Only increment during a production build or at the very start of a dev session
+    const isBuild = phase === PHASE_PRODUCTION_BUILD;
+    const isDev = phase === PHASE_DEVELOPMENT_SERVER;
+
+    if (!isBuild && !isDev) return pkg.version;
+
+    // Prevent re-incrementing in worker processes or during reloads
+    // Next.js spawns multiple processes; we only want the main one to increment
+    if (process.env.NEXT_PRIVATE_WORKER || process.env.NEXT_IS_RELOAD === 'true') {
+      return pkg.version;
+    }
+
+    // Double-check with a temporary file lock to ensure only one increment per 5 seconds
+    // This handles cases where the main process might evaluate the config multiple times
+    const lockDir = path.join(process.cwd(), "node_modules", ".cache");
+    if (!fs.existsSync(lockDir)) {
+      fs.mkdirSync(lockDir, { recursive: true });
+    }
+    const lockPath = path.join(lockDir, "version_increment.lock");
+
+    if (fs.existsSync(lockPath)) {
+      const lastIncrement = parseInt(fs.readFileSync(lockPath, "utf8"), 10);
+      if (Date.now() - lastIncrement < 5000) {
+        return pkg.version;
+      }
+    }
+
+    // Perform increment
+    const versionParts = pkg.version.split('.');
+    if (versionParts.length === 3) {
+      versionParts[2] = (parseInt(versionParts[2], 10) + 1).toString();
+      pkg.version = versionParts.join('.');
+
+      // Save back to package.json
+      fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf8");
+      // Update lock
+      fs.writeFileSync(lockPath, Date.now().toString(), "utf8");
+
+      return pkg.version;
+    }
+    return pkg.version;
+  } catch (e) {
+    return "0.0.1";
+  }
 };
 
-export default nextConfig;
+export default (phase: string) => {
+  const version = autoIncrementVersion(phase);
+
+  // Get git commit hash (short)
+  let gitCommit = "no-git";
+  try {
+    gitCommit = execSync("git rev-parse --short HEAD", { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+  } catch (e) {
+    // Silent fallback
+  }
+
+  const nextConfig: NextConfig = {
+    env: {
+      NEXT_PUBLIC_APP_VERSION: version,
+      NEXT_PUBLIC_GIT_COMMIT: gitCommit,
+      NEXT_PUBLIC_BUILD_DATE: new Date().toLocaleDateString("fr-FR"),
+      NEXT_PUBLIC_CREDIT: "Michel ESPARSA",
+    },
+  };
+
+  return nextConfig;
+};
