@@ -118,8 +118,17 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 justify-between">
                         <div className="flex">
-                            <div className="flex flex-shrink-0 items-center">
+                            <div className="flex flex-shrink-0 items-center gap-4">
                                 <span className="text-xl font-bold text-indigo-600 dark:text-indigo-400">Sitematiere</span>
+                                <div className="hidden md:flex items-center gap-3 text-[10px] text-gray-400 dark:text-gray-500 font-mono bg-gray-50 dark:bg-gray-900/50 px-2 py-1 rounded-full border border-gray-100 dark:border-gray-800">
+                                    <span title="Version">v{process.env.NEXT_PUBLIC_APP_VERSION}</span>
+                                    <span className="text-gray-300 dark:text-gray-700">|</span>
+                                    <span title="Commit Hash">{process.env.NEXT_PUBLIC_GIT_COMMIT}</span>
+                                    <span className="text-gray-300 dark:text-gray-700">|</span>
+                                    <span title="Build Date">{process.env.NEXT_PUBLIC_BUILD_DATE}</span>
+                                    <span className="text-gray-300 dark:text-gray-700">|</span>
+                                    <span className="font-semibold text-gray-500 dark:text-gray-400">{process.env.NEXT_PUBLIC_CREDIT}</span>
+                                </div>
                             </div>
                         </div>
                         <div className="flex items-center gap-4">
