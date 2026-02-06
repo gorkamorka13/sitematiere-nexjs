@@ -7,11 +7,11 @@ import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 
 // Sub-component to handle map view changes
-function ChangeView({ latitude, longitude, zoom }: { latitude: number; longitude: number; zoom: number }) {
+function ChangeView({ latitude, longitude, zoom, nonce }: { latitude: number; longitude: number; zoom: number; nonce?: number }) {
     const map = useMap();
     useEffect(() => {
         map.setView([latitude, longitude], zoom, { animate: true });
-    }, [latitude, longitude, zoom, map]);
+    }, [latitude, longitude, zoom, map, nonce]);
     return null;
 }
 
@@ -27,10 +27,13 @@ const icon = L.icon({
 type MapProps = {
     latitude: number;
     longitude: number;
+    projectName?: string;
+    country?: string;
     popupText?: string;
+    nonce?: number;
 };
 
-export default function ProjectMap({ latitude, longitude, popupText }: MapProps) {
+export default function ProjectMap({ latitude, longitude, projectName, country, popupText, nonce }: MapProps) {
     const { theme, resolvedTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
 
@@ -50,14 +53,18 @@ export default function ProjectMap({ latitude, longitude, popupText }: MapProps)
             className="h-full w-full rounded-lg z-0"
             style={{ height: "100%", width: "100%", minHeight: "300px" }}
         >
-            <ChangeView latitude={latitude} longitude={longitude} zoom={13} />
+            <ChangeView latitude={latitude} longitude={longitude} zoom={13} nonce={nonce} />
             <TileLayer
                 attribution={attribution}
                 url={tileUrl}
             />
             <Marker position={[latitude, longitude]} icon={icon}>
                 <Popup>
-                    {popupText || "Project Location"}
+                    <div className="text-center">
+                        <strong className="block mb-1">{projectName || "Projet"}</strong>
+                        <span className="text-xs text-gray-500 block mb-1">{country || "Emplacement"}</span>
+                        {popupText && !projectName && <span className="text-xs italic text-gray-400">{popupText}</span>}
+                    </div>
                 </Popup>
             </Marker>
         </MapContainer>

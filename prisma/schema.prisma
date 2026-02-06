@@ -10,10 +10,12 @@ datasource db {
 // Modèle utilisateur pour l'authentification
 model User {
   id            String    @id @default(cuid())
-  email         String    @unique
-  name          String?
-  passwordHash  String    // Hashé avec bcrypt
+  username      String?   @unique  // Nom de connexion (ex: admin)
+  email         String?   @unique  // Deprecated: gardé pour compatibilité
+  name          String?            // Nom complet de l'utilisateur
+  passwordHash  String             // Hashé avec bcrypt
   role          UserRole  @default(USER)
+  color         String?   @default("#6366f1") // Couleur de la pastille (défaut: indigo)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   projects      Project[] @relation("ProjectOwner")
@@ -24,6 +26,7 @@ model User {
 enum UserRole {
   USER
   ADMIN
+  VISITOR
 }
 
 // Modèle principal des projets de ponts

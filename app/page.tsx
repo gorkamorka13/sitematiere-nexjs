@@ -26,7 +26,12 @@ export default async function DashboardPage() {
   return (
     <DashboardClient
       initialProjects={projects}
-      user={{ name: session.user?.name, email: session.user?.email }}
+      user={{ 
+        name: session.user?.name, 
+        username: (session.user as { username?: string })?.username, 
+        role: (session.user as { role?: "ADMIN" | "USER" | "VISITOR" })?.role,
+        color: (session.user as { color?: string })?.color
+      }}
     />
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useEffect, useState } from "react";
@@ -25,34 +25,52 @@ const getIcon = (status: string) => {
 type MultiMapProps = {
     projects: Project[];
     onSelectProject?: (project: Project) => void;
+    fitNonce?: number;
+    globalCenterNonce?: number;
+    globalCenterPoint?: [number, number] | null;
 };
 
-function MapUpdater({ projects }: { projects: Project[] }) {
+function CenterView({ point, nonce }: { point: [number, number] | null; nonce?: number }) {
+    const map = useMap();
+
+    useEffect(() => {
+        if (!point) return;
+        // Panner vers le point en conservant le zoom actuel
+        map.setView(point, map.getZoom(), { animate: true });
+    }, [nonce, map]);
+
+    return null;
+}
+
+function MapUpdater({ projects, fitNonce }: { projects: Project[]; fitNonce?: number }) {
     const map = useMap();
 
     useEffect(() => {
         if (projects.length === 0) return;
 
-        const lats = projects.map(p => p.latitude).filter(l => l !== 0);
-        const longs = projects.map(p => p.longitude).filter(l => l !== 0);
+        // This effect now depends on fitNonce to prevent zooming on every project selection
+        // but still uses the latest projects list to calculate bounds.
 
-        if (lats.length > 0 && longs.length > 0) {
-            // Calculate geographic center (average)
-            const avgLat = lats.reduce((a, b) => a + b, 0) / lats.length;
-            const avgLong = longs.reduce((a, b) => a + b, 0) / longs.length;
+        const validProjects = projects.filter(p => p.latitude !== 0 && p.longitude !== 0);
 
-            // Move to center while preserving current zoom
-            map.setView([avgLat, avgLong], map.getZoom(), {
+        if (validProjects.length > 0) {
+            const bounds = L.latLngBounds(
+                validProjects.map(p => [p.latitude, p.longitude])
+            );
+
+            map.fitBounds(bounds, {
                 animate: true,
-                duration: 1
+                duration: 1,
+                padding: [50, 50],
+                maxZoom: 10
             });
         }
-    }, [projects, map]);
+    }, [fitNonce, map]); // Removed projects from dependencies to avoid auto-zoom on filter sync
 
     return null;
 }
 
-export default function ProjectsMap({ projects, onSelectProject }: MultiMapProps) {
+export default function ProjectsMap({ projects, onSelectProject, fitNonce, globalCenterNonce, globalCenterPoint }: MultiMapProps) {
     const { theme, resolvedTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
 
@@ -73,11 +91,11 @@ export default function ProjectsMap({ projects, onSelectProject }: MultiMapProps
             className="h-full w-full rounded-lg z-0"
             style={{ height: "100%", width: "100%", minHeight: "400px" }}
         >
+            <CenterView point={globalCenterPoint || null} nonce={globalCenterNonce} />
             <TileLayer
                 attribution={attribution}
                 url={tileUrl}
             />
-
             {validProjects.map((project) => (
                 <Marker
                     key={project.id}
@@ -85,21 +103,18 @@ export default function ProjectsMap({ projects, onSelectProject }: MultiMapProps
                     icon={getIcon(project.status)}
                     eventHandlers={{
                         click: () => onSelectProject?.(project),
+                        popupopen: () => onSelectProject?.(project),
                     }}
                 >
-                    <Popup>
-                        <div className="text-center">
-                            <strong className="block mb-1">{project.name}</strong>
-                            <span className="text-xs text-gray-500 block mb-2">{project.country}</span>
-                            <Link href={`/projects/${project.id}`} className="text-indigo-600 hover:text-indigo-800 text-sm font-semibold">
-                                Voir la fiche
-                            </Link>
+                    <Tooltip direction="top" offset={[0, -32]} opacity={1}>
+                        <div className="font-mono text-[10px]">
+                            {project.latitude.toFixed(6)}, {project.longitude.toFixed(6)}
                         </div>
-                    </Popup>
+                    </Tooltip>
                 </Marker>
             ))}
 
-            <MapUpdater projects={validProjects} />
+            <MapUpdater projects={validProjects} fitNonce={fitNonce} />
         </MapContainer>
     );
 }

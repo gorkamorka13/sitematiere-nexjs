@@ -26,17 +26,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         Credentials({
             name: "Credentials",
             credentials: {
-                email: { label: "Email", type: "email" },
-                password: { label: "Password", type: "password" },
+                username: { label: "Nom d'utilisateur", type: "text" },
+                password: { label: "Mot de passe", type: "password" },
             },
             async authorize(credentials) {
                 const parsedCredentials = z
-                    .object({ email: z.string(), password: z.string().min(6) })
+                    .object({ username: z.string(), password: z.string().min(6) })
                     .safeParse(credentials);
 
                 if (parsedCredentials.success) {
-                    const { email, password } = parsedCredentials.data;
-                    const user = await prisma.user.findUnique({ where: { email } });
+                    const { username, password } = parsedCredentials.data;
+                    const user = await prisma.user.findUnique({ where: { username } });
 
                     if (!user || !user.passwordHash) return null;
 
@@ -54,6 +54,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             if (user) {
                 token.id = user.id;
                 token.role = user.role;
+                token.username = user.username;
+                token.name = user.name;
+                token.color = user.color;
             }
             return token;
         },
@@ -61,6 +64,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             if (session.user) {
                 session.user.id = token.id;
                 session.user.role = token.role;
+                session.user.username = token.username;
+                session.user.name = token.name;
+                session.user.color = token.color;
             }
             return session;
         },

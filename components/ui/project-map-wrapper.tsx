@@ -10,7 +10,10 @@ const ProjectMap = dynamic(() => import("./project-map"), {
 type Props = {
     latitude: number;
     longitude: number;
+    projectName?: string;
+    country?: string;
     popupText?: string;
+    nonce?: number;
 };
 
 export default function ProjectMapWrapper(props: Props) {
