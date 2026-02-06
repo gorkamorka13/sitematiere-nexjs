@@ -3,16 +3,16 @@
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
 import { Project } from "@prisma/client";
 import Link from "next/link";
 
-// Fix for default Leaflet marker icons in Next.js/React
-// We can define different icons based on status if we want
+// Fix for default Leaflet marker icons
 const getIcon = (status: string) => {
     let iconUrl = "/images/pin/pin_done.png";
     if (status === 'CURRENT') iconUrl = "/images/pin/pin_underconstruction.png";
-    if (status === 'PROSPECT') iconUrl = "/images/pin/pin_prospection.png"; // Assuming we have this, else fallback
+    if (status === 'PROSPECT') iconUrl = "/images/pin/pin_prospection.png";
 
     return L.icon({
         iconUrl: iconUrl,
@@ -33,21 +33,19 @@ function MapUpdater({ projects }: { projects: Project[] }) {
     useEffect(() => {
         if (projects.length === 0) return;
 
-        // Calculate bounds
         const lats = projects.map(p => p.latitude).filter(l => l !== 0);
         const longs = projects.map(p => p.longitude).filter(l => l !== 0);
 
         if (lats.length > 0 && longs.length > 0) {
-            const minLat = Math.min(...lats);
-            const maxLat = Math.max(...lats);
-            const minLong = Math.min(...longs);
-            const maxLong = Math.max(...longs);
+            // Calculate geographic center (average)
+            const avgLat = lats.reduce((a, b) => a + b, 0) / lats.length;
+            const avgLong = longs.reduce((a, b) => a + b, 0) / longs.length;
 
-            // Fit bounds with some padding
-            map.fitBounds([
-                [minLat, minLong],
-                [maxLat, maxLong]
-            ], { padding: [50, 50] });
+            // Move to center while preserving current zoom
+            map.setView([avgLat, avgLong], map.getZoom(), {
+                animate: true,
+                duration: 1
+            });
         }
     }, [projects, map]);
 
@@ -55,7 +53,16 @@ function MapUpdater({ projects }: { projects: Project[] }) {
 }
 
 export default function ProjectsMap({ projects, onSelectProject }: MultiMapProps) {
-    // Filter out projects with invalid coordinates (0,0 is often default)
+    const { theme, resolvedTheme } = useTheme();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    const tileUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+    const attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
     const validProjects = projects.filter(p => p.latitude !== 0 || p.longitude !== 0);
 
     return (
@@ -67,8 +74,8 @@ export default function ProjectsMap({ projects, onSelectProject }: MultiMapProps
             style={{ height: "100%", width: "100%", minHeight: "400px" }}
         >
             <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution={attribution}
+                url={tileUrl}
             />
 
             {validProjects.map((project) => (
