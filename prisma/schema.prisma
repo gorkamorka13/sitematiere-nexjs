@@ -1,0 +1,129 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Modèle utilisateur pour l'authentification
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  passwordHash  String    // Hashé avec bcrypt
+  role          UserRole  @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  projects      Project[] @relation("ProjectOwner")
+  
+  @@map("users")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+// Modèle principal des projets de ponts
+model Project {
+  id              String        @id @default(cuid())
+  name            String        @db.VarChar(255)
+  country         String        @db.VarChar(255)
+  latitude        Float
+  longitude       Float
+  description     String?       @db.Text
+  type            ProjectType
+  status          ProjectStatus @default(PROSPECT)
+  
+  // Progression (0-100)
+  prospection     Int           @default(0)
+  studies         Int           @default(0) // "etudes"
+  fabrication     Int           @default(0)
+  transport       Int           @default(0)
+  construction    Int           @default(0)
+  
+  // Relations
+  images          Image[]
+  videos          Video[]
+  documents       Document[]
+  
+  // Métadonnées
+  projectCode     String?       @db.VarChar(255) // "prochantier"
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relation propriétaire
+  ownerId         String
+  owner           User          @relation("ProjectOwner", fields: [ownerId], references: [id])
+  
+  @@index([country])
+  @@index([type])
+  @@index([status])
+  @@map("projects")
+}
+
+enum ProjectType {
+  PRS
+  PEB
+  MPB
+  MXB
+  UB
+  PASSERELLE
+  AUTRE
+}
+
+enum ProjectStatus {
+  DONE
+  CURRENT
+  PROSPECT
+}
+
+// Modèle pour les images
+model Image {
+  id          String   @id @default(cuid())
+  url         String   // URL Vercel Blob ou S3
+  alt         String?
+  order       Int      @default(0)
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  
+  @@index([projectId])
+  @@map("images")
+}
+
+// Modèle pour les vidéos
+model Video {
+  id          String   @id @default(cuid())
+  url         String
+  title       String?
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  
+  @@index([projectId])
+  @@map("videos")
+}
+
+// Modèle pour les documents (PDF, plans)
+model Document {
+  id          String       @id @default(cuid())
+  url         String
+  name        String
+  type        DocumentType
+  projectId   String
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt   DateTime     @default(now()) // Correction from plan: should be @default(now())
+  
+  @@index([projectId])
+  @@map("documents")
+}
+
+enum DocumentType {
+  PLAN
+  FLAG
+  CLIENT_LOGO
+  OTHER
+}
