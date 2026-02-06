@@ -11,7 +11,8 @@ import { ModeToggle } from "@/components/ui/mode-toggle";
 import SettingsDialogs from "@/components/settings/settings-dialogs";
 import UserBadge from "@/components/settings/user-badge";
 import ProjectManagementDialog from "@/components/settings/project-management-dialog";
-import { Search, Ruler, Factory, Truck, HardHat, FileText, FolderOpen, Image as ImageIcon, Video, ExternalLink, Eye, Play, Pause, SkipBack, SkipForward, ChevronLeft, ChevronRight, Square, Users, LayoutDashboard, Settings, Palette, MoreVertical, PanelLeftClose, PanelLeftOpen, Menu, X as CloseIcon } from "lucide-react";
+import FileManagementDialog from "@/components/settings/file-management-dialog";
+import { Search, Ruler, Factory, Truck, HardHat, FileText, FolderOpen, Image as ImageIcon, Video, ExternalLink, Eye, Play, Pause, SkipBack, SkipForward, ChevronLeft, ChevronRight, Square, Users, LayoutDashboard, Settings, Palette, MoreVertical, PanelLeftClose, PanelLeftOpen, Menu, X as CloseIcon, FileStack } from "lucide-react";
 
 type DashboardClientProps = {
     initialProjects: Project[];
@@ -57,6 +58,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
     const [isLoadingMedia, setIsLoadingMedia] = useState(false);
     const [isProjectManagementOpen, setIsProjectManagementOpen] = useState(false);
     const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
+    const [isFileManagementOpen, setIsFileManagementOpen] = useState(false);
 
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -391,6 +393,13 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                         >
                             <FolderOpen className={`w-5 h-5 ${isSidebarCollapsed ? "mx-auto" : ""}`} />
                             {!isSidebarCollapsed && <span className="text-sm font-medium group-hover:text-gray-900 dark:group-hover:text-white">Gestion Projets</span>}
+                        </button>
+                        <button
+                            onClick={() => setIsFileManagementOpen(true)}
+                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400 transition-all group"
+                        >
+                            <FileStack className={`w-5 h-5 ${isSidebarCollapsed ? "mx-auto" : ""}`} />
+                            {!isSidebarCollapsed && <span className="text-sm font-medium group-hover:text-gray-900 dark:group-hover:text-white">Gestion Fichiers</span>}
                         </button>
                     </div>
                 </nav>
@@ -923,6 +932,11 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                 isOpen={isProjectManagementOpen}
                 onClose={() => setIsProjectManagementOpen(false)}
                 isAdmin={user.role === "ADMIN"}
+            />
+
+            <FileManagementDialog
+                isOpen={isFileManagementOpen}
+                onClose={() => setIsFileManagementOpen(false)}
             />
 
             {/* User Management Dialog */}
