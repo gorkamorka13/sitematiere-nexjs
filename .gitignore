@@ -40,3 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 nul
+
+# images
+/public/images1
+/public/images-backup1
+
