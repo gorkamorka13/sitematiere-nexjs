@@ -916,9 +916,9 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
 
           {activeTab === 'create' && (
             <form onSubmit={handleCreate} className="p-6 space-y-6">
-              <div className="p-4 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-xl border border-blue-100 dark:border-blue-800 flex items-center gap-3">
-                <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                <span className="text-sm font-medium italic">Phase 1 : Interface de création (Logique backend à venir en Phase 2)</span>
+              <div className="p-4 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-xl border border-indigo-100 dark:border-indigo-800 flex items-center gap-3">
+                <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+                <span className="text-sm font-medium italic">Prêt à créer un nouvel ouvrage. Remplissez les champs ci-dessous.</span>
               </div>
 
               {/* Informations de base */}

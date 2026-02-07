@@ -12,7 +12,8 @@ import SettingsDialogs from "@/components/settings/settings-dialogs";
 import UserBadge from "@/components/settings/user-badge";
 import ProjectManagementDialog from "@/components/settings/project-management-dialog";
 import FileManagementDialog from "@/components/settings/file-management-dialog";
-import { Search, Ruler, Factory, Truck, HardHat, FileText, FolderOpen, Folders, Image as ImageIcon, Video, ExternalLink, Play, Pause, SkipBack, SkipForward, ChevronLeft, ChevronRight, Square, Users, LayoutDashboard, PanelLeftClose, Menu, X as CloseIcon, FileStack } from "lucide-react";
+import { Search, Ruler, Factory, Truck, HardHat, FileText, FolderOpen, Folders, Image as ImageIcon, Video, ExternalLink, Play, Pause, SkipBack, SkipForward, ChevronLeft, ChevronRight, Square, Users, LayoutDashboard, PanelLeftClose, Menu, X as CloseIcon, FileStack, Download } from "lucide-react";
+import { ProjectExportDialog } from "@/components/projects/project-export-dialog";
 
 type DashboardClientProps = {
     initialProjects: Project[];
@@ -65,6 +66,8 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
 
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+    const [projectToExport, setProjectToExport] = useState<(Project & { documents: ProjectDocument[]; videos: ProjectVideo[] }) | null>(null);
     const [mapNonce, setMapNonce] = useState<number>(0);
     const [fitNonce, setFitNonce] = useState<number>(0);
     const [globalCenterNonce, setGlobalCenterNonce] = useState<number>(0);
@@ -208,24 +211,34 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
     }, []);
 
     const toggleType = (type: ProjectType) => {
-        setSelectedTypes(prev =>
-            prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
-        );
+        setSelectedTypes(prev => {
+            if (prev.includes(type)) {
+                // Interdire de décocher si c'est le dernier
+                if (prev.length === 1) return prev;
+                return prev.filter(t => t !== type);
+            }
+            return [...prev, type];
+        });
         triggerFit();
     };
 
     const toggleStatus = (status: ProjectStatus) => {
-        setSelectedStatuses(prev =>
-            prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]
-        );
+        setSelectedStatuses(prev => {
+            if (prev.includes(status)) {
+                // Interdire de décocher si c'est le dernier
+                if (prev.length === 1) return prev;
+                return prev.filter(s => s !== status);
+            }
+            return [...prev, status];
+        });
         triggerFit();
     };
 
     const resetFilters = () => {
         setSelectedCountry("");
         setSelectedName("");
-        setSelectedTypes([]);
-        setSelectedStatuses([]);
+        setSelectedTypes(Object.values(ProjectType));
+        setSelectedStatuses(Object.values(ProjectStatus));
         setSearchQuery("");
         triggerFit();
     };
@@ -499,55 +512,8 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                     {/* Filters Section */}
                     <div className="bg-white dark:bg-gray-800 p-4 lg:p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mb-8 transition-all">
                         <div className="flex flex-col lg:flex-row lg:items-end gap-5">
-                            {/* Smart Search Field */}
-                            <div className="w-full lg:max-w-[400px] relative">
-                                <label htmlFor="search" className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Recherche rapide</label>
-                                <div className="relative group">
-                                    <input
-                                        id="search"
-                                        type="text"
-                                        value={searchQuery}
-                                        onChange={(e) => {
-                                            setSearchQuery(e.target.value);
-                                            setShowSuggestions(true);
-                                            setFocusedSuggestionIndex(-1);
-                                        }}
-                                        onFocus={() => setShowSuggestions(true)}
-                                        onKeyDown={handleKeyDown}
-                                        onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                                        placeholder="Rechercher un projet..."
-                                        className="block w-full rounded-xl border-gray-200 dark:border-gray-700 py-2.5 pl-11 pr-4 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 border bg-white dark:bg-gray-900 dark:text-white transition-all shadow-sm"
-                                    />
-                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
-
-                                    {/* Autocomplete Suggestions */}
-                                    {showSuggestions && searchSuggestions.length > 0 && (
-                                        <div className="absolute z-50 w-full mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-60 overflow-auto animate-in fade-in slide-in-from-top-2">
-                                            {searchSuggestions.map((project, index) => (
-                                                <button
-                                                    key={project.id}
-                                                    type="button"
-                                                    onMouseMove={() => setFocusedSuggestionIndex(index)}
-                                                    onClick={() => handleSearchSelect(project)}
-                                                    className={`w-full text-left px-4 py-3 transition-colors border-b border-gray-50 dark:border-gray-700/50 last:border-0 ${
-                                                        focusedSuggestionIndex === index
-                                                        ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300'
-                                                        : 'hover:bg-indigo-50 dark:hover:bg-indigo-900/30'
-                                                    }`}
-                                                >
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-sm font-semibold">{project.name}</span>
-                                                        <span className="text-xs opacity-60 italic">{project.country}</span>
-                                                    </div>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
                             {/* Country & Project Grid */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-grow">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-grow lg:flex-grow-0 lg:min-w-[450px]">
                                 {/* Country Select */}
                                 <div>
                                     <label htmlFor="country" className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Pays</label>
@@ -612,6 +578,53 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                                 </div>
                             </div>
 
+                            {/* Smart Search Field */}
+                            <div className="w-full lg:max-w-[300px] relative">
+                                <label htmlFor="search" className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Recherche rapide</label>
+                                <div className="relative group">
+                                    <input
+                                        id="search"
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => {
+                                            setSearchQuery(e.target.value);
+                                            setShowSuggestions(true);
+                                            setFocusedSuggestionIndex(-1);
+                                        }}
+                                        onFocus={() => setShowSuggestions(true)}
+                                        onKeyDown={handleKeyDown}
+                                        onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                                        placeholder="Rechercher..."
+                                        className="block w-full rounded-xl border-gray-200 dark:border-gray-700 py-2.5 pl-11 pr-4 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 border bg-white dark:bg-gray-900 dark:text-white transition-all shadow-sm"
+                                    />
+                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
+
+                                    {/* Autocomplete Suggestions */}
+                                    {showSuggestions && searchSuggestions.length > 0 && (
+                                        <div className="absolute z-50 w-full mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-60 overflow-auto animate-in fade-in slide-in-from-top-2">
+                                            {searchSuggestions.map((project, index) => (
+                                                <button
+                                                    key={project.id}
+                                                    type="button"
+                                                    onMouseMove={() => setFocusedSuggestionIndex(index)}
+                                                    onClick={() => handleSearchSelect(project)}
+                                                    className={`w-full text-left px-4 py-3 transition-colors border-b border-gray-50 dark:border-gray-700/50 last:border-0 ${
+                                                        focusedSuggestionIndex === index
+                                                        ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300'
+                                                        : 'hover:bg-indigo-50 dark:hover:bg-indigo-900/30'
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-sm font-semibold">{project.name}</span>
+                                                        <span className="text-xs opacity-60 italic">{project.country}</span>
+                                                    </div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
                             {/* Status and Type Filter Group */}
                             <div className="flex flex-col sm:flex-row gap-4 items-end flex-grow">
                                 {/* Status Section */}
@@ -622,33 +635,41 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                                             <button
                                                 key={status}
                                                 onClick={() => toggleStatus(status)}
-                                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${selectedStatuses.includes(status)
+                                                className={`relative flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${selectedStatuses.includes(status)
                                                     ? 'bg-indigo-600 border-indigo-500 text-white shadow-sm shadow-indigo-200 dark:shadow-none'
                                                     : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700'
                                                     }`}
                                             >
                                                 <div className={`w-2 h-2 rounded-full ${selectedStatuses.includes(status) ? 'bg-white' : 'bg-gray-300 dark:bg-gray-600'}`} />
-                                                {status}
+                                                <span>{status}</span>
+                                                {/* Indicateur de l'attribut du projet sélectionné (Point Rouge) */}
+                                                {selectedProject?.status === status && (
+                                                    <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-800" title="Statut du projet sélectionné" />
+                                                )}
                                             </button>
                                         ))}
                                     </div>
                                 </div>
 
                                 {/* Type Section */}
-                                <div className="bg-gray-50/50 dark:bg-gray-900/40 p-3 rounded-xl border border-gray-100 dark:border-gray-800/50 min-w-[220px]">
+                                <div className="bg-gray-50/50 dark:bg-gray-900/40 p-3 rounded-xl border border-gray-100 dark:border-gray-800/50 flex-grow lg:flex-grow-0">
                                     <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2.5 ml-1">Type</span>
-                                    <div className="grid grid-cols-2 gap-1.5">
+                                    <div className="grid grid-rows-3 grid-flow-col gap-1.5">
                                         {types.map(type => (
                                             <button
                                                 key={type}
                                                 onClick={() => toggleType(type)}
-                                                className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all ${selectedTypes.includes(type)
+                                                className={`relative flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all min-w-[110px] ${selectedTypes.includes(type)
                                                     ? 'bg-indigo-600 border-indigo-500 text-white shadow-sm shadow-indigo-200 dark:shadow-none'
                                                     : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700'
                                                     }`}
                                             >
                                                 <div className={`w-1.5 h-1.5 rounded-full ${selectedTypes.includes(type) ? 'bg-white' : 'bg-gray-300 dark:bg-gray-600'}`} />
-                                                {type}
+                                                <span className="truncate">{type}</span>
+                                                {/* Indicateur de l'attribut du projet sélectionné (Point Rouge) */}
+                                                {selectedProject?.type === type && (
+                                                    <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-500 ring-1 ring-white dark:ring-gray-800" title="Type du projet sélectionné" />
+                                                )}
                                             </button>
                                         ))}
                                     </div>
@@ -941,9 +962,18 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                                                                 </span>
                                                             </td>
                                                             <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                                                                <Link href={`/projects/${project.id}`} className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
-                                                                    Voir<span className="sr-only">, {project.name}</span>
-                                                                </Link>
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setProjectToExport(project as any);
+                                                                        setIsExportDialogOpen(true);
+                                                                    }}
+                                                                    className="flex items-center gap-1.5 ml-auto text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/40 px-3 py-1.5 rounded-lg transition-colors group"
+                                                                    title="Générer Rapport PDF"
+                                                                >
+                                                                    <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                                                    <span className="font-bold">PDF</span>
+                                                                </button>
                                                             </td>
                                                         </tr>
                                                     ))
@@ -987,6 +1017,17 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                 isAdmin={user.role === "ADMIN"}
                 isOpen={isUserManagementOpen}
                 onClose={() => setIsUserManagementOpen(false)}
+            />
+
+            <ProjectExportDialog
+                isOpen={isExportDialogOpen}
+                onClose={() => setIsExportDialogOpen(false)}
+                project={projectToExport}
+                images={dynamicMedia.images}
+                globalMetadata={{
+                    appVersion: process.env.NEXT_PUBLIC_APP_VERSION || "0.0.38",
+                    buildDate: process.env.NEXT_PUBLIC_BUILD_DATE || new Date().toISOString()
+                }}
             />
         </div>
     );
