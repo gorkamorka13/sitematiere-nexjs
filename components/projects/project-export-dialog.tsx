@@ -17,7 +17,9 @@ import {
 import { Project, Document as ProjectDocument, Video as ProjectVideo } from "@prisma/client";
 import jsPDF from "jspdf";
 import * as htmlToImage from "html-to-image";
+import JSZip from "jszip";
 import dynamic from "next/dynamic";
+import { decimalToDMS } from "@/lib/coordinate-utils";
 
 // Dynamic imports for maps to handle Leaflet's window dependency
 const ProjectsMap = dynamic(() => import("@/components/ui/projects-map"), { ssr: false });
@@ -308,7 +310,7 @@ export function ProjectExportDialog({
         yPos += mapHeight + 8;
         doc.setFontSize(9);
         doc.setFont("helvetica", "bold");
-        
+
         if (options.globalMap) {
           doc.setTextColor(79, 70, 229);
           doc.text("Vue régionale", margin + mapWidth/2, yPos, { align: "center" });
@@ -318,7 +320,7 @@ export function ProjectExportDialog({
           const projectCount = projectsForMap.length;
           doc.text(`${projectCount} projet${projectCount > 1 ? 's' : ''} dans la région`, margin + mapWidth/2, yPos + 4, { align: "center" });
         }
-        
+
         if (options.projectMap) {
           const rightX = margin + mapWidth + 10;
           doc.setFontSize(9);
@@ -329,6 +331,10 @@ export function ProjectExportDialog({
           doc.setTextColor(107, 114, 128);
           doc.setFontSize(7);
           doc.text(project.name, rightX + mapWidth/2, yPos + 4, { align: "center" });
+          // Coordinates in sexagesimal format
+          const latDMS = decimalToDMS(project.latitude, true);
+          const lngDMS = decimalToDMS(project.longitude, false);
+          doc.text(`${latDMS} | ${lngDMS}`, rightX + mapWidth/2, yPos + 8, { align: "center" });
         }
 
         setExportStatus("Finalisation...");
@@ -451,7 +457,77 @@ export function ProjectExportDialog({
         doc.text(`Page ${i} / ${pageCount}`, pageWidth - margin, pageHeight - 10, { align: "right" });
       }
 
-      doc.save(`RAPPORT_TECHNIQUE_${project.name.replace(/\s+/g, '_').toUpperCase()}.pdf`);
+      // --- EXPORT LOGIC: PDF or ZIP ---
+      const pdfFileName = `RAPPORT_TECHNIQUE_${project.name.replace(/\s+/g, '_').toUpperCase()}.pdf`;
+      
+      if (options.documents && project.documents && project.documents.length > 0) {
+        // Create ZIP with PDF and documents
+        setExportStatus("Préparation du ZIP avec annexes...");
+        const zip = new JSZip();
+        
+        // Add PDF to ZIP
+        const pdfBlob = doc.output('blob');
+        zip.file(pdfFileName, pdfBlob);
+        
+        // Create folder for documents
+        const docsFolder = zip.folder("Documents");
+        
+        // Download and add each document
+        let docsAdded = 0;
+        for (const doc of project.documents) {
+          try {
+            if (doc.url) {
+              setExportStatus(`Téléchargement des annexes... ${docsAdded + 1}/${project.documents.length}`);
+              const response = await fetch(doc.url);
+              if (response.ok) {
+                const blob = await response.blob();
+                let fileName = doc.name || `document_${doc.id}`;
+                
+                // Ensure file has an extension
+                if (!fileName.includes('.')) {
+                  // Extract extension from URL
+                  const urlExtension = doc.url.split('.').pop()?.split('?')[0];
+                  if (urlExtension && urlExtension.length > 0 && urlExtension.length < 10) {
+                    fileName += `.${urlExtension}`;
+                  } else {
+                    // Default extensions based on document type
+                    const type = doc.type?.toLowerCase() || '';
+                    if (type.includes('pdf')) fileName += '.pdf';
+                    else if (type.includes('image') || type.includes('jpg') || type.includes('jpeg')) fileName += '.jpg';
+                    else if (type.includes('png')) fileName += '.png';
+                    else if (type.includes('dwg') || type.includes('autocad')) fileName += '.dwg';
+                    else if (type.includes('doc')) fileName += '.docx';
+                    else if (type.includes('xls')) fileName += '.xlsx';
+                    else if (type.includes('zip')) fileName += '.zip';
+                    else fileName += '.pdf'; // Default fallback
+                  }
+                }
+                
+                docsFolder?.file(fileName, blob);
+                docsAdded++;
+              }
+            }
+          } catch (e) {
+            console.warn(`Could not download document ${doc.id}:`, e);
+          }
+        }
+        
+        // Generate and download ZIP
+        setExportStatus("Génération du fichier ZIP...");
+        const zipBlob = await zip.generateAsync({ type: "blob" });
+        const zipUrl = URL.createObjectURL(zipBlob);
+        const link = document.createElement('a');
+        link.href = zipUrl;
+        link.download = `RAPPORT_TECHNIQUE_${project.name.replace(/\s+/g, '_').toUpperCase()}_AVEC_ANNEXES.zip`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(zipUrl);
+      } else {
+        // Just save PDF
+        doc.save(pdfFileName);
+      }
+      
       onClose();
     } catch (error) {
       console.error("PDF Generation failed:", error);
@@ -486,7 +562,7 @@ export function ProjectExportDialog({
       <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-2">
           <FileText className="w-5 h-5 text-indigo-600 flex-shrink-0" />
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white uppercase tracking-tight">Export Rapport Premium</h3>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white uppercase tracking-tight">Export Rapport</h3>
         </div>
         <button onClick={onClose} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
           <X className="w-5 h-5 text-gray-500" />
@@ -500,7 +576,7 @@ export function ProjectExportDialog({
 
         <div className="space-y-3">
           <OptionRow
-            id="lastPhoto" label="Photo de couverture (Premium Fit)" icon={ImageIcon} color="text-purple-500"
+            id="lastPhoto" label="Photo de couverture" icon={ImageIcon} color="text-purple-500"
             checked={options.lastPhoto} onChange={(v: boolean) => setOptions(o => ({ ...o, lastPhoto: v }))}
           />
           <OptionRow
@@ -512,7 +588,7 @@ export function ProjectExportDialog({
             checked={options.progress} onChange={(v: boolean) => setOptions(o => ({ ...o, progress: v }))}
           />
           <OptionRow
-            id="documents" label="Annexes: Dossier Plans et Documents" icon={Paperclip} color="text-orange-500"
+            id="documents" label="📦 ZIP avec Annexes (Documents du projet)" icon={Paperclip} color="text-orange-500"
             checked={options.documents} onChange={(v: boolean) => setOptions(o => ({ ...o, documents: v }))}
           />
 
@@ -553,14 +629,16 @@ export function ProjectExportDialog({
           ) : (
             <>
               <Download className="w-4 h-4" />
-              Générer Rapport PDF
+              {options.documents && project.documents && project.documents.length > 0 
+                ? "Générer ZIP avec Annexes" 
+                : "Générer Rapport PDF"}
             </>
           )}
         </button>
       </div>
 
       {/* Hidden container for map capture - completely off-screen */}
-      <div 
+      <div
         ref={portalRef}
         style={{
           position: 'absolute',

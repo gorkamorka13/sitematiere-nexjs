@@ -305,7 +305,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
             {/* Mobile Header - Sticky */}
             <div className="lg:hidden fixed top-0 left-0 right-0 z-50 h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 flex items-center justify-between shadow-sm">
                 <div className="flex items-center gap-2">
-                    <span className="text-lg font-black text-indigo-600 dark:text-indigo-400 tracking-tight uppercase">Site Matière</span>
+                    <span className="matiere text-lg tracking-tight">Matière</span>
                     <div className="text-[10px] font-bold text-gray-400 border border-gray-200 dark:border-gray-700 px-1.5 py-0.5 rounded ml-1">V{process.env.NEXT_PUBLIC_APP_VERSION}</div>
                 </div>
                 <button
@@ -341,7 +341,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                             className="w-10 h-10 object-contain shrink-0"
                         />
                         {!isSidebarCollapsed && (
-                            <span className="text-xl font-black text-indigo-600 dark:text-indigo-400 tracking-tight uppercase truncate">
+                            <span className="matiere text-xl tracking-tight truncate">
                                 Matière
                             </span>
                         )}

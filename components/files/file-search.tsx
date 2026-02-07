@@ -9,7 +9,14 @@ interface FileSearchProps {
   onFilterChange: (type: string) => void;
   countryFilter: string;
   onCountryChange: (country: string) => void;
-  files?: { id: string; name: string; project?: { country: string } | null }[];
+  projectFilter: string;
+  onProjectChange: (project: string) => void;
+  files?: {
+    id: string;
+    name: string;
+    project?: { id: string; name: string; country: string } | null;
+    projectId?: string | null;
+  }[];
   onFileSelect?: (file: { id: string; name: string }) => void;
 }
 
@@ -20,20 +27,18 @@ export function FileSearch({
   onFilterChange,
   countryFilter,
   onCountryChange,
+  projectFilter,
+  onProjectChange,
   files = [],
   onFileSelect,
 }: FileSearchProps) {
-  // Filter files based on country selection
-  const filteredFiles = files.filter(f => {
-    if (countryFilter === "Tous") return true;
-    if (countryFilter === "Autre") return !f.project?.country;
-    return f.project?.country === countryFilter;
-  });
+  // Filter files based on constraints for the dropdown listing logic (optional but good for UX)
+  // Here we just use all files to populate dropdowns
 
-  // Sort filtered files alphabetically
-  const sortedFiles = [...filteredFiles].sort((a, b) => a.name.localeCompare(b.name));
+  // Sort files for the "Jump to" dropdown
+  const sortedFiles = [...files].sort((a, b) => a.name.localeCompare(b.name));
 
-  // Extract unique countries from files
+  // Extract unique countries
   const countries = Array.from(
     new Set(
       files
@@ -42,11 +47,24 @@ export function FileSearch({
     )
   ).sort();
 
-  // Check if there are orphaned files (files without a project)
-  const hasOrphanedFiles = files.some(f => !f.project?.country);
+  // Extract unique projects, filtered by selected country
+  const projectsMap = new Map<string, string>();
+  files.forEach(f => {
+    if (f.project) {
+        // Only add project if it matches the selected country (or if no country selected)
+        if (countryFilter === "Tous" || f.project.country === countryFilter) {
+             projectsMap.set(f.project.id, f.project.name);
+        }
+    }
+  });
+
+  // Convert map to array and sort by name
+  const projects = Array.from(projectsMap.entries()).sort((a, b) => a[1].localeCompare(b[1]));
+
+  const hasOrphanedFiles = files.some(f => !f.project);
 
   return (
-    <div className="flex flex-col sm:flex-row gap-4 w-full">
+    <div className="flex flex-col xl:flex-row gap-4 w-full">
       <div className="relative flex-1">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <input
@@ -58,18 +76,15 @@ export function FileSearch({
         />
       </div>
 
-       {/* File List Dropdown */}
+       {/* File List Dropdown (Jump to) */}
        <div className="relative min-w-[200px]">
          <select
            onChange={(e) => {
              const file = files.find((f) => f.id === e.target.value);
              if (file && onFileSelect) onFileSelect(file);
-             // Optionally reset select? Or keep it?
-             // If we keep it, it shows the current selection.
-             // If we reset, it acts as a "Jump to" trigger.
-             e.target.value = ""; // Reset to placeholder
+             e.target.value = "";
            }}
-           className="w-full px-4 py-2 text-sm bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer"
+           className="w-full px-4 py-2 text-sm bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer text-ellipsis overflow-hidden whitespace-nowrap"
            defaultValue=""
          >
            <option value="" disabled>
@@ -81,35 +96,53 @@ export function FileSearch({
              </option>
            ))}
          </select>
-         {/* Custom arrow for appearance-none if we want, but default select is fine for MVP */}
        </div>
 
-      {/* Country Filter Dropdown */}
-      <select
-        value={countryFilter}
-        onChange={(e) => onCountryChange(e.target.value)}
-        className="px-4 py-2 text-sm bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
-      >
-        <option value="Tous">Tous les pays</option>
-        {hasOrphanedFiles && <option value="Autre">Autre (sans projet)</option>}
-        {countries.map((country) => (
-          <option key={country} value={country}>
-            {country}
-          </option>
-        ))}
-      </select>
+      <div className="flex gap-2 overflow-x-auto pb-1 xl:pb-0">
+          {/* Project Filter Dropdown */}
+          <select
+            value={projectFilter}
+            onChange={(e) => onProjectChange(e.target.value)}
+            className="px-4 py-2 text-sm bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 min-w-[150px]"
+          >
+            <option value="ALL">Tous les projets</option>
+            {hasOrphanedFiles && <option value="ORPHANED">Sans projet</option>}
+            {projects.map(([id, name]) => (
+              <option key={id} value={id}>
+                {name}
+              </option>
+            ))}
+          </select>
 
-      <select
-        value={fileTypeFilter}
-        onChange={(e) => onFilterChange(e.target.value)}
-        className="px-4 py-2 text-sm bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
-      >
-        <option value="ALL">Tous les types</option>
-        <option value="IMAGE">Images</option>
-        <option value="VIDEO">Vidéos</option>
-        <option value="DOCUMENT">Documents</option>
-        <option value="ARCHIVE">Archives</option>
-      </select>
+          {/* Country Filter Dropdown */}
+          <select
+            value={countryFilter}
+            onChange={(e) => onCountryChange(e.target.value)}
+            className="px-4 py-2 text-sm bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+          >
+            <option value="Tous">Tous les pays</option>
+            {hasOrphanedFiles && <option value="Autre">Autre (sans pays)</option>}
+            {countries.map((country) => (
+              <option key={country} value={country}>
+                {country}
+              </option>
+            ))}
+          </select>
+
+          {/* File Type Filter Dropdown */}
+          <select
+            value={fileTypeFilter}
+            onChange={(e) => onFilterChange(e.target.value)}
+            className="px-4 py-2 text-sm bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+          >
+            <option value="ALL">Tous les types</option>
+            <option value="IMAGE">Images</option>
+            <option value="VIDEO">Vidéos</option>
+            <option value="DOCUMENT">Documents</option>
+            <option value="ARCHIVE">Archives</option>
+          </select>
+      </div>
     </div>
   );
 }
+

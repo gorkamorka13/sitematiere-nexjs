@@ -58,8 +58,24 @@ export function FileContextMenu({
             style={style}
             className="fixed z-50 w-56 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md animate-in fade-in zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
         >
-            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground border-b mb-1 truncate">
-                {file.name}
+            <div className="px-2 py-1.5 border-b mb-1">
+                <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
+                    {file.name}
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
+                    {file.project ? (
+                        <span className="flex items-center gap-1">
+                            <span>📁</span>
+                            <span>{file.project.name}</span>
+                            <span className="text-gray-400">({file.project.country})</span>
+                        </span>
+                    ) : (
+                        <span className="flex items-center gap-1">
+                            <span>📁</span>
+                            <span>Global</span>
+                        </span>
+                    )}
+                </div>
             </div>
 
             {showRestore ? (

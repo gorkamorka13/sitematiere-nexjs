@@ -38,8 +38,20 @@ export function FileExplorer() {
     const [searchQuery, setSearchQuery] = useState("");
     const [fileTypeFilter, setFileTypeFilter] = useState("ALL");
     const [countryFilter, setCountryFilter] = useState("Tous");
+    const [projectFilter, setProjectFilter] = useState("ALL"); // New Project Filter State
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+    // Auto-select country when project is selected
+    useEffect(() => {
+        if (projectFilter !== "ALL" && projectFilter !== "ORPHANED") {
+            const projectFile = allFiles.find(f => f.project?.id === projectFilter);
+            if (projectFile?.project?.country) {
+                setCountryFilter(projectFile.project.country);
+            }
+        }
+    }, [projectFilter, allFiles]);
+
 
     // Derived state for display (computed after state declarations)
     const files = allFiles.filter(f => {
@@ -48,10 +60,19 @@ export function FileExplorer() {
             return false;
         }
 
+        // Filter by project
+        if (projectFilter !== "ALL") {
+            if (projectFilter === "ORPHANED") {
+                if (f.project) return false;
+            } else {
+                if (f.project?.id !== projectFilter) return false;
+            }
+        }
+
         // Filter by country
         if (countryFilter !== "Tous") {
             if (countryFilter === "Autre") {
-                // Show orphaned files (no project)
+                // Show orphaned files or files without country
                 return !f.project?.country;
             }
             // Show files from selected country
@@ -210,6 +231,8 @@ export function FileExplorer() {
                     onFilterChange={setFileTypeFilter}
                     countryFilter={countryFilter}
                     onCountryChange={setCountryFilter}
+                    projectFilter={projectFilter}
+                    onProjectChange={setProjectFilter}
                     files={allFiles}
                     onFileSelect={(file) => {
                         setSearchQuery(file.name);
