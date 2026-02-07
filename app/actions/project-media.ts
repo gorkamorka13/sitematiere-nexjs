@@ -5,18 +5,23 @@ import path from "path";
 
 export async function getProjectMedia(projectName: string) {
   // Normalisation du nom de projet pour correspondre aux dossiers
-  // Ex: "Sewa" -> "sewa", "Six Mois" -> "sixmois" (selon la structure public/images)
-  const folderName = projectName.toLowerCase().replace(/\s+/g, '');
-  const publicDir = path.join(process.cwd(), "public");
-  const mediaPath = path.join(publicDir, "images", folderName);
-
+  // Sécurité: n'autoriser que les caractères alphanumériques pour éviter la traversée de répertoire
+  const folderName = projectName.toLowerCase().replace(/[^a-z0-9]/g, '');
+  
   const result = {
     images: [] as { url: string; name: string }[],
     pdfs: [] as { url: string; name: string }[],
   };
 
+  // Validation: le nom du dossier ne doit pas être vide
+  if (!folderName || folderName.length === 0) {
+    return result;
+  }
+
+  const publicDir = path.join(process.cwd(), "public");
+  const mediaPath = path.join(publicDir, "images", folderName);
+
   if (!fs.existsSync(mediaPath)) {
-    console.warn(`Directory not found: ${mediaPath}`);
     return result;
   }
 

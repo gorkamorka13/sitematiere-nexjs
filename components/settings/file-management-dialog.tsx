@@ -2,6 +2,7 @@
 
 import { FileStack, FileText, ImageIcon, Trash2, FolderOpen, AlertCircle, X, Info } from "lucide-react";
 import { useState, useEffect } from "react";
+import { FileStatistics } from "@/lib/types";
 
 interface FileManagementDialogProps {
     isOpen: boolean;
@@ -10,16 +11,43 @@ interface FileManagementDialogProps {
 }
 
 export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileManagementDialogProps) {
-    // Statut fictif pour l'ébauche - En production, on chargerait les vraies données
-    const stats = {
-        totalImages: 124,
-        totalPdfs: 42,
-        storageUsed: "450 MB",
-        storageLimit: "1 GB",
-        orphanedFiles: 8
+    // Statistiques chargées depuis l'API
+    const [stats, setStats] = useState<FileStatistics | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        if (isOpen && isAdmin) {
+            fetchStatistics();
+        }
+    }, [isOpen, isAdmin]);
+
+    const fetchStatistics = async () => {
+        setIsLoading(true);
+        try {
+            const response = await fetch("/api/files/statistics");
+            if (response.ok) {
+                const data = await response.json();
+                setStats(data);
+            }
+        } catch (error) {
+            console.error("Erreur lors du chargement des statistiques:", error);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    const progressPercentage = (450 / 1024) * 100;
+    // Valeurs par défaut si les stats ne sont pas encore chargées
+    const displayStats = stats || {
+        totalImages: 0,
+        totalPdfs: 0,
+        storageUsed: "0 MB",
+        totalProjects: 0,
+        lastScan: new Date().toISOString()
+    };
+
+    // Calcul du pourcentage de stockage (estimation basée sur 1GB)
+    const storageValue = parseFloat(displayStats.storageUsed);
+    const progressPercentage = Math.min((storageValue / 1024) * 100, 100);
 
     // Sécurité : Ne pas afficher si pas ouvert OU si pas admin
     if (!isOpen || !isAdmin) return null;
@@ -62,8 +90,8 @@ export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileM
                                 <AlertCircle className="w-4 h-4 text-indigo-500" />
                             </div>
                             <div className="flex items-baseline gap-2 mb-2">
-                                <span className="text-2xl font-black text-gray-900 dark:text-white">{stats.storageUsed}</span>
-                                <span className="text-xs text-gray-500">/ {stats.storageLimit}</span>
+                                <span className="text-2xl font-black text-gray-900 dark:text-white">{displayStats.storageUsed}</span>
+                                <span className="text-xs text-gray-500">/ {displayStats.storageLimit || "1 GB"}</span>
                             </div>
                             <div className="w-full bg-gray-200 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
                                 <div
@@ -85,14 +113,14 @@ export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileM
                                         <ImageIcon className="w-3.5 h-3.5 text-pink-500" />
                                         <span className="text-gray-600 dark:text-gray-400">Images</span>
                                     </div>
-                                    <span className="font-bold">{stats.totalImages}</span>
+                                    <span className="font-bold">{displayStats.totalImages}</span>
                                 </div>
                                 <div className="flex justify-between items-center text-sm">
                                     <div className="flex items-center gap-2">
                                         <FileText className="w-3.5 h-3.5 text-blue-500" />
                                         <span className="text-gray-600 dark:text-gray-400">Documents PDF</span>
                                     </div>
-                                    <span className="font-bold">{stats.totalPdfs}</span>
+                                    <span className="font-bold">{displayStats.totalPdfs}</span>
                                 </div>
                             </div>
                         </div>
@@ -104,7 +132,7 @@ export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileM
                                 <Trash2 className="w-4 h-4 text-amber-500" />
                             </div>
                             <div className="flex items-baseline gap-2 mb-1">
-                                <span className="text-2xl font-black text-amber-700 dark:text-amber-400">{stats.orphanedFiles}</span>
+                                <span className="text-2xl font-black text-amber-700 dark:text-amber-400">{displayStats.orphanedFiles || 0}</span>
                                 <span className="text-xs text-amber-600/70">Fichiers orphelins</span>
                             </div>
                             <p className="text-[10px] text-amber-600/70 italic leading-tight">Ces fichiers ne sont rattachés à aucun projet.</p>
@@ -122,7 +150,7 @@ export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileM
                             <div>
                                 <h4 className="text-sm font-bold text-indigo-900 dark:text-indigo-200 mb-1">Informations Administration</h4>
                                 <p className="text-xs text-indigo-700/80 dark:text-indigo-300/60 leading-relaxed italic">
-                                    Cette section permet de gérer les fichiers qui ont été téléversés mais qui n'apparaissent plus dans la base de données.
+                                    Cette section permet de gérer les fichiers qui ont été téléversés mais qui n&apos;apparaissent plus dans la base de données.
                                     Elle est strictement réservée au rôle Administrateur.
                                 </p>
                             </div>

@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { getProjectMedia } from "@/app/actions/project-media";
 import Link from "next/link";
 import { SignOutButton } from "@/components/auth/sign-out-button";
-import { Project, ProjectStatus, ProjectType, UserRole } from "@prisma/client";
+import { Project, ProjectStatus, ProjectType, UserRole, Document as ProjectDocument, Video as ProjectVideo } from "@prisma/client";
 import ProjectsMapWrapper from "@/components/ui/projects-map-wrapper";
 import ProjectMapWrapper from "@/components/ui/project-map-wrapper";
 import { ModeToggle } from "@/components/ui/mode-toggle";
@@ -12,7 +12,7 @@ import SettingsDialogs from "@/components/settings/settings-dialogs";
 import UserBadge from "@/components/settings/user-badge";
 import ProjectManagementDialog from "@/components/settings/project-management-dialog";
 import FileManagementDialog from "@/components/settings/file-management-dialog";
-import { Search, Ruler, Factory, Truck, HardHat, FileText, FolderOpen, Image as ImageIcon, Video, ExternalLink, Eye, Play, Pause, SkipBack, SkipForward, ChevronLeft, ChevronRight, Square, Users, LayoutDashboard, Settings, Palette, MoreVertical, PanelLeftClose, PanelLeftOpen, Menu, X as CloseIcon, FileStack } from "lucide-react";
+import { Search, Ruler, Factory, Truck, HardHat, FileText, FolderOpen, Image as ImageIcon, Video, ExternalLink, Play, Pause, SkipBack, SkipForward, ChevronLeft, ChevronRight, Square, Users, LayoutDashboard, PanelLeftClose, Menu, X as CloseIcon, FileStack } from "lucide-react";
 
 type DashboardClientProps = {
     initialProjects: Project[];
@@ -789,18 +789,18 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                                     </div>
                                     <div className="flex items-center gap-2">
                                         {/* Drapeau du pays */}
-                                        {selectedProject && (selectedProject as any).documents?.filter((d: any) => d.type === 'FLAG').length > 0 && (
+                                        {selectedProject && (selectedProject as Project & { documents: ProjectDocument[] }).documents?.filter((d) => d.type === 'FLAG').length > 0 && (
                                             <img
-                                                src={`/${(selectedProject as any).documents.find((d: any) => d.type === 'FLAG')?.url}`}
+                                                src={`/${(selectedProject as Project & { documents: ProjectDocument[] }).documents.find((d) => d.type === 'FLAG')?.url}`}
                                                 alt={`Drapeau ${selectedProject.country}`}
                                                 className="w-8 h-6 object-cover rounded shadow-sm"
                                                 title={`Drapeau ${selectedProject.country}`}
                                             />
                                         )}
                                         {/* Logo client */}
-                                        {selectedProject && (selectedProject as any).documents?.filter((d: any) => d.type === 'CLIENT_LOGO' || d.name.toLowerCase().includes('logo')).length > 0 && (
+                                        {selectedProject && (selectedProject as Project & { documents: ProjectDocument[] }).documents?.filter((d) => d.type === 'CLIENT_LOGO' || d.name.toLowerCase().includes('logo')).length > 0 && (
                                             <img
-                                                src={`/${(selectedProject as any).documents.find((d: any) => d.type === 'CLIENT_LOGO' || d.name.toLowerCase().includes('logo'))?.url}`}
+                                                src={`/${(selectedProject as Project & { documents: ProjectDocument[] }).documents.find((d) => d.type === 'CLIENT_LOGO' || d.name.toLowerCase().includes('logo'))?.url}`}
                                                 alt="Logo client"
                                                 className="h-6 w-auto object-contain"
                                                 title="Logo client"
@@ -816,6 +816,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
 
                         {/* Colonne 2: Photos */}
                         <PhotoGalleryWithControls
+                            key={selectedProject?.id || 'no-project'}
                             selectedProject={selectedProject}
                             dynamicImages={dynamicMedia.images}
                             isLoading={isLoadingMedia}
@@ -842,7 +843,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                     )}
 
                     {/* LIGNE 4: Vidéos - Conditionnel: visible uniquement s'il y a des vidéos */}
-                    {selectedProject && (selectedProject as any).videos?.length > 0 && (
+                    {selectedProject && (selectedProject as Project & { videos: ProjectVideo[] }).videos?.length > 0 && (
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
                                 <div className="border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50 px-4 py-3 flex items-center gap-2">
@@ -851,7 +852,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                                 </div>
                                 <div className="p-4">
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        {(selectedProject as any).videos.map((vid: any) => (
+                                        {(selectedProject as Project & { videos: ProjectVideo[] }).videos.map((vid) => (
                                             <div key={vid.id} className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors cursor-pointer group">
                                                 <div className="w-12 h-8 bg-red-100 dark:bg-red-900/30 rounded flex items-center justify-center flex-shrink-0">
                                                     <Video className="w-4 h-4 text-red-500" />
@@ -964,7 +965,7 @@ function formatDescription(text: string | null | undefined): string {
 }
 
 // PDF Viewer Component
-function PdfViewer({ documents }: { documents: any[] }) {
+function PdfViewer({ documents }: { documents: { url: string; name: string }[] }) {
     if (!documents || documents.length === 0) {
         return (
             <div className="p-4 text-center text-gray-500">
@@ -999,21 +1000,13 @@ function PhotoGalleryWithControls({
     dynamicImages: { url: string; name: string }[];
     isLoading: boolean;
 }) {
+    // Initialiser l'index à 0 à chaque rendu du composant
+    // Le composant est recréé quand selectedProject change grâce à la key
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     const images = dynamicImages;
-
-    // Reset quand on change de projet
-    useEffect(() => {
-        setCurrentIndex(0);
-        setIsPlaying(false);
-        if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-        }
-    }, [selectedProject?.id]);
 
     // Gestion du diaporama automatique
     useEffect(() => {

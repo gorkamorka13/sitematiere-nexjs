@@ -20,6 +20,8 @@ type Props = {
   onPositionChange: (lat: number, lng: number) => void;
 };
 
-export default function EditableMapWrapper(props: Props) {
-  return <EditableMap {...props} />;
+export default function EditableMapWrapper({ latitude, longitude, onPositionChange }: Props) {
+  // Ne pas utiliser de key basée sur les coordonnées pour éviter de recréer la carte
+  // et ainsi préserver le niveau de zoom choisi par l'utilisateur
+  return <EditableMap latitude={latitude} longitude={longitude} onPositionChange={onPositionChange} />;
 }

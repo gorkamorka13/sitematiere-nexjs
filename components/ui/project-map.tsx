@@ -2,9 +2,7 @@
 
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import L from "leaflet";
-import { useEffect, useState } from "react";
-import { useTheme } from "next-themes";
+import { useEffect } from "react";
 import { getIcon } from "@/lib/map-icons";
 
 // Sub-component to handle map view changes
@@ -28,14 +26,6 @@ type MapProps = {
 };
 
 export default function ProjectMap({ latitude, longitude, status, projectName, country, popupText, nonce }: MapProps) {
-    const { theme, resolvedTheme } = useTheme();
-    const [mounted, setMounted] = useState(false);
-
-    // Prevent hydration mismatch
-    useEffect(() => {
-        setMounted(true);
-    }, []);
-
     const tileUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
     const attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 

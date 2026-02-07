@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { X, Save, MapPin, AlignLeft, FolderOpen, AlertCircle, CheckCircle2, Globe, Search } from "lucide-react";
-import { Project } from "@prisma/client";
+import { useState, useEffect, useCallback } from "react";
+import { X, Save, MapPin, AlignLeft, FolderOpen, AlertCircle, CheckCircle2, Globe, Search, Undo2, Redo2 } from "lucide-react";
+import { Project, Document as ProjectDocument } from "@prisma/client";
 import { updateProject } from "@/app/actions/project-actions";
 import EditableMapWrapper from "@/components/ui/editable-map-wrapper";
 import { decimalToDMS, dmsToDecimal, isValidLatitude, isValidLongitude } from "@/lib/coordinate-utils";
@@ -37,6 +37,11 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, isA
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [focusedSuggestionIndex, setFocusedSuggestionIndex] = useState(-1);
+
+  // Historique des positions pour undo/redo
+  const [positionHistory, setPositionHistory] = useState<{ lat: number; lng: number }[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [isUndoRedo, setIsUndoRedo] = useState(false);
 
   // Handle dialog dragging
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -76,9 +81,91 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, isA
   }, [isDragging, dragStart]);
 
   // Handle map marker position change
-  const handleMapPositionChange = (lat: number, lng: number) => {
+  const handleMapPositionChange = (lat: number, lng: number, isFinal?: boolean) => {
+    // Si c'est un undo/redo, ne pas ajouter à l'historique
+    if (isUndoRedo) {
+      setIsUndoRedo(false);
+      setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }));
+      return;
+    }
+
+    // Mettre à jour le formulaire dans tous les cas
     setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }));
+
+    // N'ajouter à l'historique que si c'est une position finale (relâchement de la souris)
+    if (isFinal) {
+      setPositionHistory(prev => {
+        // Supprimer l'historique après l'index actuel si on ajoute une nouvelle position
+        const newHistory = prev.slice(0, historyIndex + 1);
+        newHistory.push({ lat, lng });
+        // Limiter à 50 positions
+        if (newHistory.length > 50) {
+          newHistory.shift();
+        }
+        return newHistory;
+      });
+      setHistoryIndex(prev => Math.min(prev + 1, 49));
+    }
   };
+
+  // Fonction Undo
+  const handleUndo = useCallback(() => {
+    if (historyIndex > 0) {
+      setIsUndoRedo(true);
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      const pos = positionHistory[newIndex];
+      if (pos) {
+        setFormData(prev => ({ ...prev, latitude: pos.lat, longitude: pos.lng }));
+      }
+    }
+  }, [historyIndex, positionHistory]);
+
+  // Fonction Redo
+  const handleRedo = useCallback(() => {
+    if (historyIndex < positionHistory.length - 1) {
+      setIsUndoRedo(true);
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      const pos = positionHistory[newIndex];
+      if (pos) {
+        setFormData(prev => ({ ...prev, latitude: pos.lat, longitude: pos.lng }));
+      }
+    }
+  }, [historyIndex, positionHistory]);
+
+  // Initialiser l'historique quand on sélectionne un projet
+  useEffect(() => {
+    if (selectedProjectId) {
+      // Attendre que formData soit mis à jour avec les valeurs du projet
+      const timer = setTimeout(() => {
+        if (formData.latitude !== 0 && formData.longitude !== 0) {
+          setPositionHistory([{ lat: formData.latitude, lng: formData.longitude }]);
+          setHistoryIndex(0);
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProjectId]);
+
+  // Raccourcis clavier Ctrl+Z (Undo) et Ctrl+Y (Redo)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === 'z' && !e.shiftKey) {
+          e.preventDefault();
+          handleUndo();
+        } else if (e.key === 'y' || (e.key === 'z' && e.shiftKey)) {
+          e.preventDefault();
+          handleRedo();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleUndo, handleRedo]);
 
   // Handle coordinate input change with format conversion
   const handleCoordinateChange = (value: string, field: 'latitude' | 'longitude') => {
@@ -100,10 +187,35 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, isA
         return;
       }
 
-      setFormData(prev => ({ ...prev, [field]: decimal }));
+      // Clear error status if validation passes
       setStatus(null);
-    } catch (error) {
-      setStatus({ type: 'error', message: 'Format de coordonnées invalide' });
+
+      // Mettre à jour le formulaire
+      const newLat = field === 'latitude' ? decimal : formData.latitude;
+      const newLng = field === 'longitude' ? decimal : formData.longitude;
+
+      setFormData(prev => ({
+        ...prev,
+        [field]: decimal
+      }));
+
+      // Ajouter à l'historique si ce n'est pas un undo/redo
+      if (!isUndoRedo) {
+        setPositionHistory(prev => {
+          const newHistory = prev.slice(0, historyIndex + 1);
+          newHistory.push({ lat: newLat, lng: newLng });
+          if (newHistory.length > 50) {
+            newHistory.shift();
+          }
+          return newHistory;
+        });
+        setHistoryIndex(prev => Math.min(prev + 1, 49));
+      } else {
+        setIsUndoRedo(false);
+      }
+    } catch (err) {
+      // Invalid format, don't update
+      setStatus({ type: 'error', message: `Format ${coordinateFormat === 'dms' ? 'DMS' : 'décimal'} invalide` });
     }
   };
 
@@ -143,10 +255,10 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, isA
   // Mettre à jour les champs lors du changement de projet
   useEffect(() => {
     if (selectedProjectId) {
-      const project = projects.find(p => p.id === selectedProjectId) as any;
+      const project = projects.find(p => p.id === selectedProjectId) as Project & { documents: ProjectDocument[] };
       if (project) {
-        const flagDoc = project.documents?.find((d: any) => d.type === "FLAG");
-        const logoDoc = project.documents?.find((d: any) => d.type === "CLIENT_LOGO" || d.name.toLowerCase().includes('logo'));
+        const flagDoc = project.documents?.find((d) => d.type === "FLAG");
+        const logoDoc = project.documents?.find((d) => d.type === "CLIENT_LOGO" || d.name.toLowerCase().includes('logo'));
 
         setFormData({
           latitude: project.latitude,
@@ -323,8 +435,9 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, isA
             </div>
           )}
 
+          {/* Labels des coordonnées */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Latitude */}
+            {/* Label Latitude */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center justify-between">
                 <span className="flex items-center gap-2">
@@ -357,21 +470,9 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, isA
                   </button>
                 </div>
               </label>
-              <input
-                type="text"
-                value={coordinateFormat === 'decimal' ? formData.latitude : decimalToDMS(formData.latitude, true)}
-                onChange={(e) => handleCoordinateChange(e.target.value, 'latitude')}
-                disabled={!selectedProjectId}
-                className="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 transition-all dark:text-white font-mono text-sm"
-                placeholder={coordinateFormat === 'decimal' ? '8.4657' : '8° 27\' 56" N'}
-                required
-              />
-              <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
-                {coordinateFormat === 'decimal' ? 'Ex: 8.4657' : 'Ex: 8° 27\' 56" N'}
-              </p>
             </div>
 
-            {/* Longitude */}
+            {/* Label Longitude */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center justify-between">
                 <span className="flex items-center gap-2">
@@ -404,16 +505,73 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, isA
                   </button>
                 </div>
               </label>
+            </div>
+          </div>
+
+          {/* Ligne des inputs avec boutons Undo/Redo */}
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-3 items-center">
+            {/* Input Latitude */}
+            <div>
+              <input
+                type="text"
+                value={coordinateFormat === 'decimal' ? formData.latitude : decimalToDMS(formData.latitude, true)}
+                onChange={(e) => handleCoordinateChange(e.target.value, 'latitude')}
+                disabled={!selectedProjectId}
+                className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 transition-all dark:text-white font-mono text-sm"
+                placeholder={coordinateFormat === 'decimal' ? '8.4657' : '8° 27\' 56" N'}
+                required
+              />
+            </div>
+
+            {/* Boutons Undo/Redo centraux */}
+            <div className="flex items-center justify-center">
+              <div className="flex items-center gap-1 border border-gray-200 dark:border-gray-600 rounded-lg p-1 bg-white dark:bg-gray-800 shadow-sm">
+                <button
+                  type="button"
+                  onClick={handleUndo}
+                  disabled={historyIndex <= 0 || !selectedProjectId}
+                  className="p-2 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1"
+                  title="Annuler (Ctrl+Z)"
+                >
+                  <Undo2 className="w-4 h-4" />
+                  <span className="text-xs font-medium hidden sm:inline">Undo</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRedo}
+                  disabled={historyIndex >= positionHistory.length - 1 || !selectedProjectId}
+                  className="p-2 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1"
+                  title="Rétablir (Ctrl+Y)"
+                >
+                  <Redo2 className="w-4 h-4" />
+                  <span className="text-xs font-medium hidden sm:inline">Redo</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Input Longitude */}
+            <div>
               <input
                 type="text"
                 value={coordinateFormat === 'decimal' ? formData.longitude : decimalToDMS(formData.longitude, false)}
                 onChange={(e) => handleCoordinateChange(e.target.value, 'longitude')}
                 disabled={!selectedProjectId}
-                className="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 transition-all dark:text-white font-mono text-sm"
+                className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 transition-all dark:text-white font-mono text-sm"
                 placeholder={coordinateFormat === 'decimal' ? '-13.2317' : '13° 13\' 54" W'}
                 required
               />
-              <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+            </div>
+          </div>
+
+          {/* Ligne des exemples */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 -mt-4">
+            <div>
+              <p className="text-xs text-gray-400 dark:text-gray-500">
+                {coordinateFormat === 'decimal' ? 'Ex: 8.4657' : 'Ex: 8° 27\' 56" N'}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-400 dark:text-gray-500">
                 {coordinateFormat === 'decimal' ? 'Ex: -13.2317' : 'Ex: 13° 13\' 54" W'}
               </p>
             </div>
@@ -453,7 +611,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, isA
                     type="number"
                     min="0"
                     max="100"
-                    value={(formData as any)[step.key]}
+                    value={formData[step.key as keyof typeof formData]}
                     onChange={(e) => setFormData({ ...formData, [step.key]: parseInt(e.target.value) || 0 })}
                     disabled={!selectedProjectId}
                     className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white text-sm"

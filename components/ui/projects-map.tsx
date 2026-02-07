@@ -1,10 +1,9 @@
 "use client";
 
-import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Tooltip, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { useEffect, useState } from "react";
-import { useTheme } from "next-themes";
+import { useEffect } from "react";
 import { Project } from "@prisma/client";
 import { getIcon } from "@/lib/map-icons";
 
@@ -23,7 +22,7 @@ function CenterView({ point, nonce }: { point: [number, number] | null; nonce?: 
         if (!point) return;
         // Panner vers le point en conservant le zoom actuel
         map.setView(point, map.getZoom(), { animate: true });
-    }, [nonce, map]);
+    }, [point, nonce, map]);
 
     return null;
 }
@@ -51,19 +50,12 @@ function MapUpdater({ projects, fitNonce }: { projects: Project[]; fitNonce?: nu
                 maxZoom: 10
             });
         }
-    }, [fitNonce, map]); // Removed projects from dependencies to avoid auto-zoom on filter sync
+    }, [projects, fitNonce, map]);
 
     return null;
 }
 
 export default function ProjectsMap({ projects, onSelectProject, fitNonce, globalCenterNonce, globalCenterPoint }: MultiMapProps) {
-    const { theme, resolvedTheme } = useTheme();
-    const [mounted, setMounted] = useState(false);
-
-    useEffect(() => {
-        setMounted(true);
-    }, []);
-
     const tileUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
     const attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 

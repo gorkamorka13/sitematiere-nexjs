@@ -1,8 +1,31 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, ProjectType, ProjectStatus } from '@prisma/client';
 import mysql from 'mysql2/promise';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
+
+// MySQL project row interface
+interface MySQLProjectRow {
+  id: number;
+  nom: string;
+  pays: string;
+  latitude: string | number;
+  longitude: string | number;
+  texte: string;
+  type: string;
+  pin: string;
+  prospection: number;
+  etudes: number;
+  fabrication: number;
+  transport: number;
+  construction: number;
+  prochantier: string;
+  chemin_images?: string;
+  nombre_images?: number;
+  plan?: string;
+  chemin_flag?: string;
+  chemin_client?: string;
+}
 
 async function migrateData() {
     // MySQL Connection details from environment variables
@@ -42,17 +65,18 @@ async function migrateData() {
         });
     }
 
-    console.log(`Migrating ${(rows as any[]).length} projects...`);
+    const typedRows = rows as MySQLProjectRow[];
+    console.log(`Migrating ${typedRows.length} projects...`);
 
     // Migrate each project
-    for (const row of rows as any[]) {
+    for (const row of typedRows) {
         try {
             const project = await prisma.project.create({
                 data: {
                     name: row.nom,
                     country: row.pays,
-                    latitude: parseFloat(row.latitude) || 0,
-                    longitude: parseFloat(row.longitude) || 0,
+                    latitude: parseFloat(String(row.latitude)) || 0,
+                    longitude: parseFloat(String(row.longitude)) || 0,
                     description: row.texte,
                     type: mapProjectType(row.type),
                     status: mapProjectStatus(row.pin || ''),
@@ -68,7 +92,7 @@ async function migrateData() {
 
             // Migrate images
             // Assuming row.nombre_images exists based on the plan's logic
-            if (row.chemin_images && row.nombre_images > 0) {
+            if (row.chemin_images && row.nombre_images && row.nombre_images > 0) {
                 for (let i = 1; i <= row.nombre_images; i++) {
                     await prisma.image.create({
                         data: {
@@ -123,23 +147,23 @@ async function migrateData() {
     await prisma.$disconnect();
 }
 
-function mapProjectType(type: string): any {
-    const mapping: Record<string, string> = {
-        'PRS': 'PRS',
-        'PEB': 'PEB',
-        'MPB': 'MPB',
-        'MXB': 'MXB',
-        'UB': 'UB',
-        'Passerelle': 'PASSERELLE',
-        'Autre': 'AUTRE',
+function mapProjectType(type: string): ProjectType {
+    const mapping: Record<string, ProjectType> = {
+        'PRS': ProjectType.PRS,
+        'PEB': ProjectType.PEB,
+        'MPB': ProjectType.MPB,
+        'MXB': ProjectType.MXB,
+        'UB': ProjectType.UB,
+        'Passerelle': ProjectType.PASSERELLE,
+        'Autre': ProjectType.AUTRE,
     };
-    return mapping[type] || 'AUTRE';
+    return mapping[type] || ProjectType.AUTRE;
 }
 
-function mapProjectStatus(pin: string): any {
-    if (pin.includes('done')) return 'DONE';
-    if (pin.includes('underconstruction')) return 'CURRENT';
-    return 'PROSPECT';
+function mapProjectStatus(pin: string): ProjectStatus {
+    if (pin.includes('done')) return ProjectStatus.DONE;
+    if (pin.includes('underconstruction')) return ProjectStatus.CURRENT;
+    return ProjectStatus.PROSPECT;
 }
 
 migrateData().catch(console.error);

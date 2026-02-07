@@ -2,14 +2,14 @@
 
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { ProjectUpdateSchema } from "@/lib/validations";
+import { ProjectUpdateSchema, ProjectUpdateInput } from "@/lib/validations";
 import { revalidatePath } from "next/cache";
 
-export async function updateProject(formData: any) {
+export async function updateProject(formData: ProjectUpdateInput) {
   const session = await auth();
 
   // Vérification de l'authentification et du rôle
-  if (!session || (session.user as any)?.role !== "ADMIN") {
+  if (!session || (session.user as { role?: string })?.role !== "ADMIN") {
     throw new Error("Action non autorisée. Seuls les administrateurs peuvent modifier les projets.");
   }
 

@@ -4,6 +4,7 @@ import Credentials from "next-auth/providers/credentials";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import { User } from "@prisma/client";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
     adapter: PrismaAdapter(prisma),
@@ -50,23 +51,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }),
     ],
     callbacks: {
-        async jwt({ token, user }: any) {
+        async jwt({ token, user }) {
             if (user) {
-                token.id = user.id;
-                token.role = user.role;
-                token.username = user.username;
-                token.name = user.name;
-                token.color = user.color;
+                const u = user as User;
+                token.id = u.id;
+                token.role = u.role;
+                token.username = u.username;
+                token.name = u.name;
+                token.color = u.color;
             }
             return token;
         },
-        async session({ session, token }: any) {
+        async session({ session, token }) {
             if (session.user) {
-                session.user.id = token.id;
-                session.user.role = token.role;
-                session.user.username = token.username;
-                session.user.name = token.name;
-                session.user.color = token.color;
+                session.user.id = token.id as string;
+                session.user.role = token.role as string;
+                session.user.username = token.username as string;
+                session.user.name = token.name as string;
+                session.user.color = token.color as string | null;
             }
             return session;
         },
