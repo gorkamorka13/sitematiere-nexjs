@@ -6,6 +6,19 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { User } from "@prisma/client";
 
+// Étendre les types NextAuth
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+      role: string;
+      username: string;
+      name: string | null;
+      color: string | null;
+    };
+  }
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
     adapter: PrismaAdapter(prisma),
     session: { strategy: "jwt" },

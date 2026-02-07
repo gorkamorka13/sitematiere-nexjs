@@ -116,6 +116,8 @@ export interface PdfViewerProps {
 export interface FileStatistics {
   totalImages: number;
   totalPdfs: number;
+  totalVideos: number;
+  totalOthers: number;
   storageUsed: string;
   storageLimit?: string;
   totalProjects: number;

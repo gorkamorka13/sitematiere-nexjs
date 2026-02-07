@@ -51,6 +51,7 @@ model Project {
   images          Image[]
   videos          Video[]
   documents       Document[]
+  files           File[]
   
   // Métadonnées
   projectCode     String?       @db.VarChar(255) // "prochantier"
@@ -129,4 +130,46 @@ enum DocumentType {
   FLAG
   CLIENT_LOGO
   OTHER
+}
+
+// Enum pour les types de fichiers
+enum FileType {
+  IMAGE
+  DOCUMENT
+  VIDEO
+  AUDIO
+  ARCHIVE
+  OTHER
+}
+
+// Modèle pour la gestion unifiée des fichiers
+model File {
+  id          String    @id @default(cuid())
+  name        String    // Nom affiché
+  blobUrl     String    @unique // URL Vercel Blob
+  blobPath    String    // Chemin: projetId/uuid.ext
+  fileType    FileType
+  mimeType    String
+  size        Int       // Taille en bytes
+  projectId   String?
+  project     Project?   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  // Métadonnées pour miniatures
+  thumbnailUrl String?  // URL miniature (images/vidéos)
+  width       Int?      // Largeur (images/vidéos)
+  height      Int?      // Hauteur (images/vidéos)
+  duration    Int?      // Durée en secondes (vidéos/audio)
+  
+  // Historique - Soft delete
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
+  deletedBy   String?   // User ID qui a supprimé
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@index([projectId])
+  @@index([isDeleted])
+  @@index([fileType])
+  @@map("files")
 }

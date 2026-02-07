@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import fs from "fs";
-import path from "path";
+import prisma from "@/lib/prisma";
 
 export async function GET() {
   // Vérifier l'authentification
@@ -11,56 +10,57 @@ export async function GET() {
   }
 
   try {
-    const publicDir = path.join(process.cwd(), "public");
-    const imagesDir = path.join(publicDir, "images");
-    
+    // 1. Calculer les statistiques à partir de la table File (Vercel Blob)
+    const stats = await prisma.file.aggregate({
+      where: { isDeleted: false },
+      _sum: { size: true },
+      _count: { id: true }
+    });
+
+    const fileCounts = await prisma.file.groupBy({
+      by: ['fileType'],
+      where: { isDeleted: false },
+      _count: { id: true }
+    });
+
+    const projectCount = await prisma.file.groupBy({
+      by: ['projectId'],
+      where: { isDeleted: false }
+    });
+
     let totalImages = 0;
     let totalPdfs = 0;
-    let totalSize = 0;
-    let totalProjects = 0;
+    let totalVideos = 0;
+    let totalOthers = 0;
 
-    // Vérifier si le répertoire images existe
-    if (fs.existsSync(imagesDir)) {
-      const projectDirs = fs.readdirSync(imagesDir, { withFileTypes: true })
-        .filter(dirent => dirent.isDirectory());
-      
-      totalProjects = projectDirs.length;
+    fileCounts.forEach((group: any) => {
+      const count = group._count.id;
+      if (group.fileType === 'IMAGE') totalImages = count;
+      else if (group.fileType === 'DOCUMENT') totalPdfs = count;
+      else if (group.fileType === 'VIDEO') totalVideos = count;
+      else totalOthers += count; // Accumulate everything else
+    });
 
-      for (const projectDir of projectDirs) {
-        const projectPath = path.join(imagesDir, projectDir.name);
-        const files = fs.readdirSync(projectPath);
-
-        for (const file of files) {
-          const filePath = path.join(projectPath, file);
-          const stats = fs.statSync(filePath);
-          totalSize += stats.size;
-
-          const ext = path.extname(file).toLowerCase();
-          if ([".jpg", ".jpeg", ".png", ".webp"].includes(ext)) {
-            totalImages++;
-          } else if (ext === ".pdf") {
-            totalPdfs++;
-          }
-        }
-      }
-    }
-
-    // Formater la taille en MB
+    const totalSize = stats._sum.size || 0;
     const storageUsed = `${(totalSize / (1024 * 1024)).toFixed(1)} MB`;
 
     const statistics = {
       totalImages,
       totalPdfs,
+      totalVideos,
+      totalOthers,
       storageUsed,
-      storageLimit: "1 GB",
-      totalProjects,
-      orphanedFiles: 0, // TODO: Implémenter la logique de détection des fichiers orphelins
+      storageLimit: "1 GB", // Limite Vercel Blob Hobby
+      totalProjects: projectCount.length,
+      orphanedFiles: 0,
       lastScan: new Date().toISOString(),
     };
 
     return NextResponse.json(statistics);
   } catch (error) {
     console.error("Erreur lors du calcul des statistiques:", error);
+    // En cas d'erreur de la nouvelle table, on pourrait fallback sur l'ancienne logique
+    // mais ici on préfère renvoyer une erreur car la bascule est demandée.
     return NextResponse.json(
       { error: "Erreur lors du calcul des statistiques" },
       { status: 500 }

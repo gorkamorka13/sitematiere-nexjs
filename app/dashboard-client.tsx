@@ -38,14 +38,16 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
         p.country === "Sierra-Léone" && p.name === "Sewa"
     ) || initialProjects.find(p => p.country === "Sierra-Léone") || initialProjects[0];
 
+    // State for search (declared first to avoid TDZ issues)
+    const [searchQuery, setSearchQuery] = useState<string>("");
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [focusedSuggestionIndex, setFocusedSuggestionIndex] = useState<number>(-1);
+
     // State for filters
     const [selectedCountry, setSelectedCountry] = useState<string>(defaultProject?.country || initialProjects[0]?.country || "");
     const [selectedName, setSelectedName] = useState<string>(defaultProject?.name || initialProjects[0]?.name || "");
     const [selectedTypes, setSelectedTypes] = useState<ProjectType[]>([]);
     const [selectedStatuses, setSelectedStatuses] = useState<ProjectStatus[]>([]);
-    const [searchQuery, setSearchQuery] = useState<string>("");
-    const [showSuggestions, setShowSuggestions] = useState(false);
-    const [focusedSuggestionIndex, setFocusedSuggestionIndex] = useState<number>(-1);
 
     // State for Selected Project (for right map)
     const [selectedProject, setSelectedProject] = useState<Project | null>(defaultProject || initialProjects[0] || null);
@@ -791,7 +793,9 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                                         {/* Drapeau du pays */}
                                         {selectedProject && (selectedProject as Project & { documents: ProjectDocument[] }).documents?.filter((d) => d.type === 'FLAG').length > 0 && (
                                             <img
-                                                src={`/${(selectedProject as Project & { documents: ProjectDocument[] }).documents.find((d) => d.type === 'FLAG')?.url}`}
+                                                src={(selectedProject as Project & { documents: ProjectDocument[] }).documents.find((d) => d.type === 'FLAG')?.url.startsWith('http')
+                                                    ? (selectedProject as Project & { documents: ProjectDocument[] }).documents.find((d) => d.type === 'FLAG')?.url
+                                                    : `/${(selectedProject as Project & { documents: ProjectDocument[] }).documents.find((d) => d.type === 'FLAG')?.url}`}
                                                 alt={`Drapeau ${selectedProject.country}`}
                                                 className="w-8 h-6 object-cover rounded shadow-sm"
                                                 title={`Drapeau ${selectedProject.country}`}
@@ -800,7 +804,9 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                                         {/* Logo client */}
                                         {selectedProject && (selectedProject as Project & { documents: ProjectDocument[] }).documents?.filter((d) => d.type === 'CLIENT_LOGO' || d.name.toLowerCase().includes('logo')).length > 0 && (
                                             <img
-                                                src={`/${(selectedProject as Project & { documents: ProjectDocument[] }).documents.find((d) => d.type === 'CLIENT_LOGO' || d.name.toLowerCase().includes('logo'))?.url}`}
+                                                src={(selectedProject as Project & { documents: ProjectDocument[] }).documents.find((d) => d.type === 'CLIENT_LOGO' || d.name.toLowerCase().includes('logo'))?.url.startsWith('http')
+                                                    ? (selectedProject as Project & { documents: ProjectDocument[] }).documents.find((d) => d.type === 'CLIENT_LOGO' || d.name.toLowerCase().includes('logo'))?.url
+                                                    : `/${(selectedProject as Project & { documents: ProjectDocument[] }).documents.find((d) => d.type === 'CLIENT_LOGO' || d.name.toLowerCase().includes('logo'))?.url}`}
                                                 alt="Logo client"
                                                 className="h-6 w-auto object-contain"
                                                 title="Logo client"
@@ -981,7 +987,7 @@ function PdfViewer({ documents }: { documents: { url: string; name: string }[] }
             {/* Visualiseur PDF */}
             <div className="relative w-full h-[600px]">
                 <iframe
-                    src={`/${currentPdf.url}#toolbar=1&navpanes=0&scrollbar=1`}
+                    src={currentPdf.url.startsWith('http') ? `${currentPdf.url}#toolbar=1&navpanes=0&scrollbar=1` : `/${currentPdf.url}#toolbar=1&navpanes=0&scrollbar=1`}
                     className="w-full h-full border-0 rounded-b-xl"
                     title={currentPdf.name}
                 />
@@ -1101,7 +1107,7 @@ function PhotoGalleryWithControls({
                 <div className="flex-grow p-4">
                     <div className="relative w-full h-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900 group">
                         <img
-                            src={`/${images[currentIndex].url}`}
+                            src={images[currentIndex].url.startsWith('http') ? images[currentIndex].url : `/${images[currentIndex].url}`}
                             alt={images[currentIndex].name || `Photo ${currentIndex + 1}`}
                             className="object-contain w-full h-full transition-opacity duration-500"
                         />

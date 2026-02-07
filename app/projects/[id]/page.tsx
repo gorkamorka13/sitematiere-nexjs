@@ -160,7 +160,7 @@ export default async function ProjectDetailPage(props: Props) {
                                             {/* Using simple img tag for external urls or local paths without optimization configuration */}
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <img
-                                                src={`/${img.url}`}
+                                                src={img.url.startsWith('http') ? img.url : `/${img.url}`}
                                                 alt={img.alt || project.name}
                                                 className="object-cover w-full h-full text-xs text-gray-400 group-hover:scale-105 transition-transform duration-300"
                                             />

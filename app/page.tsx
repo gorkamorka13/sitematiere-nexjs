@@ -1,8 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
-import Link from "next/link";
-import { SignOutButton } from "@/components/auth/sign-out-button"; // We will create this
 import DashboardClient from "./dashboard-client";
 
 export default async function DashboardPage() {
@@ -17,6 +15,7 @@ export default async function DashboardPage() {
       images: true,
       documents: true,
       videos: true,
+      files: true,
     },
     orderBy: {
       updatedAt: 'desc',
@@ -25,12 +24,12 @@ export default async function DashboardPage() {
 
   return (
     <DashboardClient
-      initialProjects={projects}
-      user={{ 
-        name: session.user?.name, 
-        username: (session.user as { username?: string })?.username, 
-        role: (session.user as { role?: "ADMIN" | "USER" | "VISITOR" })?.role,
-        color: (session.user as { color?: string })?.color
+      initialProjects={projects as any}
+      user={{
+        name: session.user?.name,
+        username: (session.user as any)?.username,
+        role: (session.user as any)?.role,
+        color: (session.user as any)?.color
       }}
     />
   );

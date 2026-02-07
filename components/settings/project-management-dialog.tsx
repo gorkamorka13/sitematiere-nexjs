@@ -633,7 +633,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, isA
                   Drapeau
                   {selectedProjectId && formData.flagName && (
                     <img
-                      src={`/${formData.flagName}`}
+                      src={formData.flagName.startsWith('http') ? formData.flagName : `/${formData.flagName}`}
                       alt="Drapeau"
                       className="w-8 h-6 object-cover rounded shadow-sm ml-auto"
                       onError={(e) => {
@@ -657,7 +657,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, isA
                   Logo Client
                   {selectedProjectId && formData.clientLogoName && (
                     <img
-                      src={`/${formData.clientLogoName}`}
+                      src={formData.clientLogoName.startsWith('http') ? formData.clientLogoName : `/${formData.clientLogoName}`}
                       alt="Logo client"
                       className="h-6 w-auto object-contain ml-auto"
                       onError={(e) => {
