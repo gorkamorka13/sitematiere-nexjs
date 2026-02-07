@@ -75,9 +75,9 @@ export function ProjectExportDialog({
   if (!isOpen || !project) return null;
 
   /**
-   * Premium Image Loader: Center-crop (cover) and rounded corners
+   * Premium Image Loader: Center-crop (cover)
    */
-  const loadPremiumImage = (url: string, targetRatio: number = 16/9, borderRadius: number = 20): Promise<string> => {
+  const loadPremiumImage = (url: string, targetRatio: number = 16/9): Promise<string> => {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.crossOrigin = "anonymous";
@@ -109,25 +109,10 @@ export function ProjectExportDialog({
         canvas.width = 1200;
         canvas.height = canvas.width / targetRatio;
 
-        // Apply rounded corners clip
-        ctx.beginPath();
-        const r = borderRadius;
-        ctx.moveTo(r, 0);
-        ctx.lineTo(canvas.width - r, 0);
-        ctx.quadraticCurveTo(canvas.width, 0, canvas.width, r);
-        ctx.lineTo(canvas.width, canvas.height - r);
-        ctx.quadraticCurveTo(canvas.width, canvas.height, canvas.width - r, canvas.height);
-        ctx.lineTo(r, canvas.height);
-        ctx.quadraticCurveTo(0, canvas.height, 0, canvas.height - r);
-        ctx.lineTo(0, r);
-        ctx.quadraticCurveTo(0, 0, r, 0);
-        ctx.closePath();
-        ctx.clip();
-
-        // Draw the image cropped and centered
+        // Draw the image cropped and centered (no rounded corners)
         ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight, 0, 0, canvas.width, canvas.height);
 
-        resolve(canvas.toDataURL("image/jpeg", 0.85));
+        resolve(canvas.toDataURL("image/jpeg", 0.9));
       };
       img.onerror = () => reject(`Failed to load image at ${url}`);
       img.src = url.startsWith('http') ? url : window.location.origin + (url.startsWith('/') ? url : '/' + url);
@@ -142,24 +127,24 @@ export function ProjectExportDialog({
       // Step 1: Trigger JIT rendering
       setCaptureKey(mode);
 
-      // Step 2: Wait for component mount and Leaflet settle (optimized times)
-      const waitTime = mode === 'global' ? 5000 : 3500;
+      // Step 2: Wait for component mount and Leaflet settle (reduced times)
+      const waitTime = mode === 'global' ? 3000 : 2000;
       await new Promise(resolve => setTimeout(resolve, waitTime));
       window.dispatchEvent(new Event('resize'));
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       const element = document.getElementById(elementId);
       if (!element) {
-        console.error(`[CAPTURE v2.1] Element ${elementId} not found after JIT wait`);
+        console.error(`[CAPTURE v2.2] Element ${elementId} not found after JIT wait`);
         setCaptureKey(null);
         return null;
       }
 
-      console.log(`[CAPTURE v2.1] Starting capture for ${elementId}`);
+      console.log(`[CAPTURE v2.2] Starting capture for ${elementId}`);
 
       // Use html-to-image for better performance
       const dataUrl = await htmlToImage.toJpeg(element, {
-        quality: 0.9,
+        quality: 0.85,
         backgroundColor: '#ffffff',
         pixelRatio: 1,
         cacheBust: true,
@@ -173,7 +158,7 @@ export function ProjectExportDialog({
         }
       });
 
-      console.log(`[CAPTURE v2.1] SUCCESS: ${elementId}`);
+      console.log(`[CAPTURE v2.2] SUCCESS: ${elementId}`);
 
       // Cleanup
       setCaptureKey(null);
@@ -270,7 +255,7 @@ export function ProjectExportDialog({
       const lastPhoto = images[images.length - 1];
       if (options.lastPhoto && lastPhoto) {
         try {
-          const imgData = await loadPremiumImage(lastPhoto.url, 16/9, 40); // Larger radius for main photo
+          const imgData = await loadPremiumImage(lastPhoto.url, 16/9);
           const imgWidth = contentWidth;
           const imgHeight = (imgWidth * 9) / 16;
 
@@ -279,6 +264,7 @@ export function ProjectExportDialog({
             yPos = margin + 10;
           }
 
+          // Photo without rounded corners or shadow
           doc.addImage(imgData, "JPEG", margin, yPos, imgWidth, imgHeight);
           yPos += imgHeight + 20;
         } catch (e) {
@@ -291,10 +277,8 @@ export function ProjectExportDialog({
         setExportStatus("Préparation cartes...");
         yPos = addSectionHeader("Localisation & Contexte", yPos);
 
-        const mapWidth = (contentWidth - 10) / 2; // Split page width
-        const mapHeight = (mapWidth * 3) / 4; // 4:3 ratio
-        const shadowOffset = 2;
-        const borderRadius = 5;
+        const mapWidth = (contentWidth - 10) / 2;
+        const mapHeight = (mapWidth * 3) / 4;
 
         if (yPos + mapHeight > pageHeight - 30) {
           doc.addPage();
@@ -306,15 +290,7 @@ export function ProjectExportDialog({
           setExportStatus("Capture vue régionale...");
           const globalMapImg = await captureMap("global", "pdf-global-map-capture");
           if (globalMapImg) {
-            // Shadow effect
-            doc.setFillColor(200, 200, 200);
-            doc.roundedRect(margin + shadowOffset, yPos + shadowOffset, mapWidth, mapHeight, borderRadius, borderRadius, "F");
-            // Map image with rounded corners
             doc.addImage(globalMapImg, "JPEG", margin, yPos, mapWidth, mapHeight);
-            // White border overlay for rounded corners effect
-            doc.setDrawColor(255, 255, 255);
-            doc.setLineWidth(2);
-            doc.roundedRect(margin, yPos, mapWidth, mapHeight, borderRadius, borderRadius, "S");
           }
         }
 
@@ -324,28 +300,20 @@ export function ProjectExportDialog({
           const projectMapImg = await captureMap("project", "pdf-project-map-capture");
           if (projectMapImg) {
             const rightX = margin + mapWidth + 10;
-            // Shadow effect
-            doc.setFillColor(200, 200, 200);
-            doc.roundedRect(rightX + shadowOffset, yPos + shadowOffset, mapWidth, mapHeight, borderRadius, borderRadius, "F");
-            // Map image with rounded corners
             doc.addImage(projectMapImg, "JPEG", rightX, yPos, mapWidth, mapHeight);
-            // White border overlay for rounded corners effect
-            doc.setDrawColor(255, 255, 255);
-            doc.setLineWidth(2);
-            doc.roundedRect(rightX, yPos, mapWidth, mapHeight, borderRadius, borderRadius, "S");
           }
         }
 
         // Legends below maps
-        yPos += mapHeight + 5;
+        yPos += mapHeight + 8;
         doc.setFontSize(9);
         doc.setFont("helvetica", "bold");
         
         if (options.globalMap) {
-          doc.setTextColor(79, 70, 229); // Indigo color
+          doc.setTextColor(79, 70, 229);
           doc.text("Vue régionale", margin + mapWidth/2, yPos, { align: "center" });
           doc.setFont("helvetica", "normal");
-          doc.setTextColor(107, 114, 128); // Gray color
+          doc.setTextColor(107, 114, 128);
           doc.setFontSize(7);
           const projectCount = projectsForMap.length;
           doc.text(`${projectCount} projet${projectCount > 1 ? 's' : ''} dans la région`, margin + mapWidth/2, yPos + 4, { align: "center" });
@@ -441,7 +409,7 @@ export function ProjectExportDialog({
                 const planVisual = images.find(img => img.name.toLowerCase().includes('plan') || img.name.toLowerCase().includes(plan.name.split('.')[0].toLowerCase()));
                 if (planVisual) {
                     try {
-                        const planImgData = await loadPremiumImage(planVisual.url, 3/2, 25);
+                        const planImgData = await loadPremiumImage(planVisual.url, 3/2);
                         const pImgWidth = contentWidth * 0.8;
                         const pImgHeight = (pImgWidth * 2) / 3;
 
