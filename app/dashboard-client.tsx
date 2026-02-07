@@ -1024,6 +1024,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                 onClose={() => setIsExportDialogOpen(false)}
                 project={projectToExport}
                 allProjects={initialProjects}
+                filteredProjects={mapProjects}
                 images={dynamicMedia.images}
                 globalMetadata={{
                     appVersion: process.env.NEXT_PUBLIC_APP_VERSION || "0.0.38",
