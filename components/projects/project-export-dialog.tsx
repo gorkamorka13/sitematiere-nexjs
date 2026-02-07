@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   FileText,
   Download,
@@ -16,6 +17,12 @@ import {
 } from "lucide-react";
 import { Project, Document as ProjectDocument, Video as ProjectVideo } from "@prisma/client";
 import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+import dynamic from "next/dynamic";
+
+// Dynamic imports for maps to handle Leaflet's window dependency
+const ProjectsMap = dynamic(() => import("@/components/ui/projects-map"), { ssr: false });
+const ProjectMap = dynamic(() => import("@/components/ui/project-map"), { ssr: false });
 
 // Minimal local UI components to avoid missing dependency errors
 const Dialog = ({ open, children, onClose }: { open: boolean; children: React.ReactNode; onClose: () => void }) => {
@@ -33,6 +40,7 @@ interface ProjectExportDialogProps {
   isOpen: boolean;
   onClose: () => void;
   project: (Project & { documents: ProjectDocument[]; videos: ProjectVideo[] }) | null;
+  allProjects?: Project[];
   images: { url: string; name: string }[];
   globalMetadata?: {
     appVersion: string;
@@ -44,20 +52,24 @@ export function ProjectExportDialog({
   isOpen,
   onClose,
   project,
+  allProjects = [],
   images = [],
   globalMetadata,
 }: ProjectExportDialogProps) {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [exportStatus, setExportStatus] = useState<string>("");
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
+  const [captureKey, setCaptureKey] = useState<"global" | "project" | null>(null);
   const [options, setOptions] = useState({
-    globalMap: false,
-    projectMap: false,
+    globalMap: true,
+    projectMap: true,
     progress: true,
     description: true,
     documents: true,
     lastPhoto: true,
   });
 
-  if (!project) return null;
+  if (!isOpen || !project) return null;
 
   /**
    * Premium Image Loader: Center-crop (cover) and rounded corners
@@ -117,6 +129,79 @@ export function ProjectExportDialog({
       img.onerror = () => reject(`Failed to load image at ${url}`);
       img.src = url.startsWith('http') ? url : window.location.origin + (url.startsWith('/') ? url : '/' + url);
     });
+  };
+
+  /**
+   * Capture a map element using html2canvas
+   */
+  const captureMap = async (mode: 'global' | 'project', elementId: string): Promise<string | null> => {
+    try {
+      // Step 1: Trigger JIT rendering (renders map in a portal at document.body)
+      setCaptureKey(mode);
+
+      // Step 2: Wait for component mount and Leaflet settle (Essential for JIT)
+      await new Promise(resolve => setTimeout(resolve, 8000));
+      window.dispatchEvent(new Event('resize'));
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const element = document.getElementById(elementId);
+      if (!element) {
+        console.error(`[CAPTURE v1.6] Element ${elementId} not found after JIT wait`);
+        setCaptureMode(null);
+        return null;
+      }
+
+      // Pre-fetching verification for map images (solving NS_BINDING_ABORTED)
+      const imgs = Array.from(element.querySelectorAll('img'));
+      console.log(`[CAPTURE v1.6] Found ${imgs.length} images to verify for ${elementId}`);
+
+      await Promise.all(imgs.map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise(resolve => {
+          img.onload = resolve;
+          img.onerror = resolve;
+        });
+      }));
+
+      console.log(`[CAPTURE v1.6] Images verified, starting capture for ${elementId}`);
+
+      const canvasPromise = html2canvas(element, {
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: "#ffffff",
+        scale: 1,
+        logging: true, // Re-enable logs for v1.6 troubleshooting
+        width: element.offsetWidth || 1024,
+        height: element.offsetHeight || 768,
+        scrollX: 0,
+        scrollY: 0,
+        onclone: (clonedDoc) => {
+          // Extra styles for the clone
+          const style = clonedDoc.createElement('style');
+          style.innerHTML = `
+            * { transition: none !important; animation: none !important; }
+            .leaflet-pane { transform: none !important; }
+          `;
+          clonedDoc.head.appendChild(style);
+        }
+      });
+
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error(`TIMEOUT_30S_v1.6_${elementId}`)), 30000)
+      );
+
+      const canvas = await Promise.race([canvasPromise, timeoutPromise]) as HTMLCanvasElement;
+      console.log(`[CAPTURE v1.6] SUCCESS: ${elementId}`);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+
+      // Cleanup
+      setCaptureMode(null);
+      return dataUrl;
+    } catch (error) {
+      console.error(`Error capturing map ${elementId}:`, error);
+      setCaptureMode(null);
+      return null;
+    }
   };
 
   const handleExport = async () => {
@@ -218,6 +303,41 @@ export function ProjectExportDialog({
         } catch (e) {
           console.warn("Could not load last photo for PDF", e);
         }
+      }
+
+      // --- 4.5 MAPS (Captures) ---
+      if (options.globalMap || options.projectMap) {
+        setExportStatus("Préparation cartes...");
+        yPos = addSectionHeader("Localisation & Contexte", yPos);
+
+        const mapWidth = (contentWidth - 10) / 2; // Split page width
+        const mapHeight = (mapWidth * 3) / 4; // 4:3 ratio
+
+        if (yPos + mapHeight > pageHeight - 30) {
+          doc.addPage();
+          yPos = margin + 10;
+        }
+
+        // Project Map (Local View)
+        if (options.projectMap) {
+          setExportStatus("Capture vue locale...");
+          const projectMapImg = await captureMap("project", "pdf-project-map-capture");
+          if (projectMapImg) {
+            doc.addImage(projectMapImg, "JPEG", margin, yPos, mapWidth, mapHeight);
+          }
+        }
+
+        // Global Map (Regional View)
+        if (options.globalMap) {
+          setExportStatus("Capture vue régionale...");
+          const globalMapImg = await captureMap("global", "pdf-global-map-capture");
+          if (globalMapImg) {
+            doc.addImage(globalMapImg, "JPEG", margin + mapWidth + 10, yPos, mapWidth, mapHeight);
+          }
+        }
+
+        setExportStatus("Finalisation...");
+        yPos += mapHeight + 15;
       }
 
       // --- 5. DESCRIPTION ---
@@ -403,7 +523,7 @@ export function ProjectExportDialog({
 
           <div className="pt-2">
              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 px-1">Extensions Cartographiques</div>
-             <div className="space-y-3 opacity-60">
+             <div className="space-y-3">
                 <OptionRow
                     id="projectMap" label="Géo-localisation ponctuelle" icon={MapIcon} color="text-indigo-400"
                     checked={options.projectMap} onChange={(v: boolean) => setOptions(o => ({ ...o, projectMap: v }))}
@@ -433,7 +553,7 @@ export function ProjectExportDialog({
           {isGenerating ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              Finalisation...
+              {exportStatus || "Génération..."}
             </>
           ) : (
             <>
@@ -443,6 +563,37 @@ export function ProjectExportDialog({
           )}
         </button>
       </div>
+
+      {/* JIT Map Capture Portal - Isolates map rendering from main dashboard DOM */}
+      {/* JIT Map Capture Portal - Isolates map rendering into transient Iframe */}
+      {portalTarget && captureKey && createPortal(
+        <div style={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            background: 'white'
+        }}>
+          {captureKey === 'global' ? (
+            <div id="pdf-global-map-capture" style={{ width: "1024px", height: "768px" }}>
+                <ProjectsMap projects={allProjects} isCapture={true} />
+            </div>
+          ) : (
+            <div id="pdf-project-map-capture" style={{ width: "1024px", height: "768px" }}>
+                <ProjectMap
+                    latitude={project.latitude}
+                    longitude={project.longitude}
+                    status={project.status}
+                    projectName={project.name}
+                    country={project.country}
+                    isCapture={true}
+                />
+            </div>
+          )}
+        </div>,
+        portalTarget
+      )}
     </Dialog>
   );
 }

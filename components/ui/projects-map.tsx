@@ -13,6 +13,7 @@ type MultiMapProps = {
     fitNonce?: number;
     globalCenterNonce?: number;
     globalCenterPoint?: [number, number] | null;
+    isCapture?: boolean;
 };
 
 function CenterView({ point, nonce }: { point: [number, number] | null; nonce?: number }) {
@@ -55,9 +56,8 @@ function MapUpdater({ projects, fitNonce }: { projects: Project[]; fitNonce?: nu
     return null;
 }
 
-export default function ProjectsMap({ projects, onSelectProject, fitNonce, globalCenterNonce, globalCenterPoint }: MultiMapProps) {
+export default function ProjectsMap({ projects, onSelectProject, fitNonce, globalCenterNonce, globalCenterPoint, isCapture }: MultiMapProps) {
     const tileUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
-    const attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
     const validProjects = projects.filter(p => p.latitude !== 0 || p.longitude !== 0);
 
@@ -66,12 +66,14 @@ export default function ProjectsMap({ projects, onSelectProject, fitNonce, globa
             center={[0, 0]}
             zoom={2}
             scrollWheelZoom={false}
+            zoomControl={!isCapture}
+            attributionControl={!isCapture}
+            preferCanvas={!isCapture}
             className="h-full w-full rounded-lg z-0"
             style={{ height: "100%", width: "100%", minHeight: "400px" }}
         >
             <CenterView point={globalCenterPoint || null} nonce={globalCenterNonce} />
             <TileLayer
-                attribution={attribution}
                 url={tileUrl}
             />
             {validProjects.map((project) => (
@@ -84,11 +86,13 @@ export default function ProjectsMap({ projects, onSelectProject, fitNonce, globa
                         popupopen: () => onSelectProject?.(project),
                     }}
                 >
-                    <Tooltip direction="top" offset={[0, -32]} opacity={1}>
-                        <div className="font-bold text-xs uppercase tracking-tight">
-                            {project.name}
-                        </div>
-                    </Tooltip>
+                    {!isCapture && (
+                        <Tooltip direction="top" offset={[0, -32]} opacity={1}>
+                            <div className="font-bold text-xs uppercase tracking-tight">
+                                {project.name}
+                            </div>
+                        </Tooltip>
+                    )}
                 </Marker>
             ))}
 
