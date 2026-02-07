@@ -3,18 +3,21 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff } from "lucide-react";
+import Link from "next/link";
+import { Eye, EyeOff, ArrowRight, User, Lock } from "lucide-react";
 
 export default function LoginPage() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
     const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
+        setLoading(true);
 
         const result = await signIn("credentials", {
             username,
@@ -24,70 +27,122 @@ export default function LoginPage() {
 
         if (result?.error) {
             setError("Identifiants invalides");
+            setLoading(false);
         } else {
             router.push("/");
         }
     };
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-100">
-            <div className="w-full max-w-md space-y-8 rounded-xl bg-white p-10 shadow-lg">
-                <div>
-                    <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-                        Connexion à Sitematiere
-                    </h2>
-                </div>
-                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-                    <div className="-space-y-px rounded-md shadow-sm">
-                        <div>
-                            <input
-                                id="username"
-                                name="username"
-                                type="text"
-                                autoComplete="username"
-                                required
-                                className="relative block w-full rounded-t-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 px-3"
-                                placeholder="Nom d'utilisateur"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
+        <div className="flex min-h-screen items-center justify-center bg-[#050b14] p-4 font-sans text-gray-100">
+            <div className="w-full max-w-md relative">
+                {/* Glow Effect */}
+                <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-64 h-64 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
+
+                <div className="relative rounded-3xl bg-[#0a0f1c] border border-white/5 p-8 shadow-2xl backdrop-blur-sm">
+
+                    {/* Header / Logo */}
+                    <div className="flex flex-col items-center mb-8">
+                        <div className="relative mb-4">
+                            {/* Logo identical to sidebar but larger */}
+                            <img
+                                src="/Matiere_logo_512.png"
+                                alt="Matière Logo"
+                                className="w-32 h-32 object-contain drop-shadow-xl"
                             />
                         </div>
-                        <div className="relative">
-                            <input
-                                id="password"
-                                name="password"
-                                type={showPassword ? "text" : "password"}
-                                autoComplete="current-password"
-                                required
-                                className="relative block w-full rounded-b-md border-0 py-1.5 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 px-3"
-                                placeholder="Mot de passe"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                            />
+
+                        <h1 className="text-3xl font-black mb-1">
+                            <span className="matiere text-3xl">Matière</span>
+                        </h1>
+                        <h2 className="text-xl font-bold text-white mb-2">Connexion</h2>
+                        <p className="text-gray-400 text-sm text-center max-w-xs">
+                            Votre assistant de présentation et de gestion de projets
+                        </p>
+                    </div>
+
+                    {/* Form */}
+                    <form className="space-y-6" onSubmit={handleSubmit}>
+
+                        {/* Username Input */}
+                        <div className="space-y-2">
+                            <label htmlFor="username" className="block text-xs font-bold text-gray-500 uppercase tracking-widest pl-1">
+                                Utilisateur
+                            </label>
+                            <div className="relative group">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <User className="h-5 w-5 text-yellow-500/70" />
+                                </div>
+                                <input
+                                    id="username"
+                                    name="username"
+                                    type="text"
+                                    autoComplete="username"
+                                    required
+                                    className="block w-full rounded-xl border-0 py-3.5 pl-10 text-gray-100 bg-[#3f3f10]/80 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:text-sm sm:leading-6 transition-all shadow-inner"
+                                    placeholder="admin"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Password Input */}
+                        <div className="space-y-2">
+                            <label htmlFor="password" className="block text-xs font-bold text-gray-500 uppercase tracking-widest pl-1">
+                                Mot de passe
+                            </label>
+                            <div className="relative group">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Lock className="h-5 w-5 text-yellow-500/70" />
+                                </div>
+                                <input
+                                    id="password"
+                                    name="password"
+                                    type={showPassword ? "text" : "password"}
+                                    autoComplete="current-password"
+                                    required
+                                    className="block w-full rounded-xl border-0 py-3.5 pl-10 pr-10 text-gray-100 bg-[#3f3f10]/80 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:text-sm sm:leading-6 transition-all shadow-inner"
+                                    placeholder="••••••••••••"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-white transition-colors"
+                                >
+                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                </button>
+                            </div>
+                        </div>
+
+                        {error && (
+                            <div className="text-sm text-red-400 text-center bg-red-900/20 py-2 rounded-lg border border-red-500/20">
+                                {error}
+                            </div>
+                        )}
+
+                        {/* Submit Button */}
+                        <div>
                             <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600"
-                                title={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                                type="submit"
+                                disabled={loading}
+                                className="group relative flex w-full justify-center items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3.5 text-sm font-bold text-white hover:from-blue-500 hover:to-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-all shadow-lg shadow-blue-500/20 disabled:opacity-70 disabled:cursor-not-allowed"
                             >
-                                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                {loading ? "Connexion..." : "Se connecter"}
+                                {!loading && <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />}
                             </button>
                         </div>
-                    </div>
+                    </form>
 
-                    {error && (
-                        <div className="text-sm text-red-600 text-center">{error}</div>
-                    )}
-
-                    <div>
-                        <button
-                            type="submit"
-                            className="group relative flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-                        >
-                            Se connecter
-                        </button>
+                    {/* Footer */}
+                    <div className="mt-8 text-center space-y-2">
+                        <p className="text-[10px] text-gray-600 uppercase tracking-[0.2em] font-medium">
+                            © {new Date().getFullYear()} Michel Esparsa • Sécurisé par NextAuth
+                        </p>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     );

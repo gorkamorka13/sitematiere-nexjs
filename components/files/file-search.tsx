@@ -52,7 +52,11 @@ export function FileSearch({
   files.forEach(f => {
     if (f.project) {
         // Only add project if it matches the selected country (or if no country selected)
-        if (countryFilter === "Tous" || f.project.country === countryFilter) {
+        // Handle "Autre" case: match projects with no country
+        const matchesCountry = countryFilter === "Tous" ||
+                               (countryFilter === "Autre" ? !f.project.country : f.project.country === countryFilter);
+
+        if (matchesCountry) {
              projectsMap.set(f.project.id, f.project.name);
         }
     }
@@ -62,6 +66,8 @@ export function FileSearch({
   const projects = Array.from(projectsMap.entries()).sort((a, b) => a[1].localeCompare(b[1]));
 
   const hasOrphanedFiles = files.some(f => !f.project);
+  // Check if there are any files with a project but without a country, OR orphaned files (which also have no country)
+  const hasFilesNoCountry = files.some(f => !f.project?.country);
 
   return (
     <div className="flex flex-col xl:flex-row gap-4 w-full">
@@ -121,7 +127,7 @@ export function FileSearch({
             className="px-4 py-2 text-sm bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
           >
             <option value="Tous">Tous les pays</option>
-            {hasOrphanedFiles && <option value="Autre">Autre (sans pays)</option>}
+            {hasFilesNoCountry && <option value="Autre">Autre (sans pays)</option>}
             {countries.map((country) => (
               <option key={country} value={country}>
                 {country}

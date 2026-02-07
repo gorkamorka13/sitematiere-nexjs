@@ -5,12 +5,12 @@ import L from "leaflet";
  * Centralise les visuels pour garantir la coherence entre toutes les cartes.
  */
 export const getIcon = (status: string | null | undefined) => {
-  let iconUrl = "/images/pin/pin_done.png";
+  let iconUrl = "/markers/pin_done.png";
 
   if (status === 'CURRENT') {
-    iconUrl = "/images/pin/pin_underconstruction.png";
+    iconUrl = "/markers/pin_underconstruction.png";
   } else if (status === 'PROSPECT') {
-    iconUrl = "/images/pin/pin_prospection.png";
+    iconUrl = "/markers/pin_prospection.png";
   }
 
   return L.icon({
