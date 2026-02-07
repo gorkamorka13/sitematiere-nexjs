@@ -1,8 +1,15 @@
 ---
-trigger: always_on
+name: gemini-instruction
+description: Gemini 2.5 flash model directives for payslip analyzer project with Windows-specific protocols
+license: MIT
+compatibility: opencode
+metadata:
+  audience: developers
+  workflow: payslip-analyzer
+  environment: windows
 ---
 
-# Payslip Analyzer AI - Directives Modèle (gemini.md)
+# Payslip Analyzer AI - Directives Modèle (gemini-instruction)
 
 Ce document établit les règles critiques et les protocoles de sécurité pour l'interaction entre l'utilisateur et l'assistant IA au sein de l'environnement Payslip Analyzer.
 
