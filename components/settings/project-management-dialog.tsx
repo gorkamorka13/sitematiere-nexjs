@@ -39,6 +39,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
     setSelectedProjectId("");
     setConfirmName("");
     setSearchQuery("");
+    setCountryFilter("Tous"); // Réinitialiser le filtre pays
 
     // Initialiser l'historique selon l'onglet
     if (activeTab === 'create') {
@@ -92,6 +93,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [focusedSuggestionIndex, setFocusedSuggestionIndex] = useState(-1);
+  const [countryFilter, setCountryFilter] = useState<string>("Tous");
 
   // Historique des positions pour undo/redo
   const [positionHistory, setPositionHistory] = useState<{ lat: number; lng: number }[]>([]);
@@ -231,10 +233,20 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
     }
   };
 
-  // Logic de recherche
-  const sortedProjects = (projects || []).slice().sort((a, b) => a.name.localeCompare(b.name));
+  // Extract unique countries from projects
+  const countries = Array.from(
+    new Set((projects || []).map(p => p.country).filter(Boolean))
+  ).sort();
 
-  const searchSuggestions = (projects || []).filter(p =>
+  // Logic de recherche avec filtre pays
+  const filteredProjects = (projects || []).filter(p => {
+    if (countryFilter === "Tous") return true;
+    return p.country === countryFilter;
+  });
+
+  const sortedProjects = filteredProjects.slice().sort((a, b) => a.name.localeCompare(b.name));
+
+  const searchSuggestions = filteredProjects.filter(p =>
     p.name.toLowerCase().includes(searchQuery.toLowerCase())
   ).slice(0, 5);
 
@@ -547,27 +559,46 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
         <div className="overflow-y-auto max-h-[calc(90vh-160px)] flex-1">
           {activeTab === 'modify' && (
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Sélection du projet et Recherche Rapide */}
+          {/* Filtre pays, Sélection du projet et Recherche Rapide */}
           <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 md:flex-[0.4]">
+            {/* Filtre par pays */}
+            <div className="flex-1 md:flex-[0.25]">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Filtrer par pays</label>
+              <select
+                value={countryFilter}
+                onChange={(e) => {
+                  setCountryFilter(e.target.value);
+                  setSelectedProjectId(""); // Réinitialiser la sélection quand on change de pays
+                }}
+                className="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all dark:text-white"
+              >
+                <option value="Tous">Tous les pays</option>
+                {countries.map(country => (
+                  <option key={country} value={country}>{country}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex-1 md:flex-[0.35]">
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Choisir un projet</label>
               <select
                 value={selectedProjectId}
                 onChange={(e) => {
                   setSelectedProjectId(e.target.value);
-                  // On ne synchronise plus searchQuery ici pour le laisser vide
                 }}
                 className="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all dark:text-white"
                 required
               >
-                <option value="">-- Sélectionner --</option>
+                <option value="">
+                  {sortedProjects.length === 0 ? "Aucun projet" : "-- Sélectionner --"}
+                </option>
                 {sortedProjects.map(p => (
                   <option key={p.id} value={p.id}>{p.name} ({p.country})</option>
                 ))}
               </select>
             </div>
 
-            <div className="flex-1 md:flex-[0.6] relative">
+            <div className="flex-1 md:flex-[0.4] relative">
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Recherche rapide</label>
               <div className="relative">
                 <input
@@ -1130,23 +1161,43 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                 </div>
               </div>
 
-              {/* Sélection du projet à supprimer */}
+              {/* Filtre pays, Sélection du projet à supprimer */}
               <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1 md:flex-[0.5]">
+                {/* Filtre par pays */}
+                <div className="flex-1 md:flex-[0.3]">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Filtrer par pays</label>
+                  <select
+                    value={countryFilter}
+                    onChange={(e) => {
+                      setCountryFilter(e.target.value);
+                      setSelectedProjectId(""); // Réinitialiser la sélection
+                    }}
+                    className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 transition-all dark:text-white"
+                  >
+                    <option value="Tous">Tous les pays</option>
+                    {countries.map(country => (
+                      <option key={country} value={country}>{country}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex-1 md:flex-[0.35]">
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Choisir le projet</label>
                   <select
                     value={selectedProjectId}
                     onChange={(e) => setSelectedProjectId(e.target.value)}
                     className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 transition-all dark:text-white"
                   >
-                    <option value="">-- Sélectionner un projet --</option>
+                    <option value="">
+                      {sortedProjects.length === 0 ? "Aucun projet" : "-- Sélectionner --"}
+                    </option>
                     {sortedProjects.map(p => (
                       <option key={p.id} value={p.id}>{p.name} ({p.country})</option>
                     ))}
                   </select>
                 </div>
 
-                <div className="flex-1 md:flex-[0.5] relative">
+                <div className="flex-1 md:flex-[0.35] relative">
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Recherche rapide</label>
                   <div className="relative">
                     <input

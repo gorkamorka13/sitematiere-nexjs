@@ -23,8 +23,15 @@ export function FileSearch({
   files = [],
   onFileSelect,
 }: FileSearchProps) {
-  // Sort files alphabetically
-  const sortedFiles = [...files].sort((a, b) => a.name.localeCompare(b.name));
+  // Filter files based on country selection
+  const filteredFiles = files.filter(f => {
+    if (countryFilter === "Tous") return true;
+    if (countryFilter === "Autre") return !f.project?.country;
+    return f.project?.country === countryFilter;
+  });
+
+  // Sort filtered files alphabetically
+  const sortedFiles = [...filteredFiles].sort((a, b) => a.name.localeCompare(b.name));
 
   // Extract unique countries from files
   const countries = Array.from(
