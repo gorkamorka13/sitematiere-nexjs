@@ -11,6 +11,8 @@ import {
   BarChart3,
   Paperclip,
   X,
+  Calendar,
+  Layers,
 } from "lucide-react";
 import { Project, Document as ProjectDocument, Video as ProjectVideo } from "@prisma/client";
 import jsPDF from "jspdf";
@@ -57,19 +59,60 @@ export function ProjectExportDialog({
 
   if (!project) return null;
 
-  // Helper to load image as data URL
-  const loadImageAsDataURL = (url: string): Promise<string> => {
+  /**
+   * Premium Image Loader: Center-crop (cover) and rounded corners
+   */
+  const loadPremiumImage = (url: string, targetRatio: number = 16/9, borderRadius: number = 20): Promise<string> => {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.crossOrigin = "anonymous";
       img.onload = () => {
+        // Create canvas with a high resolution for PDF quality
         const canvas = document.createElement("canvas");
-        canvas.width = img.width;
-        canvas.height = img.height;
         const ctx = canvas.getContext("2d");
         if (!ctx) return reject("Could not get canvas context");
-        ctx.drawImage(img, 0, 0);
-        resolve(canvas.toDataURL("image/jpeg", 0.75));
+
+        // Set dimensions based on target ratio
+        let drawWidth, drawHeight, offsetX, offsetY;
+        const imgRatio = img.width / img.height;
+
+        if (imgRatio > targetRatio) {
+          // Image is wider than target
+          drawHeight = img.height;
+          drawWidth = img.height * targetRatio;
+          offsetX = (img.width - drawWidth) / 2;
+          offsetY = 0;
+        } else {
+          // Image is taller than target
+          drawWidth = img.width;
+          drawHeight = img.width / targetRatio;
+          offsetX = 0;
+          offsetY = (img.height - drawHeight) / 2;
+        }
+
+        // Final canvas size (scaled for quality)
+        canvas.width = 1200;
+        canvas.height = canvas.width / targetRatio;
+
+        // Apply rounded corners clip
+        ctx.beginPath();
+        const r = borderRadius;
+        ctx.moveTo(r, 0);
+        ctx.lineTo(canvas.width - r, 0);
+        ctx.quadraticCurveTo(canvas.width, 0, canvas.width, r);
+        ctx.lineTo(canvas.width, canvas.height - r);
+        ctx.quadraticCurveTo(canvas.width, canvas.height, canvas.width - r, canvas.height);
+        ctx.lineTo(r, canvas.height);
+        ctx.quadraticCurveTo(0, canvas.height, 0, canvas.height - r);
+        ctx.lineTo(0, r);
+        ctx.quadraticCurveTo(0, 0, r, 0);
+        ctx.closePath();
+        ctx.clip();
+
+        // Draw the image cropped and centered
+        ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight, 0, 0, canvas.width, canvas.height);
+
+        resolve(canvas.toDataURL("image/jpeg", 0.85));
       };
       img.onerror = () => reject(`Failed to load image at ${url}`);
       img.src = url.startsWith('http') ? url : window.location.origin + (url.startsWith('/') ? url : '/' + url);
@@ -89,42 +132,79 @@ export function ProjectExportDialog({
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 20;
       const contentWidth = pageWidth - 2 * margin;
-      let yPos = margin;
+      const indigo600 = [79, 70, 229]; // #4f46e5
+      const gray900 = [17, 24, 39];
+      const gray500 = [107, 114, 128];
 
-      // --- 1. Header (Indigo Bar) ---
-      doc.setFillColor(79, 70, 229); // Indigo 600
-      doc.rect(0, 0, pageWidth, 40, "F");
+      let yPos = 0;
+
+      // Helper for Section Headers
+      const addSectionHeader = (title: string, currentY: number) => {
+        doc.setFillColor(indigo600[0], indigo600[1], indigo600[2]);
+        doc.rect(margin, currentY, 3, 6, "F");
+        doc.setTextColor(indigo600[0], indigo600[1], indigo600[2]);
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.text(title.toUpperCase(), margin + 6, currentY + 4.5);
+
+        doc.setDrawColor(229, 231, 235);
+        doc.line(margin, currentY + 10, pageWidth - margin, currentY + 10);
+        return currentY + 18;
+      };
+
+      // --- 1. COVER HEADER ---
+      doc.setFillColor(indigo600[0], indigo600[1], indigo600[2]);
+      doc.rect(0, 0, pageWidth, 45, "F");
 
       doc.setTextColor(255, 255, 255);
-      doc.setFontSize(22);
-      doc.setFont("helvetica", "bold");
-      doc.text("RAPPORT DE PROJET", margin, 18);
-
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
-      doc.text(`Émis le ${new Date().toLocaleDateString('fr-FR')}`, margin, 28);
-      doc.text(`Logiciel Matière v${globalMetadata?.appVersion || '0.0.38'}`, pageWidth - margin - 40, 28);
-
-      yPos = 55;
-
-      // --- 2. Title Section (Centered) ---
-      doc.setTextColor(17, 24, 39); // Gray 900
       doc.setFontSize(24);
       doc.setFont("helvetica", "bold");
-      doc.text(project.name.toUpperCase(), pageWidth / 2, yPos, { align: "center" });
-      yPos += 10;
+      doc.text("RAPPORT TECHNIQUE", margin, 22);
 
-      doc.setFontSize(14);
-      doc.setTextColor(75, 85, 99); // Gray 600
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Identifiant: ${project.projectCode || project.id.substring(0,8)}`, margin, 32);
+      doc.text(`Date d'export: ${new Date().toLocaleDateString('fr-FR')}`, pageWidth - margin, 32, { align: "right" });
+
+      yPos = 60;
+
+      // --- 2. MAIN TITLE ---
+      doc.setTextColor(gray900[0], gray900[1], gray900[2]);
+      doc.setFontSize(32);
       doc.setFont("helvetica", "bold");
-      doc.text(`${project.country} | ${project.type} | STATUT: ${project.status}`, pageWidth / 2, yPos, { align: "center" });
+      doc.text(project.name.toUpperCase(), pageWidth / 2, yPos, { align: "center" });
       yPos += 15;
 
-      // --- 3. Last Photo (Main Visual) ---
+      // --- 3. PROJECT INFO CARDS (Boxed) ---
+      doc.setFillColor(249, 250, 251); // Gray 50
+      doc.setDrawColor(229, 231, 235);
+      doc.roundedRect(margin, yPos, contentWidth, 22, 3, 3, "FD");
+
+      doc.setFontSize(8);
+      doc.setTextColor(gray500[0], gray500[1], gray500[2]);
+      doc.text("PAYS", margin + 10, yPos + 7);
+      doc.text("TYPE DE STRUCTURE", margin + (contentWidth/3) + 5, yPos + 7);
+      doc.text("STATUT ACTUEL", margin + (2 * contentWidth/3) + 5, yPos + 7);
+
+      doc.setFontSize(11);
+      doc.setTextColor(gray900[0], gray900[1], gray900[2]);
+      doc.setFont("helvetica", "bold");
+      doc.text(project.country, margin + 10, yPos + 15);
+      doc.text(project.type, margin + (contentWidth/3) + 5, yPos + 15);
+
+      // Status with color dot simulation
+      const statusColor = project.status === 'DONE' ? [34, 197, 94] : project.status === 'CURRENT' ? [234, 179, 8] : [99, 102, 241];
+      doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
+      doc.circle(margin + (2 * contentWidth/3) + 8, yPos + 13.5, 1.5, "F");
+      doc.text(project.status, margin + (2 * contentWidth/3) + 12, yPos + 15);
+
+      yPos += 35;
+
+      // --- 4. MAIN PHOTO (Premium Fit) ---
       const lastPhoto = images[images.length - 1];
       if (options.lastPhoto && lastPhoto) {
         try {
-          const imgData = await loadImageAsDataURL(lastPhoto.url);
+          const imgData = await loadPremiumImage(lastPhoto.url, 16/9, 40); // Larger radius for main photo
           const imgWidth = contentWidth;
           const imgHeight = (imgWidth * 9) / 16;
 
@@ -134,21 +214,15 @@ export function ProjectExportDialog({
           }
 
           doc.addImage(imgData, "JPEG", margin, yPos, imgWidth, imgHeight);
-          yPos += imgHeight + 15;
+          yPos += imgHeight + 20;
         } catch (e) {
           console.warn("Could not load last photo for PDF", e);
         }
       }
 
-      // --- 4. Description Section ---
+      // --- 5. DESCRIPTION ---
       if (options.description && project.description) {
-        if (yPos > pageHeight - 40) { doc.addPage(); yPos = margin; }
-
-        doc.setTextColor(79, 70, 229);
-        doc.setFontSize(14);
-        doc.setFont("helvetica", "bold");
-        doc.text("DESCRIPTION DU PROJET", margin, yPos);
-        yPos += 8;
+        yPos = addSectionHeader("Description du Projet", yPos);
 
         doc.setTextColor(55, 65, 81);
         doc.setFontSize(10);
@@ -156,22 +230,17 @@ export function ProjectExportDialog({
         const splitDescription = doc.splitTextToSize(project.description.replace(/\\n/g, '\n'), contentWidth);
 
         splitDescription.forEach((line: string) => {
-            if (yPos > pageHeight - 15) { doc.addPage(); yPos = margin + 10; }
+            if (yPos > pageHeight - 15) { doc.addPage(); yPos = margin + 15; }
             doc.text(line, margin, yPos);
-            yPos += 5;
+            yPos += 6;
         });
         yPos += 12;
       }
 
-      // --- 5. Progress Section ---
+      // --- 6. PROGRESS ---
       if (options.progress) {
-        if (yPos > pageHeight - 65) { doc.addPage(); yPos = margin; }
-
-        doc.setTextColor(79, 70, 229);
-        doc.setFontSize(14);
-        doc.setFont("helvetica", "bold");
-        doc.text("AVANCEMENT DU CHANTIER", margin, yPos);
-        yPos += 12;
+        if (yPos > pageHeight - 70) { doc.addPage(); yPos = margin + 10; }
+        yPos = addSectionHeader("Avancement du Chantier", yPos);
 
         const steps = [
           { label: "Prospection", val: project.prospection },
@@ -182,83 +251,69 @@ export function ProjectExportDialog({
         ];
 
         steps.forEach(step => {
-          doc.setTextColor(55, 65, 81);
+          doc.setTextColor(gray900[0], gray900[1], gray900[2]);
           doc.setFontSize(9);
           doc.setFont("helvetica", "bold");
           doc.text(step.label.toUpperCase(), margin, yPos);
+
+          // Progress track
           doc.setFillColor(243, 244, 246);
-          doc.rect(margin + 45, yPos - 3.5, 100, 4, "F");
-          doc.setFillColor(79, 70, 229);
-          doc.rect(margin + 45, yPos - 3.5, step.val, 4, "F");
+          doc.roundedRect(margin + 45, yPos - 3.5, 100, 3.5, 1.5, 1.5, "F");
+
+          // Progress bar
+          if (step.val > 0) {
+              doc.setFillColor(indigo600[0], indigo600[1], indigo600[2]);
+              doc.roundedRect(margin + 45, yPos - 3.5, step.val, 3.5, 1.5, 1.5, "F");
+          }
+
           doc.setFont("helvetica", "normal");
           doc.text(`${step.val}%`, margin + 150, yPos);
-          yPos += 9;
+          yPos += 10;
         });
         yPos += 10;
       }
 
-      // --- 6. Documents & Plans Section ---
+      // --- 7. DOCUMENTS & PLANS ---
       if (options.documents && project.documents.length > 0) {
-        if (yPos > pageHeight - 40) { doc.addPage(); yPos = margin; }
-
-        doc.setTextColor(79, 70, 229);
-        doc.setFontSize(14);
-        doc.setFont("helvetica", "bold");
-        doc.text("DOCUMENTS & PLANS", margin, yPos);
-        yPos += 10;
+        if (yPos > pageHeight - 50) { doc.addPage(); yPos = margin + 10; }
+        yPos = addSectionHeader("Plans & Documentation Technique", yPos);
 
         const planDocs = project.documents.filter(d => d.type === 'PLAN' || d.name.toLowerCase().includes('plan'));
         const otherDocs = project.documents.filter(d => d.type !== 'FLAG' && d.type !== 'CLIENT_LOGO' && d.type !== 'PLAN' && !d.name.toLowerCase().includes('plan'));
 
-        // Plans visuals
         if (planDocs.length > 0) {
-            doc.setTextColor(17, 24, 39);
-            doc.setFontSize(11);
-            doc.setFont("helvetica", "bold");
-            doc.text("Plans Techniques :", margin, yPos);
-            yPos += 8;
-
             for (const plan of planDocs) {
-                if (yPos > pageHeight - 30) { doc.addPage(); yPos = margin + 10; }
+                if (yPos > pageHeight - 40) { doc.addPage(); yPos = margin + 15; }
 
-                doc.setFillColor(219, 234, 254);
-                doc.rect(margin, yPos - 4, 4, 4, "F");
-                doc.setTextColor(55, 65, 81);
+                doc.setTextColor(gray900[0], gray900[1], gray900[2]);
                 doc.setFontSize(10);
-                doc.setFont("helvetica", "normal");
-                doc.text(`${plan.name}`, margin + 6, yPos);
-                yPos += 6;
+                doc.setFont("helvetica", "bold");
+                doc.text(`Plan: ${plan.name}`, margin, yPos);
+                yPos += 8;
 
-                // SPECIAL: Search for an image that matches this plan's name (visual preview)
                 const planVisual = images.find(img => img.name.toLowerCase().includes('plan') || img.name.toLowerCase().includes(plan.name.split('.')[0].toLowerCase()));
                 if (planVisual) {
                     try {
-                        const planImgData = await loadImageAsDataURL(planVisual.url);
-                        const pImgWidth = contentWidth * 0.7;
+                        const planImgData = await loadPremiumImage(planVisual.url, 3/2, 25);
+                        const pImgWidth = contentWidth * 0.8;
                         const pImgHeight = (pImgWidth * 2) / 3;
 
-                        if (yPos + pImgHeight > pageHeight - 20) { doc.addPage(); yPos = margin + 10; }
+                        if (yPos + pImgHeight > pageHeight - 20) { doc.addPage(); yPos = margin + 15; }
 
                         doc.addImage(planImgData, "JPEG", margin + (contentWidth - pImgWidth)/2, yPos, pImgWidth, pImgHeight);
-                        yPos += pImgHeight + 10;
+                        yPos += pImgHeight + 12;
                     } catch (e) {
                         console.warn("Could not load plan preview", e);
                     }
                 }
             }
-            yPos += 6;
+            yPos += 5;
         }
 
         if (otherDocs.length > 0) {
-            doc.setTextColor(17, 24, 39);
-            doc.setFontSize(11);
-            doc.setFont("helvetica", "bold");
-            doc.text("Autres fichiers :", margin, yPos);
-            yPos += 8;
-
             otherDocs.forEach(d => {
-                if (yPos > pageHeight - 15) { doc.addPage(); yPos = margin + 10; }
-                doc.setTextColor(75, 85, 99);
+                if (yPos > pageHeight - 15) { doc.addPage(); yPos = margin + 15; }
+                doc.setTextColor(gray500[0], gray500[1], gray500[2]);
                 doc.setFontSize(9);
                 doc.setFont("helvetica", "normal");
                 doc.text(`• ${d.name} (${d.type})`, margin + 5, yPos);
@@ -267,23 +322,25 @@ export function ProjectExportDialog({
         }
       }
 
-      // --- Global Footer ---
+      // --- GLOBAL FOOTER LOGIC ---
       const pageCount = doc.internal.getNumberOfPages();
       for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
-        doc.setFontSize(8);
-        doc.setTextColor(156, 163, 175);
-        doc.text(`Rapport de projet : ${project.name}`, margin, pageHeight - 10);
-        doc.text(`Page ${i} / ${pageCount}`, pageWidth - margin, pageHeight - 10, { align: "right" });
+
         doc.setDrawColor(229, 231, 235);
         doc.line(margin, pageHeight - 15, pageWidth - margin, pageHeight - 15);
+
+        doc.setFontSize(8);
+        doc.setTextColor(gray500[0], gray500[1], gray500[2]);
+        doc.text(`Projet: ${project.name} | Confidentialité: Interne Matière`, margin, pageHeight - 10);
+        doc.text(`Page ${i} / ${pageCount}`, pageWidth - margin, pageHeight - 10, { align: "right" });
       }
 
-      doc.save(`Rapport_${project.name.replace(/\s+/g, '_')}.pdf`);
+      doc.save(`RAPPORT_TECHNIQUE_${project.name.replace(/\s+/g, '_').toUpperCase()}.pdf`);
       onClose();
     } catch (error) {
       console.error("PDF Generation failed:", error);
-      alert("Erreur lors de la génération du PDF.");
+      alert("Erreur lors de la génération du rapport professionnel.");
     } finally {
       setIsGenerating(false);
     }
@@ -314,7 +371,7 @@ export function ProjectExportDialog({
       <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-2">
           <FileText className="w-5 h-5 text-indigo-600 flex-shrink-0" />
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white">Rapport PDF Personnalisé</h3>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white uppercase tracking-tight">Export Rapport Premium</h3>
         </div>
         <button onClick={onClose} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
           <X className="w-5 h-5 text-gray-500" />
@@ -323,36 +380,36 @@ export function ProjectExportDialog({
 
       <div className="p-6 overflow-y-auto max-h-[60vh] custom-scrollbar">
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 font-medium">
-          Configurez le contenu du rapport pour <span className="text-indigo-600 font-bold">{project.name}</span>.
+          Générez un document professionnel pour l'ouvrage <span className="text-indigo-600 font-bold">{project.name}</span>.
         </p>
 
         <div className="space-y-3">
           <OptionRow
-            id="lastPhoto" label="Inclure la photo principale" icon={ImageIcon} color="text-purple-500"
+            id="lastPhoto" label="Photo de couverture (Premium Fit)" icon={ImageIcon} color="text-purple-500"
             checked={options.lastPhoto} onChange={(v: boolean) => setOptions(o => ({ ...o, lastPhoto: v }))}
           />
           <OptionRow
-            id="description" label="Description technique complète" icon={AlignLeft} color="text-blue-500"
+            id="description" label="Description technique & Contexte" icon={AlignLeft} color="text-blue-500"
             checked={options.description} onChange={(v: boolean) => setOptions(o => ({ ...o, description: v }))}
           />
           <OptionRow
-            id="progress" label="État d'avancement des travaux" icon={BarChart3} color="text-green-500"
+            id="progress" label="Suivi d'avancement graphique" icon={BarChart3} color="text-green-500"
             checked={options.progress} onChange={(v: boolean) => setOptions(o => ({ ...o, progress: v }))}
           />
           <OptionRow
-            id="documents" label="Plans & Documents archivés" icon={Paperclip} color="text-orange-500"
+            id="documents" label="Annexes: Dossier Plans et Documents" icon={Paperclip} color="text-orange-500"
             checked={options.documents} onChange={(v: boolean) => setOptions(o => ({ ...o, documents: v }))}
           />
 
           <div className="pt-2">
-             <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 px-1">Options Avancées (Beta)</div>
+             <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 px-1">Extensions Cartographiques</div>
              <div className="space-y-3 opacity-60">
                 <OptionRow
-                    id="projectMap" label="Carte du projet" icon={MapIcon} color="text-indigo-400"
+                    id="projectMap" label="Géo-localisation ponctuelle" icon={MapIcon} color="text-indigo-400"
                     checked={options.projectMap} onChange={(v: boolean) => setOptions(o => ({ ...o, projectMap: v }))}
                 />
                 <OptionRow
-                    id="globalMap" label="Carte globale multi-projets" icon={MapIcon} color="text-gray-400"
+                    id="globalMap" label="Contexte régional (Carte globale)" icon={MapIcon} color="text-gray-400"
                     checked={options.globalMap} onChange={(v: boolean) => setOptions(o => ({ ...o, globalMap: v }))}
                 />
              </div>
@@ -364,24 +421,24 @@ export function ProjectExportDialog({
         <button
           onClick={onClose}
           disabled={isGenerating}
-          className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800 transition-all"
+          className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800 transition-all font-bold"
         >
           Annuler
         </button>
         <button
           onClick={handleExport}
           disabled={isGenerating}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold shadow-lg shadow-indigo-600/20 transition-all disabled:opacity-50"
+          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold shadow-lg shadow-indigo-600/20 transition-all active:scale-95 disabled:opacity-50"
         >
           {isGenerating ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              Génération du PDF...
+              Finalisation...
             </>
           ) : (
             <>
               <Download className="w-4 h-4" />
-              Générer le Rapport
+              Générer Rapport PDF
             </>
           )}
         </button>

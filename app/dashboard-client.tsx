@@ -399,8 +399,8 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                         </button>
                     </div>
 
-                    {/* Section Projets (ADMIN et USER) */}
-                    {(user.role === 'ADMIN' || user.role === 'USER') && (
+                    {/* Section Projets (USER uniquement, ADMIN a déjà Gestion Projet) */}
+                    {user.role === 'USER' && (
                         <div className="space-y-1 mb-6">
                             {!isSidebarCollapsed && <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-3 mb-2 block">Projets</span>}
                             <button

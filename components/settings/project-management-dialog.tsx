@@ -42,7 +42,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
 
     // Initialiser l'historique selon l'onglet
     if (activeTab === 'create') {
-      setPositionHistory([{ lat: 0, lng: 0 }]);
+      setPositionHistory([{ lat: 44.916672, lng: 2.45 }]);
       setHistoryIndex(0);
     } else {
       setPositionHistory([]);
@@ -69,8 +69,8 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
     country: "",
     type: ProjectType.PRS as ProjectType,
     status: ProjectStatus.PROSPECT as ProjectStatus,
-    latitude: 0,
-    longitude: 0,
+    latitude: 44.916672,
+    longitude: 2.45,
     description: "",
     projectCode: "",
     prospection: 0,
@@ -377,7 +377,6 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
           setStatus({ type: 'success', message: "Projet créé. Transfert des fichiers en cours..." });
           await processUploads(result.projectId);
         }
-
         setStatus({ type: 'success', message: "Projet et fichiers créés avec succès !" });
         // Reset form
         setCreateFormData({
@@ -385,8 +384,8 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
           country: "",
           type: ProjectType.PRS as ProjectType,
           status: ProjectStatus.PROSPECT as ProjectStatus,
-          latitude: 0,
-          longitude: 0,
+          latitude: 44.916672,
+          longitude: 2.45,
           description: "",
           projectCode: "",
           prospection: 0,
@@ -637,71 +636,19 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Label Latitude */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center justify-between">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 <span className="flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-gray-400" /> Latitude
                 </span>
-                <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
-                  <button
-                    type="button"
-                    onClick={() => setCoordinateFormat('decimal')}
-                    className={`px-2 py-1 rounded text-xs font-medium transition-all ${
-                      coordinateFormat === 'decimal'
-                        ? 'bg-white dark:bg-gray-600 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                    }`}
-                    title="Format décimal"
-                  >
-                    <Globe className="w-3 h-3" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCoordinateFormat('dms')}
-                    className={`px-2 py-1 rounded text-xs font-medium transition-all ${
-                      coordinateFormat === 'dms'
-                        ? 'bg-white dark:bg-gray-600 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                    }`}
-                    title="Format DMS (Degrés, Minutes, Secondes)"
-                  >
-                    <MapPin className="w-3 h-3" />
-                  </button>
-                </div>
               </label>
             </div>
 
             {/* Label Longitude */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center justify-between">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 <span className="flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-gray-400" /> Longitude
                 </span>
-                <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
-                  <button
-                    type="button"
-                    onClick={() => setCoordinateFormat('decimal')}
-                    className={`px-2 py-1 rounded text-xs font-medium transition-all ${
-                      coordinateFormat === 'decimal'
-                        ? 'bg-white dark:bg-gray-600 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                    }`}
-                    title="Format décimal"
-                  >
-                    <Globe className="w-3 h-3" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCoordinateFormat('dms')}
-                    className={`px-2 py-1 rounded text-xs font-medium transition-all ${
-                      coordinateFormat === 'dms'
-                        ? 'bg-white dark:bg-gray-600 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                    }`}
-                    title="Format DMS (Degrés, Minutes, Secondes)"
-                  >
-                    <MapPin className="w-3 h-3" />
-                  </button>
-                </div>
               </label>
             </div>
           </div>
@@ -737,6 +684,19 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
             {/* Boutons Undo/Redo à droite */}
             <div className="flex items-center justify-center">
               <div className="flex items-center gap-1 border border-gray-200 dark:border-gray-600 rounded-lg p-1 bg-white dark:bg-gray-800 shadow-sm">
+                {/* Format Toggle Button - Unique per row */}
+                <button
+                  type="button"
+                  onClick={() => setCoordinateFormat(prev => prev === 'decimal' ? 'dms' : 'decimal')}
+                  className="p-2 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-all flex items-center gap-1.5"
+                  title={coordinateFormat === 'decimal' ? "Passer en DMS" : "Passer en Décimal"}
+                >
+                  {coordinateFormat === 'decimal' ? <MapPin className="w-4 h-4" /> : <Globe className="w-4 h-4" />}
+                  <span className="text-[10px] font-bold uppercase">{coordinateFormat === 'decimal' ? 'DMS' : 'DEC'}</span>
+                </button>
+
+                <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
+
                 <button
                   type="button"
                   onClick={handleUndo}
@@ -1000,22 +960,17 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                 </div>
               </div>
 
-              {/* Labels des coordonnées pour Création */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 flex items-center justify-between">
-                  <span className="flex items-center gap-2"><MapPin className="w-4 h-4 text-gray-400" /> Latitude</span>
-                  <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
-                    <button type="button" onClick={() => setCoordinateFormat('decimal')} className={`px-2 py-1 rounded text-[10px] font-bold ${coordinateFormat === 'decimal' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500'}`}><Globe className="w-3 h-3" /></button>
-                    <button type="button" onClick={() => setCoordinateFormat('dms')} className={`px-2 py-1 rounded text-[10px] font-bold ${coordinateFormat === 'dms' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500'}`}><MapPin className="w-3 h-3" /></button>
-                  </div>
-                </label>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 flex items-center justify-between">
-                  <span className="flex items-center gap-2"><MapPin className="w-4 h-4 text-gray-400" /> Longitude</span>
-                  <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
-                    <button type="button" onClick={() => setCoordinateFormat('decimal')} className={`px-2 py-1 rounded text-[10px] font-bold ${coordinateFormat === 'decimal' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500'}`}><Globe className="w-3 h-3" /></button>
-                    <button type="button" onClick={() => setCoordinateFormat('dms')} className={`px-2 py-1 rounded text-[10px] font-bold ${coordinateFormat === 'dms' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500'}`}><MapPin className="w-3 h-3" /></button>
-                  </div>
-                </label>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-gray-400" /> Latitude
+                  </label>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-gray-400" /> Longitude
+                  </label>
+                </div>
               </div>
 
               {/* Ligne des inputs Coordonnées avec Undo/Redo pour Création */}
@@ -1047,6 +1002,19 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                   required
                 />
                 <div className="flex items-center gap-1 border border-gray-200 dark:border-gray-600 rounded-lg p-1 bg-white dark:bg-gray-800 shadow-sm">
+                  {/* Format Toggle Button - Unique per row */}
+                  <button
+                    type="button"
+                    onClick={() => setCoordinateFormat(prev => prev === 'decimal' ? 'dms' : 'decimal')}
+                    className="p-2 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-all flex items-center gap-1.5"
+                    title={coordinateFormat === 'decimal' ? "Passer en DMS" : "Passer en Décimal"}
+                  >
+                    {coordinateFormat === 'decimal' ? <MapPin className="w-4 h-4" /> : <Globe className="w-4 h-4" />}
+                    <span className="text-[10px] font-bold uppercase">{coordinateFormat === 'decimal' ? 'DMS' : 'DEC'}</span>
+                  </button>
+
+                  <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
+
                   <button
                     type="button"
                     onClick={handleUndo}

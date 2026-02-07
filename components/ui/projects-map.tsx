@@ -85,8 +85,8 @@ export default function ProjectsMap({ projects, onSelectProject, fitNonce, globa
                     }}
                 >
                     <Tooltip direction="top" offset={[0, -32]} opacity={1}>
-                        <div className="font-mono text-[10px]">
-                            {project.latitude.toFixed(6)}, {project.longitude.toFixed(6)}
+                        <div className="font-bold text-xs uppercase tracking-tight">
+                            {project.name}
                         </div>
                     </Tooltip>
                 </Marker>

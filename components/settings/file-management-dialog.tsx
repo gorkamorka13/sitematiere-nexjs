@@ -191,67 +191,60 @@ export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileM
             />
 
             {/* Dialog Container */}
-            <div className="relative w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col bg-white dark:bg-gray-800 border-none shadow-2xl rounded-2xl animate-in zoom-in-95 duration-300">
+            <div className="relative w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-2xl rounded-2xl animate-in zoom-in-95 duration-300">
                 {/* Header */}
-                <header className="p-6 bg-gradient-to-r from-indigo-600 to-blue-600 text-white shrink-0 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                            <FileStack className="w-6 h-6" />
+                <div className="flex flex-col border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50 select-none">
+                    <div className="flex items-center justify-between p-5">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-indigo-50 dark:bg-indigo-900/40 rounded-lg">
+                                <FileStack className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg lg:text-xl font-bold text-gray-900 dark:text-white uppercase tracking-tight">Gestion des Fichiers</h2>
+                                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-none mt-1">Administration Globale</p>
+                            </div>
                         </div>
-                        <div>
-                            <h2 className="text-xl font-black uppercase tracking-tight">Gestion des Fichiers</h2>
-                            <p className="text-indigo-100 text-xs font-medium">Administration globale du stockage et des documents</p>
-                        </div>
+                        <button
+                            onClick={onClose}
+                            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                    >
-                        <X className="w-6 h-6" />
-                    </button>
-                </header>
 
-                {/* Tabs */}
-                <div className="px-6 pt-4 border-b border-gray-100 dark:border-gray-700 flex gap-6">
-                    <button
-                        onClick={() => setActiveTab("dashboard")}
-                        className={`pb-3 text-sm font-bold uppercase tracking-wider transition-colors border-b-2 ${
-                            activeTab === "dashboard"
-                                ? "border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400"
-                                : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                        }`}
-                    >
-                        <div className="flex items-center gap-2">
-                            <LayoutDashboard className="w-4 h-4" />
+                    {/* Tabs Navigation */}
+                    <div className="flex px-5 gap-6">
+                        <button
+                            onClick={() => setActiveTab("dashboard")}
+                            className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 ${
+                                activeTab === "dashboard"
+                                    ? "text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400"
+                                    : "text-gray-400 border-transparent hover:text-gray-600 dark:hover:text-gray-200"
+                            }`}
+                        >
                             Tableau de bord
-                        </div>
-                    </button>
-                    <button
-                        onClick={() => setActiveTab("explorer")}
-                        className={`pb-3 text-sm font-bold uppercase tracking-wider transition-colors border-b-2 ${
-                            activeTab === "explorer"
-                                ? "border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400"
-                                : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                        }`}
-                    >
-                        <div className="flex items-center gap-2">
-                            <FolderOpen className="w-4 h-4" />
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("explorer")}
+                            className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 ${
+                                activeTab === "explorer"
+                                    ? "text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400"
+                                    : "text-gray-400 border-transparent hover:text-gray-600 dark:hover:text-gray-200"
+                            }`}
+                        >
                             Explorateur
-                        </div>
-                    </button>
-                    <button
-                        onClick={() => setActiveTab("upload")}
-                        className={`pb-3 text-sm font-bold uppercase tracking-wider transition-colors border-b-2 ${
-                            activeTab === "upload"
-                                ? "border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400"
-                                : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                        }`}
-                    >
-                        <div className="flex items-center gap-2">
-                            <UploadCloud className="w-4 h-4" />
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("upload")}
+                            className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 ${
+                                activeTab === "upload"
+                                    ? "text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400"
+                                    : "text-gray-400 border-transparent hover:text-gray-600 dark:hover:text-gray-200"
+                            }`}
+                        >
                             Téléverser
-                        </div>
-                    </button>
+                        </button>
+                    </div>
                 </div>
 
                 <div className="p-6 overflow-y-auto flex-grow custom-scrollbar">
@@ -364,9 +357,9 @@ export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileM
                 <footer className="p-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50 flex justify-end">
                     <button
                         onClick={onClose}
-                        className="px-6 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-xs font-black uppercase tracking-widest rounded-xl hover:scale-105 transition-all active:scale-95 shadow-lg shadow-gray-200 dark:shadow-none"
+                        className="px-8 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-xs font-black uppercase tracking-widest rounded-xl hover:scale-105 transition-all active:scale-95 shadow-lg shadow-gray-200 dark:shadow-none"
                     >
-                        Fermer
+                        Fermer l'administration
                     </button>
                 </footer>
             </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Tooltip, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useEffect } from "react";
 import { getIcon } from "@/lib/map-icons";
@@ -43,13 +43,16 @@ export default function ProjectMap({ latitude, longitude, status, projectName, c
                 url={tileUrl}
             />
             <Marker position={[latitude, longitude]} icon={getIcon(status)}>
-                <Popup>
-                    <div className="text-center">
-                        <strong className="block mb-1">{projectName || "Projet"}</strong>
-                        <span className="text-xs text-gray-500 block mb-1">{country || "Emplacement"}</span>
-                        {popupText && !projectName && <span className="text-xs italic text-gray-400">{popupText}</span>}
+                <Tooltip direction="top" offset={[0, -32]} opacity={1}>
+                    <div className="text-center p-1">
+                        <strong className="block text-sm mb-0.5">{projectName || "Projet"}</strong>
+                        <span className="text-xs text-indigo-600 dark:text-indigo-400 font-bold block mb-1 opacity-80">{country || "Emplacement"}</span>
+                        <div className="w-full h-px bg-gray-100 dark:bg-gray-700 my-1" />
+                        <span className="text-[10px] font-mono text-gray-400 block italic leading-none">
+                            {latitude.toFixed(6)}, {longitude.toFixed(6)}
+                        </span>
                     </div>
-                </Popup>
+                </Tooltip>
             </Marker>
         </MapContainer>
     );
