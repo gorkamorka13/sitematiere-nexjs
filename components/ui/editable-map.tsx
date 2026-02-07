@@ -33,30 +33,20 @@ function DraggableMarker({
   position: [number, number];
   onPositionChange: (lat: number, lng: number, isFinal?: boolean) => void;
 }) {
-  const [markerPosition, setMarkerPosition] = useState<[number, number]>(position);
   const markerRef = useRef<L.Marker>(null);
 
-  // Update marker position when props change
-  useEffect(() => {
-    setMarkerPosition(position);
-  }, [position]);
-
   const eventHandlers = {
-    // Update in real-time while dragging (isFinal = false)
     drag() {
       const marker = markerRef.current;
       if (marker != null) {
         const newPos = marker.getLatLng();
-        setMarkerPosition([newPos.lat, newPos.lng]);
         onPositionChange(newPos.lat, newPos.lng, false);
       }
     },
-    // Only update history when drag ends (isFinal = true)
     dragend() {
       const marker = markerRef.current;
       if (marker != null) {
         const newPos = marker.getLatLng();
-        setMarkerPosition([newPos.lat, newPos.lng]);
         onPositionChange(newPos.lat, newPos.lng, true);
       }
     },
@@ -66,7 +56,7 @@ function DraggableMarker({
     <Marker
       draggable={true}
       eventHandlers={eventHandlers}
-      position={markerPosition}
+      position={position}
       ref={markerRef}
       icon={editableIcon}
     />
@@ -92,34 +82,46 @@ function MapViewController({ center, zoomRef }: { center: [number, number]; zoom
 }
 
 export default function EditableMap({ latitude, longitude, onPositionChange }: EditableMapProps) {
-  const [center, setCenter] = useState<[number, number]>([latitude, longitude]);
-  // Référence pour mémoriser le zoom choisi par l'utilisateur
+  const [markerPos, setMarkerPos] = useState<[number, number]>([latitude, longitude]);
+  const [viewCenter, setViewCenter] = useState<[number, number]>([latitude, longitude]);
+  const isDraggingInternal = useRef(false);
   const zoomRef = useRef<number | null>(null);
 
-  // Mettre à jour le centre quand les coordonnées changent depuis l'extérieur
+  // Synchroniser la position du marqueur avec les props
   useEffect(() => {
-    setCenter([latitude, longitude]);
+    if (!isDraggingInternal.current) {
+      setMarkerPos([latitude, longitude]);
+      setViewCenter([latitude, longitude]);
+    }
   }, [latitude, longitude]);
+
+  const handlePositionChange = (lat: number, lng: number, isFinal?: boolean) => {
+    if (isFinal !== undefined) {
+      isDraggingInternal.current = !isFinal;
+    }
+    setMarkerPos([lat, lng]);
+    onPositionChange(lat, lng, isFinal);
+  };
 
   const tileUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
   const attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
   return (
     <MapContainer
-      center={center}
+      center={viewCenter}
       zoom={13}
       scrollWheelZoom={true}
       className="h-full w-full rounded-lg z-0"
       style={{ height: "300px", width: "100%" }}
     >
-      <MapViewController center={center} zoomRef={zoomRef} />
+      <MapViewController center={viewCenter} zoomRef={zoomRef} />
       <TileLayer
         attribution={attribution}
         url={tileUrl}
       />
       <DraggableMarker
-        position={center}
-        onPositionChange={onPositionChange}
+        position={markerPos}
+        onPositionChange={handlePositionChange}
       />
     </MapContainer>
   );

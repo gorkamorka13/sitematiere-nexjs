@@ -12,7 +12,7 @@ import SettingsDialogs from "@/components/settings/settings-dialogs";
 import UserBadge from "@/components/settings/user-badge";
 import ProjectManagementDialog from "@/components/settings/project-management-dialog";
 import FileManagementDialog from "@/components/settings/file-management-dialog";
-import { Search, Ruler, Factory, Truck, HardHat, FileText, FolderOpen, Image as ImageIcon, Video, ExternalLink, Play, Pause, SkipBack, SkipForward, ChevronLeft, ChevronRight, Square, Users, LayoutDashboard, PanelLeftClose, Menu, X as CloseIcon, FileStack } from "lucide-react";
+import { Search, Ruler, Factory, Truck, HardHat, FileText, FolderOpen, Folders, Image as ImageIcon, Video, ExternalLink, Play, Pause, SkipBack, SkipForward, ChevronLeft, ChevronRight, Square, Users, LayoutDashboard, PanelLeftClose, Menu, X as CloseIcon, FileStack } from "lucide-react";
 
 type DashboardClientProps = {
     initialProjects: Project[];
@@ -59,6 +59,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
     }>({ images: [], pdfs: [] });
     const [isLoadingMedia, setIsLoadingMedia] = useState(false);
     const [isProjectManagementOpen, setIsProjectManagementOpen] = useState(false);
+    const [projectManagementDefaultTab, setProjectManagementDefaultTab] = useState<'create' | 'modify' | 'delete'>('modify');
     const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
     const [isFileManagementOpen, setIsFileManagementOpen] = useState(false);
 
@@ -385,6 +386,24 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                         </button>
                     </div>
 
+                    {/* Section Projets (ADMIN et USER) */}
+                    {(user.role === 'ADMIN' || user.role === 'USER') && (
+                        <div className="space-y-1 mb-6">
+                            {!isSidebarCollapsed && <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-3 mb-2 block">Projets</span>}
+                            <button
+                                onClick={() => {
+                                    setProjectManagementDefaultTab('modify');
+                                    setIsProjectManagementOpen(true);
+                                }}
+                                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400 transition-all group"
+                            >
+                                <FolderOpen className={`w-5 h-5 ${isSidebarCollapsed ? "mx-auto" : ""}`} />
+                                {!isSidebarCollapsed && <span className="text-sm font-medium group-hover:text-gray-900 dark:group-hover:text-white">Modification Projets</span>}
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Section Administration (ADMIN uniquement) */}
                     {user.role === 'ADMIN' && (
                         <div className="space-y-1">
                             {!isSidebarCollapsed && <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-3 mb-2 block">Administration</span>}
@@ -396,11 +415,14 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                                 {!isSidebarCollapsed && <span className="text-sm font-medium group-hover:text-gray-900 dark:group-hover:text-white">Gestion Utilisateurs</span>}
                             </button>
                             <button
-                                onClick={() => setIsProjectManagementOpen(true)}
+                                onClick={() => {
+                                    setProjectManagementDefaultTab('create');
+                                    setIsProjectManagementOpen(true);
+                                }}
                                 className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400 transition-all group"
                             >
-                                <FolderOpen className={`w-5 h-5 ${isSidebarCollapsed ? "mx-auto" : ""}`} />
-                                {!isSidebarCollapsed && <span className="text-sm font-medium group-hover:text-gray-900 dark:group-hover:text-white">Gestion Projets</span>}
+                                <Folders className={`w-5 h-5 ${isSidebarCollapsed ? "mx-auto" : ""}`} />
+                                {!isSidebarCollapsed && <span className="text-sm font-medium group-hover:text-gray-900 dark:group-hover:text-white">Gestion Projet</span>}
                             </button>
                             <button
                                 onClick={() => setIsFileManagementOpen(true)}
@@ -590,41 +612,46 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                                 </div>
                             </div>
 
-                            {/* Status Checkboxes */}
-                            <div className="flex-1 min-w-[200px]">
-                                <span className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Statut</span>
-                                <div className="flex flex-wrap gap-1.5">
-                                    {statuses.map(status => (
-                                        <button
-                                            key={status}
-                                            onClick={() => toggleStatus(status)}
-                                            className={`inline-flex items-center px-2.5 py-1 rounded text-xs font-medium border transition-colors ${selectedStatuses.includes(status)
-                                                ? 'bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-900/50 dark:text-indigo-200 dark:border-indigo-800'
-                                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700'
-                                                }`}
-                                        >
-                                            {status}
-                                        </button>
-                                    ))}
+                            {/* Status and Type Filter Group */}
+                            <div className="flex flex-col sm:flex-row gap-4 items-end flex-grow">
+                                {/* Status Section */}
+                                <div className="bg-gray-50/50 dark:bg-gray-900/40 p-3 rounded-xl border border-gray-100 dark:border-gray-800/50 min-w-[140px]">
+                                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2.5 ml-1">Statut</span>
+                                    <div className="flex flex-col gap-1.5">
+                                        {statuses.map(status => (
+                                            <button
+                                                key={status}
+                                                onClick={() => toggleStatus(status)}
+                                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${selectedStatuses.includes(status)
+                                                    ? 'bg-indigo-600 border-indigo-500 text-white shadow-sm shadow-indigo-200 dark:shadow-none'
+                                                    : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700'
+                                                    }`}
+                                            >
+                                                <div className={`w-2 h-2 rounded-full ${selectedStatuses.includes(status) ? 'bg-white' : 'bg-gray-300 dark:bg-gray-600'}`} />
+                                                {status}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
 
-                            {/* Type Checkboxes */}
-                            <div className="flex-1 min-w-[200px]">
-                                <span className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Type</span>
-                                <div className="flex flex-wrap gap-1.5">
-                                    {types.map(type => (
-                                        <button
-                                            key={type}
-                                            onClick={() => toggleType(type)}
-                                            className={`inline-flex items-center px-2.5 py-1 rounded text-xs font-medium border transition-colors ${selectedTypes.includes(type)
-                                                ? 'bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-900/50 dark:text-indigo-200 dark:border-indigo-800'
-                                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700'
-                                                }`}
-                                        >
-                                            {type}
-                                        </button>
-                                    ))}
+                                {/* Type Section */}
+                                <div className="bg-gray-50/50 dark:bg-gray-900/40 p-3 rounded-xl border border-gray-100 dark:border-gray-800/50 min-w-[220px]">
+                                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2.5 ml-1">Type</span>
+                                    <div className="grid grid-cols-2 gap-1.5">
+                                        {types.map(type => (
+                                            <button
+                                                key={type}
+                                                onClick={() => toggleType(type)}
+                                                className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all ${selectedTypes.includes(type)
+                                                    ? 'bg-indigo-600 border-indigo-500 text-white shadow-sm shadow-indigo-200 dark:shadow-none'
+                                                    : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700'
+                                                    }`}
+                                            >
+                                                <div className={`w-1.5 h-1.5 rounded-full ${selectedTypes.includes(type) ? 'bg-white' : 'bg-gray-300 dark:bg-gray-600'}`} />
+                                                {type}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
 
@@ -945,7 +972,8 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                 projects={initialProjects}
                 isOpen={isProjectManagementOpen}
                 onClose={() => setIsProjectManagementOpen(false)}
-                isAdmin={user.role === "ADMIN"}
+                userRole={user.role || UserRole.VISITOR}
+                defaultTab={projectManagementDefaultTab}
             />
 
             <FileManagementDialog

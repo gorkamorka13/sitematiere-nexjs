@@ -1,20 +1,55 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { X, Save, MapPin, AlignLeft, FolderOpen, AlertCircle, CheckCircle2, Globe, Search, Undo2, Redo2 } from "lucide-react";
-import { Project, Document as ProjectDocument } from "@prisma/client";
-import { updateProject } from "@/app/actions/project-actions";
+import { X, Save, MapPin, AlignLeft, FolderOpen, AlertCircle, CheckCircle2, Globe, Search, Undo2, Redo2, Plus, Trash2, Edit, UploadCloud } from "lucide-react";
+import { Project, Document as ProjectDocument, ProjectType, ProjectStatus, UserRole } from "@prisma/client";
+import { updateProject, createProject, deleteProject } from "@/app/actions/project-actions";
 import EditableMapWrapper from "@/components/ui/editable-map-wrapper";
 import { decimalToDMS, dmsToDecimal, isValidLatitude, isValidLongitude } from "@/lib/coordinate-utils";
+import { FileUploadZone } from "../files/file-upload-zone";
+import { FileUploadProgress, FileUploadState } from "../files/file-upload-progress";
 
 interface ProjectManagementDialogProps {
   projects: Project[];
   isOpen: boolean;
   onClose: () => void;
-  isAdmin: boolean;
+  userRole: UserRole;
+  defaultTab?: 'create' | 'modify' | 'delete';
 }
 
-export default function ProjectManagementDialog({ projects, isOpen, onClose, isAdmin }: ProjectManagementDialogProps) {
+export default function ProjectManagementDialog({ projects, isOpen, onClose, userRole, defaultTab }: ProjectManagementDialogProps) {
+  const isAdmin = userRole === 'ADMIN';
+  const canModify = isAdmin || userRole === 'USER';
+  const [activeTab, setActiveTab] = useState<'create' | 'modify' | 'delete'>(defaultTab || 'modify');
+
+  // Synchroniser activeTab avec defaultTab quand le dialogue s'ouvre
+  useEffect(() => {
+    if (isOpen && defaultTab) {
+      // Sécurité : si un non-admin essaie d'ouvrir un onglet restreint, forcer 'modify'
+      if (!isAdmin && (defaultTab === 'create' || defaultTab === 'delete')) {
+        setActiveTab('modify');
+      } else {
+        setActiveTab(defaultTab);
+      }
+    }
+  }, [isOpen, defaultTab, isAdmin]);
+
+  // Réinitialiser la sélection lors du changement d'onglet pour éviter l'auto-sélection confuse
+  useEffect(() => {
+    setSelectedProjectId("");
+    setConfirmName("");
+    setSearchQuery("");
+
+    // Initialiser l'historique selon l'onglet
+    if (activeTab === 'create') {
+      setPositionHistory([{ lat: 0, lng: 0 }]);
+      setHistoryIndex(0);
+    } else {
+      setPositionHistory([]);
+      setHistoryIndex(-1);
+    }
+  }, [activeTab]);
+
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [formData, setFormData] = useState({
     latitude: 0,
@@ -28,12 +63,32 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, isA
     flagName: "",
     clientLogoName: "",
   });
+
+  const [createFormData, setCreateFormData] = useState({
+    name: "",
+    country: "",
+    type: ProjectType.PRS as ProjectType,
+    status: ProjectStatus.PROSPECT as ProjectStatus,
+    latitude: 0,
+    longitude: 0,
+    description: "",
+    projectCode: "",
+    prospection: 0,
+    studies: 0,
+    fabrication: 0,
+    transport: 0,
+    construction: 0,
+  });
+
+  const [confirmName, setConfirmName] = useState("");
   const [coordinateFormat, setCoordinateFormat] = useState<'decimal' | 'dms'>('decimal');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+
+  // Phase 3: Upload State
+  const [uploads, setUploads] = useState<FileUploadState[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [focusedSuggestionIndex, setFocusedSuggestionIndex] = useState(-1);
@@ -41,56 +96,15 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, isA
   // Historique des positions pour undo/redo
   const [positionHistory, setPositionHistory] = useState<{ lat: number; lng: number }[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
-  const [isUndoRedo, setIsUndoRedo] = useState(false);
-
-  // Handle dialog dragging
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setIsDragging(true);
-    setDragStart({
-      x: e.clientX - position.x,
-      y: e.clientY - position.y
-    });
-  };
-
-  const handleMouseMove = (e: MouseEvent) => {
-    if (isDragging) {
-      setPosition({
-        x: e.clientX - dragStart.x,
-        y: e.clientY - dragStart.y
-      });
-    }
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  // Add/remove mouse event listeners for dragging
-  useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-    } else {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    }
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isDragging, dragStart]);
 
   // Handle map marker position change
-  const handleMapPositionChange = (lat: number, lng: number, isFinal?: boolean) => {
-    // Si c'est un undo/redo, ne pas ajouter à l'historique
-    if (isUndoRedo) {
-      setIsUndoRedo(false);
+  const handleMapPositionChange = (lat: number, lng: number, isFinal: boolean = true) => {
+    // Mettre à jour le formulaire approprié
+    if (activeTab === 'create') {
+      setCreateFormData(prev => ({ ...prev, latitude: lat, longitude: lng }));
+    } else {
       setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }));
-      return;
     }
-
-    // Mettre à jour le formulaire dans tous les cas
-    setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }));
 
     // N'ajouter à l'historique que si c'est une position finale (relâchement de la souris)
     if (isFinal) {
@@ -111,43 +125,45 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, isA
   // Fonction Undo
   const handleUndo = useCallback(() => {
     if (historyIndex > 0) {
-      setIsUndoRedo(true);
       const newIndex = historyIndex - 1;
       setHistoryIndex(newIndex);
       const pos = positionHistory[newIndex];
       if (pos) {
-        setFormData(prev => ({ ...prev, latitude: pos.lat, longitude: pos.lng }));
+        if (activeTab === 'create') {
+          setCreateFormData(prev => ({ ...prev, latitude: pos.lat, longitude: pos.lng }));
+        } else {
+          setFormData(prev => ({ ...prev, latitude: pos.lat, longitude: pos.lng }));
+        }
       }
     }
-  }, [historyIndex, positionHistory]);
+  }, [historyIndex, positionHistory, activeTab]);
 
   // Fonction Redo
   const handleRedo = useCallback(() => {
     if (historyIndex < positionHistory.length - 1) {
-      setIsUndoRedo(true);
       const newIndex = historyIndex + 1;
       setHistoryIndex(newIndex);
       const pos = positionHistory[newIndex];
       if (pos) {
-        setFormData(prev => ({ ...prev, latitude: pos.lat, longitude: pos.lng }));
+        if (activeTab === 'create') {
+          setCreateFormData(prev => ({ ...prev, latitude: pos.lat, longitude: pos.lng }));
+        } else {
+          setFormData(prev => ({ ...prev, latitude: pos.lat, longitude: pos.lng }));
+        }
       }
     }
-  }, [historyIndex, positionHistory]);
+  }, [historyIndex, positionHistory, activeTab]);
 
-  // Initialiser l'historique quand on sélectionne un projet
+  // Initialiser l'historique quand on sélectionne un projet (Onglet Modifier)
   useEffect(() => {
-    if (selectedProjectId) {
-      // Attendre que formData soit mis à jour avec les valeurs du projet
-      const timer = setTimeout(() => {
-        if (formData.latitude !== 0 && formData.longitude !== 0) {
-          setPositionHistory([{ lat: formData.latitude, lng: formData.longitude }]);
-          setHistoryIndex(0);
-        }
-      }, 100);
-      return () => clearTimeout(timer);
+    if (activeTab === 'modify' && selectedProjectId) {
+      const project = projects.find(p => p.id === selectedProjectId);
+      if (project) {
+        setPositionHistory([{ lat: project.latitude, lng: project.longitude }]);
+        setHistoryIndex(0);
+      }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedProjectId]);
+  }, [selectedProjectId, activeTab, projects]);
 
   // Raccourcis clavier Ctrl+Z (Undo) et Ctrl+Y (Redo)
   useEffect(() => {
@@ -199,20 +215,16 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, isA
         [field]: decimal
       }));
 
-      // Ajouter à l'historique si ce n'est pas un undo/redo
-      if (!isUndoRedo) {
-        setPositionHistory(prev => {
-          const newHistory = prev.slice(0, historyIndex + 1);
-          newHistory.push({ lat: newLat, lng: newLng });
-          if (newHistory.length > 50) {
-            newHistory.shift();
-          }
-          return newHistory;
-        });
-        setHistoryIndex(prev => Math.min(prev + 1, 49));
-      } else {
-        setIsUndoRedo(false);
-      }
+      // Ajouter à l'historique
+      setPositionHistory(prev => {
+        const newHistory = prev.slice(0, historyIndex + 1);
+        newHistory.push({ lat: newLat, lng: newLng });
+        if (newHistory.length > 50) {
+          newHistory.shift();
+        }
+        return newHistory;
+      });
+      setHistoryIndex(prev => Math.min(prev + 1, 49));
     } catch (err) {
       // Invalid format, don't update
       setStatus({ type: 'error', message: `Format ${coordinateFormat === 'dms' ? 'DMS' : 'décimal'} invalide` });
@@ -290,10 +302,147 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, isA
     }
   }, [selectedProjectId, projects]);
 
-  if (!isOpen || !isAdmin) return null;
+  if (!isOpen || !canModify) return null;
+
+  const handleFilesSelected = (files: File[]) => {
+    const newUploads = files.map(file => ({
+      file,
+      progress: 0,
+      status: "pending" as const,
+    }));
+    setUploads(prev => [...prev, ...newUploads]);
+  };
+
+  const processUploads = async (projectId: string) => {
+    setIsUploading(true);
+    const uploadPromises = uploads.map(async (upload, index) => {
+      if (upload.status === "success") return;
+
+      updateUploadStatus(upload.file, { status: "uploading", progress: 0 });
+
+      const formData = new FormData();
+      formData.append("file", upload.file);
+      formData.append("projectId", projectId);
+
+      return new Promise<void>((resolve) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/files/upload');
+
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percentComplete = Math.round((event.loaded / event.total) * 100);
+            updateUploadStatus(upload.file, { progress: percentComplete });
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            updateUploadStatus(upload.file, { status: "success", progress: 100 });
+          } else {
+            updateUploadStatus(upload.file, { status: "error", error: "Upload failed" });
+          }
+          resolve();
+        };
+
+        xhr.onerror = () => {
+          updateUploadStatus(upload.file, { status: "error", error: "Network error" });
+          resolve();
+        };
+
+        xhr.send(formData);
+      });
+    });
+
+    await Promise.all(uploadPromises);
+    setIsUploading(false);
+  };
+
+  const updateUploadStatus = (file: File, updates: Partial<FileUploadState>) => {
+    setUploads(prev => prev.map(u =>
+      u.file === file ? { ...u, ...updates } : u
+    ));
+  };
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setStatus(null);
+
+    try {
+      const result = await createProject(createFormData);
+
+      if (result.success && result.projectId) {
+        // Start uploads if any
+        if (uploads.length > 0) {
+          setStatus({ type: 'success', message: "Projet créé. Transfert des fichiers en cours..." });
+          await processUploads(result.projectId);
+        }
+
+        setStatus({ type: 'success', message: "Projet et fichiers créés avec succès !" });
+        // Reset form
+        setCreateFormData({
+          name: "",
+          country: "",
+          type: ProjectType.PRS as ProjectType,
+          status: ProjectStatus.PROSPECT as ProjectStatus,
+          latitude: 0,
+          longitude: 0,
+          description: "",
+          projectCode: "",
+          prospection: 0,
+          studies: 0,
+          fabrication: 0,
+          transport: 0,
+          construction: 0,
+        });
+        setUploads([]);
+
+        setTimeout(() => {
+          setActiveTab('modify');
+          setSelectedProjectId(result.projectId || "");
+        }, 2000);
+      } else {
+        setStatus({ type: 'error', message: result.error || "Une erreur est survenue." });
+      }
+    } catch (error) {
+      setStatus({ type: 'error', message: "Erreur de communication avec le serveur." });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedProjectId) return;
+
+    setIsSubmitting(true);
+    setStatus(null);
+
+    try {
+      const result = await deleteProject(selectedProjectId, confirmName);
+
+      if (result.success) {
+        setStatus({ type: 'success', message: "Projet supprimé définitivement." });
+        setSelectedProjectId("");
+        setConfirmName("");
+        setTimeout(() => {
+          setActiveTab('modify');
+        }, 1500);
+      } else {
+        setStatus({ type: 'error', message: result.error || "Une erreur est survenue." });
+      }
+    } catch (error) {
+      setStatus({ type: 'error', message: "Erreur de communication avec le serveur." });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (activeTab === 'create') {
+      return handleCreate(e);
+    }
+
     if (!selectedProjectId) return;
 
     setIsSubmitting(true);
@@ -305,14 +454,15 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, isA
         latitude: formData.latitude,
         longitude: formData.longitude,
         description: formData.description,
+        prospection: formData.prospection,
+        studies: formData.studies,
+        fabrication: formData.fabrication,
+        transport: formData.transport,
+        construction: formData.construction,
       });
 
       if (result.success) {
         setStatus({ type: 'success', message: "Projet mis à jour avec succès !" });
-        setTimeout(() => {
-            // Optionnel: On peut rester ouvert ou fermer
-            // onClose();
-        }, 2000);
       } else {
         setStatus({ type: 'error', message: result.error || "Une erreur est survenue." });
       }
@@ -327,29 +477,77 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, isA
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 lg:p-4 animate-in fade-in duration-300">
       <div
         className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden border border-gray-100 dark:border-gray-700 transition-all animate-in fade-in zoom-in duration-200 flex flex-col"
-        style={{ transform: `translate(${position.x}px, ${position.y}px)` }}
       >
         {/* Header - Draggable */}
         <div
-          className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50 cursor-move select-none"
-          onMouseDown={handleMouseDown}
+          className="flex flex-col border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50 select-none"
         >
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-indigo-50 dark:bg-indigo-900/40 rounded-lg">
-                <FolderOpen className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-            </div>
-            <h2 className="text-lg lg:text-xl font-bold text-gray-900 dark:text-white uppercase tracking-tight">Gestion des Projets</h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+          <div
+            className="flex items-center justify-between p-5"
           >
-            <X className="w-5 h-5" />
-          </button>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-indigo-50 dark:bg-indigo-900/40 rounded-lg">
+                  {activeTab === 'create' ? <Plus className="w-5 h-5 text-indigo-600 dark:text-indigo-400" /> :
+                   activeTab === 'modify' ? <Edit className="w-5 h-5 text-indigo-600 dark:text-indigo-400" /> :
+                   <Trash2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />}
+              </div>
+              <h2 className="text-lg lg:text-xl font-bold text-gray-900 dark:text-white uppercase tracking-tight">
+                {activeTab === 'create' ? 'Création de projet' :
+                 activeTab === 'modify' ? 'Modification de projets' :
+                 'Suppression de projet'}
+              </h2>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Tab Navigation */}
+          <div className="flex px-5 gap-6">
+            {isAdmin && (
+              <button
+                onClick={() => setActiveTab('create')}
+                className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 ${
+                  activeTab === 'create'
+                  ? 'text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400'
+                  : 'text-gray-400 border-transparent hover:text-gray-600 dark:hover:text-gray-200'
+                }`}
+              >
+                Créer
+              </button>
+            )}
+            <button
+              onClick={() => setActiveTab('modify')}
+              className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 ${
+                activeTab === 'modify'
+                ? 'text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400'
+                : 'text-gray-400 border-transparent hover:text-gray-600 dark:hover:text-gray-200'
+              }`}
+            >
+              Modifier
+            </button>
+            {isAdmin && (
+              <button
+                onClick={() => setActiveTab('delete')}
+                className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 ${
+                  activeTab === 'delete'
+                  ? 'text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400'
+                  : 'text-gray-400 border-transparent hover:text-gray-600 dark:hover:text-gray-200'
+                }`}
+              >
+                Supprimer
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Form Body - Scrollable */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+        <div className="overflow-y-auto max-h-[calc(90vh-160px)] flex-1">
+          {activeTab === 'modify' && (
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Sélection du projet et Recherche Rapide */}
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 md:flex-[0.4]">
@@ -509,7 +707,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, isA
           </div>
 
           {/* Ligne des inputs avec boutons Undo/Redo */}
-          <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-3 items-center">
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-center">
             {/* Input Latitude */}
             <div>
               <input
@@ -523,32 +721,6 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, isA
               />
             </div>
 
-            {/* Boutons Undo/Redo centraux */}
-            <div className="flex items-center justify-center">
-              <div className="flex items-center gap-1 border border-gray-200 dark:border-gray-600 rounded-lg p-1 bg-white dark:bg-gray-800 shadow-sm">
-                <button
-                  type="button"
-                  onClick={handleUndo}
-                  disabled={historyIndex <= 0 || !selectedProjectId}
-                  className="p-2 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1"
-                  title="Annuler (Ctrl+Z)"
-                >
-                  <Undo2 className="w-4 h-4" />
-                  <span className="text-xs font-medium hidden sm:inline">Undo</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleRedo}
-                  disabled={historyIndex >= positionHistory.length - 1 || !selectedProjectId}
-                  className="p-2 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1"
-                  title="Rétablir (Ctrl+Y)"
-                >
-                  <Redo2 className="w-4 h-4" />
-                  <span className="text-xs font-medium hidden sm:inline">Redo</span>
-                </button>
-              </div>
-            </div>
-
             {/* Input Longitude */}
             <div>
               <input
@@ -560,6 +732,30 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, isA
                 placeholder={coordinateFormat === 'decimal' ? '-13.2317' : '13° 13\' 54" W'}
                 required
               />
+            </div>
+
+            {/* Boutons Undo/Redo à droite */}
+            <div className="flex items-center justify-center">
+              <div className="flex items-center gap-1 border border-gray-200 dark:border-gray-600 rounded-lg p-1 bg-white dark:bg-gray-800 shadow-sm">
+                <button
+                  type="button"
+                  onClick={handleUndo}
+                  disabled={historyIndex <= 0 || !selectedProjectId}
+                  className="p-2 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1"
+                  title="Annuler (Ctrl+Z)"
+                >
+                  <Undo2 className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRedo}
+                  disabled={historyIndex >= positionHistory.length - 1 || !selectedProjectId}
+                  className="p-2 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1"
+                  title="Rétablir (Ctrl+Y)"
+                >
+                  <Redo2 className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -715,7 +911,383 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, isA
               )}
             </button>
           </div>
-        </form>
+            </form>
+          )}
+
+          {activeTab === 'create' && (
+            <form onSubmit={handleCreate} className="p-6 space-y-6">
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-xl border border-blue-100 dark:border-blue-800 flex items-center gap-3">
+                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                <span className="text-sm font-medium italic">Phase 1 : Interface de création (Logique backend à venir en Phase 2)</span>
+              </div>
+
+              {/* Informations de base */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Nom du projet *</label>
+                  <input
+                    type="text"
+                    value={createFormData.name}
+                    onChange={(e) => setCreateFormData({ ...createFormData, name: e.target.value })}
+                    className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white"
+                    placeholder="Nom de l'ouvrage"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Pays *</label>
+                  <input
+                    type="text"
+                    value={createFormData.country}
+                    onChange={(e) => setCreateFormData({ ...createFormData, country: e.target.value })}
+                    className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white"
+                    placeholder="ex: Sierra Leone"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Type de projet *</label>
+                  <select
+                    value={createFormData.type}
+                    onChange={(e) => setCreateFormData({ ...createFormData, type: e.target.value as ProjectType })}
+                    className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white"
+                    required
+                  >
+                    {Object.values(ProjectType).map(t => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Statut *</label>
+                  <select
+                    value={createFormData.status}
+                    onChange={(e) => setCreateFormData({ ...createFormData, status: e.target.value as ProjectStatus })}
+                    className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white"
+                    required
+                  >
+                    {Object.values(ProjectStatus).map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Code Projet</label>
+                  <input
+                    type="text"
+                    value={createFormData.projectCode}
+                    onChange={(e) => setCreateFormData({ ...createFormData, projectCode: e.target.value })}
+                    className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white"
+                    placeholder="ex: SLE-2024-001"
+                  />
+                </div>
+              </div>
+
+              {/* Carte Interactive */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-indigo-500" /> Position Géo-référencée
+                </label>
+                <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-600 shadow-sm h-[300px]">
+                  <EditableMapWrapper
+                    latitude={createFormData.latitude}
+                    longitude={createFormData.longitude}
+                    onPositionChange={handleMapPositionChange}
+                  />
+                </div>
+              </div>
+
+              {/* Labels des coordonnées pour Création */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 flex items-center justify-between">
+                  <span className="flex items-center gap-2"><MapPin className="w-4 h-4 text-gray-400" /> Latitude</span>
+                  <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+                    <button type="button" onClick={() => setCoordinateFormat('decimal')} className={`px-2 py-1 rounded text-[10px] font-bold ${coordinateFormat === 'decimal' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500'}`}><Globe className="w-3 h-3" /></button>
+                    <button type="button" onClick={() => setCoordinateFormat('dms')} className={`px-2 py-1 rounded text-[10px] font-bold ${coordinateFormat === 'dms' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500'}`}><MapPin className="w-3 h-3" /></button>
+                  </div>
+                </label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 flex items-center justify-between">
+                  <span className="flex items-center gap-2"><MapPin className="w-4 h-4 text-gray-400" /> Longitude</span>
+                  <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+                    <button type="button" onClick={() => setCoordinateFormat('decimal')} className={`px-2 py-1 rounded text-[10px] font-bold ${coordinateFormat === 'decimal' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500'}`}><Globe className="w-3 h-3" /></button>
+                    <button type="button" onClick={() => setCoordinateFormat('dms')} className={`px-2 py-1 rounded text-[10px] font-bold ${coordinateFormat === 'dms' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500'}`}><MapPin className="w-3 h-3" /></button>
+                  </div>
+                </label>
+              </div>
+
+              {/* Ligne des inputs Coordonnées avec Undo/Redo pour Création */}
+              <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-center">
+                <input
+                  type="text"
+                  value={coordinateFormat === 'decimal' ? createFormData.latitude : decimalToDMS(createFormData.latitude, true)}
+                  onChange={(e) => {
+                    const val = coordinateFormat === 'dms' ? dmsToDecimal(e.target.value) : parseFloat(e.target.value) || 0;
+                    setCreateFormData(prev => ({ ...prev, latitude: val }));
+                    setPositionHistory(h => [...h.slice(0, historyIndex + 1), { lat: val, lng: createFormData.longitude }].slice(-50));
+                    setHistoryIndex(prev => Math.min(prev + 1, 49));
+                  }}
+                  className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white font-mono text-sm"
+                  placeholder="Latitude"
+                  required
+                />
+                <input
+                  type="text"
+                  value={coordinateFormat === 'decimal' ? createFormData.longitude : decimalToDMS(createFormData.longitude, false)}
+                  onChange={(e) => {
+                    const val = coordinateFormat === 'dms' ? dmsToDecimal(e.target.value) : parseFloat(e.target.value) || 0;
+                    setCreateFormData(prev => ({ ...prev, longitude: val }));
+                    setPositionHistory(h => [...h.slice(0, historyIndex + 1), { lat: createFormData.latitude, lng: val }].slice(-50));
+                    setHistoryIndex(prev => Math.min(prev + 1, 49));
+                  }}
+                  className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white font-mono text-sm"
+                  placeholder="Longitude"
+                  required
+                />
+                <div className="flex items-center gap-1 border border-gray-200 dark:border-gray-600 rounded-lg p-1 bg-white dark:bg-gray-800 shadow-sm">
+                  <button
+                    type="button"
+                    onClick={handleUndo}
+                    disabled={historyIndex <= 0}
+                    className="p-2 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 disabled:opacity-40 transition-all"
+                  >
+                    <Undo2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRedo}
+                    disabled={historyIndex >= positionHistory.length - 1}
+                    className="p-2 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 disabled:opacity-40 transition-all"
+                  >
+                    <Redo2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Ligne des exemples pour Création */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 -mt-1 md:-mt-2 px-1">
+                <p className="text-[10px] text-gray-400 dark:text-gray-500 italic">
+                  {coordinateFormat === 'decimal' ? 'Ex: 8.4657' : 'Ex: 8° 27\' 56" N'}
+                </p>
+                <p className="text-[10px] text-gray-400 dark:text-gray-500 italic">
+                  {coordinateFormat === 'decimal' ? 'Ex: -13.2317' : 'Ex: 13° 13\' 54" W'}
+                </p>
+              </div>
+
+
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                  <AlignLeft className="w-4 h-4 text-gray-400" /> Description du projet
+                </label>
+                <textarea
+                  value={createFormData.description}
+                  onChange={(e) => setCreateFormData({ ...createFormData, description: e.target.value })}
+                  rows={4}
+                  className="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white resize-none"
+                  placeholder="Détails de l'ouvrage..."
+                />
+              </div>
+
+              {/* Avancement */}
+              <div className="space-y-4">
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Avancement initial</h3>
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                  {[
+                    { label: "Prospection", key: "prospection" },
+                    { label: "Études", key: "studies" },
+                    { label: "Fabrication", key: "fabrication" },
+                    { label: "Transport", key: "transport" },
+                    { label: "Montage", key: "construction" },
+                  ].map((step) => (
+                    <div key={step.key}>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">{step.label}</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={createFormData[step.key as keyof typeof createFormData] as number}
+                        onChange={(e) => setCreateFormData({ ...createFormData, [step.key]: parseInt(e.target.value) || 0 })}
+                        className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white text-sm"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Phase 3: File Upload */}
+              <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                  <UploadCloud className="w-4 h-4 text-blue-500" /> Documents et Photos (Optionnel)
+                </h3>
+                <FileUploadZone
+                  onFilesSelected={handleFilesSelected}
+                  disabled={isSubmitting || isUploading}
+                />
+                <FileUploadProgress
+                  uploads={uploads}
+                  onRemove={(index) => setUploads(prev => prev.filter((_, i) => i !== index))}
+                  onClearCompleted={() => setUploads([])}
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('modify')}
+                  className="px-6 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-all"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="flex items-center gap-2 px-8 py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-lg shadow-indigo-200 dark:shadow-none transition-all active:scale-95"
+                >
+                  <Plus className="w-4 h-4" />
+                  Créer le projet
+                </button>
+              </div>
+            </form>
+          )}
+
+          {activeTab === 'delete' && (
+            <div className="p-6 space-y-6">
+              <div className="p-4 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-xl border border-red-100 dark:border-red-800 flex items-center gap-3">
+                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                <div className="flex flex-col">
+                  <span className="text-sm font-bold">Zone de danger : Suppression de projet</span>
+                  <span className="text-xs">Cette action est irréversible. Toutes les données et fichiers associés seront définitivement supprimés.</span>
+                </div>
+              </div>
+
+              {/* Sélection du projet à supprimer */}
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1 md:flex-[0.5]">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Choisir le projet</label>
+                  <select
+                    value={selectedProjectId}
+                    onChange={(e) => setSelectedProjectId(e.target.value)}
+                    className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 transition-all dark:text-white"
+                  >
+                    <option value="">-- Sélectionner un projet --</option>
+                    {sortedProjects.map(p => (
+                      <option key={p.id} value={p.id}>{p.name} ({p.country})</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex-1 md:flex-[0.5] relative">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Recherche rapide</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setShowSuggestions(true);
+                      }}
+                      onFocus={() => setShowSuggestions(true)}
+                      onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                      placeholder="Tapez le nom..."
+                      className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 transition-all dark:text-white"
+                    />
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+
+                    {showSuggestions && searchSuggestions.length > 0 && (
+                      <div className="absolute z-[110] w-full mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-48 overflow-auto animate-in fade-in slide-in-from-top-2 duration-200">
+                        {searchSuggestions.map((project: Project, index: number) => (
+                          <button
+                            key={project.id}
+                            type="button"
+                            onClick={() => handleSearchSelect(project)}
+                            className="w-full text-left px-4 py-2 text-sm hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+                          >
+                            <span className="font-semibold">{project.name}</span>
+                            <span className="ml-2 text-xs opacity-60">({project.country})</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {selectedProjectId && (
+                <div className="bg-gray-50 dark:bg-gray-900/50 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 animate-in fade-in zoom-in duration-300">
+                  <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Récapitulatif du projet</h3>
+
+                  {(() => {
+                    const project = projects.find(p => p.id === selectedProjectId);
+                    if (!project) return null;
+                    return (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <p className="text-xs text-gray-500 uppercase font-bold">Nom de l'ouvrage</p>
+                          <p className="text-lg font-bold text-gray-900 dark:text-white">{project.name}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-xs text-gray-500 uppercase font-bold">Pays</p>
+                          <p className="text-lg font-bold text-gray-900 dark:text-white">{project.country}</p>
+                        </div>
+                        <div className="space-y-1 text-red-600 dark:text-red-400">
+                          <p className="text-xs uppercase font-bold opacity-70">Attention</p>
+                          <p className="text-sm font-medium italic">Tous les documents et photos seront supprimés.</p>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                      Veuillez taper <span className="text-red-600 dark:text-red-400 font-mono">"{projects.find(p => p.id === selectedProjectId)?.name}"</span> pour confirmer la suppression :
+                    </label>
+                    <input
+                      type="text"
+                      value={confirmName}
+                      onChange={(e) => setConfirmName(e.target.value)}
+                      placeholder="Nom du projet..."
+                      className="w-full px-4 py-3 bg-white dark:bg-gray-800 border-2 border-red-200 dark:border-red-900/30 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all dark:text-white font-medium"
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-3 mt-8">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedProjectId('');
+                        setConfirmName('');
+                      }}
+                      className="px-6 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-all"
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isSubmitting || confirmName !== projects.find(p => p.id === selectedProjectId)?.name}
+                      onClick={handleDelete}
+                      className="flex items-center gap-2 px-8 py-2.5 text-sm font-bold text-white bg-red-600 hover:bg-red-700 disabled:opacity-30 disabled:cursor-not-allowed rounded-xl shadow-lg shadow-red-200 dark:shadow-none transition-all active:scale-95"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Suppression...
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 className="w-4 h-4" />
+                          Supprimer définitivement
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+        </div>
       </div>
     </div>
   );
