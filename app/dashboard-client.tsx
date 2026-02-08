@@ -841,9 +841,11 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                                         {/* Drapeau du pays */}
                                         {selectedProject && (selectedProject as Project & { documents: ProjectDocument[] }).documents?.filter((d) => d.type === 'FLAG').length > 0 && (
                                             <img
-                                                src={(selectedProject as Project & { documents: ProjectDocument[] }).documents.find((d) => d.type === 'FLAG')?.url.startsWith('http')
-                                                    ? (selectedProject as Project & { documents: ProjectDocument[] }).documents.find((d) => d.type === 'FLAG')?.url
-                                                    : `/${(selectedProject as Project & { documents: ProjectDocument[] }).documents.find((d) => d.type === 'FLAG')?.url}`}
+                                                src={(() => {
+                                                    const flagUrl = (selectedProject as Project & { documents: ProjectDocument[] }).documents.find((d) => d.type === 'FLAG')?.url;
+                                                    if (!flagUrl) return '';
+                                                    return flagUrl.startsWith('http') ? flagUrl : `/${flagUrl}`;
+                                                })()}
                                                 alt={`Drapeau ${selectedProject.country}`}
                                                 className="w-8 h-6 object-cover rounded shadow-sm"
                                                 title={`Drapeau ${selectedProject.country}`}
@@ -852,9 +854,11 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                                         {/* Logo client */}
                                         {selectedProject && (selectedProject as Project & { documents: ProjectDocument[] }).documents?.filter((d) => d.type === 'CLIENT_LOGO' || d.name.toLowerCase().includes('logo')).length > 0 && (
                                             <img
-                                                src={(selectedProject as Project & { documents: ProjectDocument[] }).documents.find((d) => d.type === 'CLIENT_LOGO' || d.name.toLowerCase().includes('logo'))?.url.startsWith('http')
-                                                    ? (selectedProject as Project & { documents: ProjectDocument[] }).documents.find((d) => d.type === 'CLIENT_LOGO' || d.name.toLowerCase().includes('logo'))?.url
-                                                    : `/${(selectedProject as Project & { documents: ProjectDocument[] }).documents.find((d) => d.type === 'CLIENT_LOGO' || d.name.toLowerCase().includes('logo'))?.url}`}
+                                                src={(() => {
+                                                    const logoUrl = (selectedProject as Project & { documents: ProjectDocument[] }).documents.find((d) => d.type === 'CLIENT_LOGO' || d.name.toLowerCase().includes('logo'))?.url;
+                                                    if (!logoUrl) return '';
+                                                    return logoUrl.startsWith('http') ? logoUrl : `/${logoUrl}`;
+                                                })()}
                                                 alt="Logo client"
                                                 className="h-6 w-auto object-contain"
                                                 title="Logo client"

@@ -83,6 +83,12 @@ export default (phase: string) => {
           port: '',
           pathname: '/**',
         },
+        {
+          protocol: 'https',
+          hostname: 'res.cloudinary.com',
+          port: '',
+          pathname: '/**',
+        },
       ],
     },
   };

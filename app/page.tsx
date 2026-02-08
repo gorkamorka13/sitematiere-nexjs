@@ -3,6 +3,9 @@ import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 import DashboardClient from "./dashboard-client";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function DashboardPage() {
   const session = await auth();
 
@@ -12,7 +15,6 @@ export default async function DashboardPage() {
 
   const projects = await prisma.project.findMany({
     include: {
-      images: true,
       documents: true,
       videos: true,
       files: true,

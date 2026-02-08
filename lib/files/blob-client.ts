@@ -1,4 +1,4 @@
-import { put, del, list } from '@vercel/blob';
+import { uploadToR2, deleteFromR2, getFileUrl } from '../storage/r2-operations';
 import sharp from 'sharp';
 import { FileType } from '@prisma/client';
 import ffmpeg from 'fluent-ffmpeg';
@@ -13,7 +13,7 @@ export interface UploadResult {
 }
 
 /**
- * Upload a file to Vercel Blob
+ * Upload a file to Cloudflare R2
  */
 export async function uploadFile(
   file: File,
@@ -21,30 +21,20 @@ export async function uploadFile(
 ): Promise<UploadResult> {
   const filename = `${projectFolderName}/${crypto.randomUUID()}-${file.name}`;
 
-  const blob = await put(filename, file, {
-    access: 'public',
-  });
+  const url = await uploadToR2(file, filename);
 
   return {
-    url: blob.url,
-    pathname: blob.pathname,
-    contentType: blob.contentType,
+    url,
+    pathname: filename,
+    contentType: file.type,
   };
 }
 
 /**
- * Delete a file from Vercel Blob
+ * Delete a file from Cloudflare R2
  */
-export async function deleteFile(url: string): Promise<void> {
-  await del(url);
-}
-
-/**
- * List files in Vercel Blob (useful for admin/debug)
- */
-export async function listFiles(prefix?: string) {
-  const { blobs } = await list({ prefix });
-  return blobs;
+export async function deleteFile(key: string): Promise<void> {
+  await deleteFromR2(key);
 }
 
 /**

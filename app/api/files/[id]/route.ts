@@ -5,7 +5,7 @@ import { sanitizeFileName } from "@/lib/files/validation";
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
   if (!session?.user || (session.user as { role?: string }).role !== "ADMIN") {
@@ -13,7 +13,7 @@ export async function PATCH(
   }
 
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     const { name, projectId } = body;
 
@@ -66,7 +66,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   // We already have a bulk delete route, but proper REST suggests singular delete here too.
   // Skipping for now as we focus on Rename.

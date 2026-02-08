@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { ProjectUpdateSchema, ProjectUpdateInput, ProjectCreateSchema, ProjectCreateInput } from "@/lib/validations";
 import { revalidatePath } from "next/cache";
-import { del } from "@vercel/blob";
+import { deleteFromR2, extractKeyFromUrl } from "@/lib/storage/r2-operations";
 
 export async function updateProject(formData: ProjectUpdateInput) {
   const session = await auth();
@@ -41,14 +41,14 @@ export async function updateProject(formData: ProjectUpdateInput) {
       ...(validatedData.flagName ? [
         prisma.document.updateMany({
           where: { projectId: validatedData.id, type: "FLAG" },
-          data: { name: validatedData.flagName }
+          data: { url: validatedData.flagName }
         })
       ] : []),
-      // Mise à jour du nom du logo client si fourni
+      // Mise à jour de l'URL du logo client si fourni
       ...(validatedData.clientLogoName ? [
         prisma.document.updateMany({
           where: { projectId: validatedData.id, type: "CLIENT_LOGO" },
-          data: { name: validatedData.clientLogoName }
+          data: { url: validatedData.clientLogoName }
         })
       ] : []),
     ]);
@@ -121,18 +121,19 @@ export async function deleteProject(projectId: string, confirmName: string) {
       return { success: false, error: "Le nom de confirmation ne correspond pas au nom du projet." };
     }
 
-    // Récupérer tous les fichiers associés pour nettoyage Blob
+    // Récupérer tous les fichiers associés pour nettoyage R2
     const files = await prisma.file.findMany({
       where: { projectId },
-      select: { blobUrl: true },
+      select: { blobUrl: true, blobPath: true },
     });
 
-    // Supprimer les blobs de Vercel
+    // Supprimer les fichiers de R2
     if (files.length > 0) {
       await Promise.all(
-        files.map((file) =>
-          del(file.blobUrl).catch((err) => console.error(`Erreur suppression blob ${file.blobUrl}:`, err))
-        )
+        files.map((file) => {
+          const key = file.blobPath || extractKeyFromUrl(file.blobUrl);
+          return deleteFromR2(key).catch((err) => console.error(`Erreur suppression R2 ${key}:`, err));
+        })
       );
     }
 
