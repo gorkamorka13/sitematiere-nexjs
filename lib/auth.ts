@@ -2,21 +2,21 @@ import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import Credentials from "next-auth/providers/credentials";
 import prisma from "@/lib/prisma";
-import bcrypt from "bcryptjs";
+import { compareSync } from "bcrypt-ts";
 import { z } from "zod";
 import { User } from "@prisma/client";
 
 // Étendre les types NextAuth
 declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string;
-      role: string;
-      username: string;
-      name: string | null;
-      color: string | null;
-    };
-  }
+    interface Session {
+        user: {
+            id: string;
+            role: string;
+            username: string;
+            name: string | null;
+            color: string | null;
+        };
+    }
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -54,7 +54,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
                     if (!user || !user.passwordHash) return null;
 
-                    const passwordsMatch = await bcrypt.compare(password, user.passwordHash);
+                    const passwordsMatch = compareSync(password, user.passwordHash);
 
                     if (passwordsMatch) return user;
                 }

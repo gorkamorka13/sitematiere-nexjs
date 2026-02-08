@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { sanitizeFileName } from "@/lib/files/validation";
 
+export const runtime = 'edge';
+
 export async function PUT(request: Request) {
   const session = await auth();
 

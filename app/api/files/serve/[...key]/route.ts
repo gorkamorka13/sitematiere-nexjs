@@ -3,6 +3,8 @@ import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { r2Client, R2_BUCKET_NAME } from "@/lib/storage/r2-client";
 import { Readable } from "stream";
 
+export const runtime = 'edge';
+
 // Helper to convert Node.js Readable stream to Web ReadableStream
 function streamToWeb(nodeStream: Readable): ReadableStream {
   return new ReadableStream({

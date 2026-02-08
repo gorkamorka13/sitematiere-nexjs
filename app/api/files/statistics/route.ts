@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
+export const runtime = 'edge';
+
 export async function GET() {
   // Vérifier l'authentification
   const session = await auth();

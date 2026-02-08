@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { FileType, Prisma } from "@prisma/client";
 
+export const runtime = 'edge';
+
 export async function GET(request: Request) {
   const session = await auth();
   if (!session?.user) {

@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import bcrypt from "bcryptjs";
+import { hash } from "bcrypt-ts";
 import { z } from "zod";
 import { UserRole } from "@prisma/client";
+
+export const runtime = 'edge';
 
 const userSchema = z.object({
   username: z.string().min(1),
@@ -87,7 +89,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Hasher le mot de passe
-    const passwordHash = await bcrypt.hash(validatedData.password, 10);
+    const passwordHash = await hash(validatedData.password, 10);
 
     const user = await prisma.user.create({
       data: {
@@ -156,7 +158,7 @@ export async function PUT(request: NextRequest) {
     if (updateData.role) dataToUpdate.role = updateData.role;
     if (updateData.color) dataToUpdate.color = updateData.color;
     if (updateData.password) {
-      dataToUpdate.passwordHash = await bcrypt.hash(updateData.password, 10);
+      dataToUpdate.passwordHash = await hash(updateData.password, 10);
     }
 
     const user = await prisma.user.update({

@@ -5,6 +5,8 @@ import { uploadFile, generateThumbnail, generateVideoThumbnail, getFileTypeFromM
 import { validateFileSize, validateFileType, sanitizeFileName } from "@/lib/files/validation";
 import { FileType } from "@prisma/client";
 
+export const runtime = 'edge';
+
 export async function POST(request: Request) {
   const session = await auth();
 
