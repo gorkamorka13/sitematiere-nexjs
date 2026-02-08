@@ -9,12 +9,13 @@ import { r2Client, R2_BUCKET_NAME, R2_PUBLIC_URL } from "./r2-client";
  * @returns Public URL of the uploaded file
  */
 export async function uploadToR2(file: File, key: string): Promise<string> {
-  const buffer = Buffer.from(await file.arrayBuffer());
+  const arrayBuffer = await file.arrayBuffer();
+  const uint8Array = new Uint8Array(arrayBuffer);
 
   await r2Client.send(new PutObjectCommand({
     Bucket: R2_BUCKET_NAME,
     Key: key,
-    Body: buffer,
+    Body: uint8Array,
     ContentType: file.type,
   }));
 

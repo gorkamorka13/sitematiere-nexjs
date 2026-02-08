@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { uploadFile, getFileTypeFromMime } from "@/lib/files/blob-client";
+import { uploadFile, getFileTypeFromMime } from "@/lib/files/blob-edge";
 import { validateFileSize, validateFileType, sanitizeFileName } from "@/lib/files/validation";
 import { FileType } from "@prisma/client";
 
-// Note: Using Node.js runtime for sharp/ffmpeg support
-// Remove edge runtime to allow Node.js modules (fs, path, sharp, fluent-ffmpeg)
+// Cloudflare Pages requires Edge Runtime for API routes
+export const runtime = 'edge';
 
 export async function POST(request: Request) {
   const session = await auth();

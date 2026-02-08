@@ -51,40 +51,9 @@ export async function getProjectMedia(projectName: string) {
       }
     }
 
-    // 2. FALLBACK: Si rien en BDD, on scanne le dossier local (Transition/Ancien système)
-    // Note: Ce code ne fonctionne que en environnement Node.js (pas sur Cloudflare Workers)
-    if (typeof process !== 'undefined' && process.cwd) {
-      const fs = await import('fs');
-      const path = await import('path');
-      
-      const publicDir = path.join(process.cwd(), "public");
-      const mediaPath = path.join(publicDir, "images", folderName);
-
-      if (fs.existsSync(mediaPath)) {
-        const files = fs.readdirSync(mediaPath);
-
-        files.forEach((file: string) => {
-          const ext = path.extname(file).toLowerCase();
-          const relativeUrl = `images/${folderName}/${file}`;
-
-          if ([".jpg", ".jpeg", ".png", ".webp"].includes(ext)) {
-            result.images.push({
-              url: relativeUrl,
-              name: path.parse(file).name,
-            });
-          } else if (ext === ".pdf") {
-            result.pdfs.push({
-              url: relativeUrl,
-              name: file,
-            });
-          }
-        });
-      }
-
-      // Tri naturel pour le fallback local
-      result.images.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
-      result.pdfs.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
-    }
+    // 2. Note: Le fallback local (scan de dossier) a été supprimé
+    // car il nécessite fs/path qui ne fonctionnent pas sur Cloudflare Edge Runtime
+    // Tous les fichiers doivent désormais être stockés en base de données (table File)
 
   } catch (error) {
     console.error(`Error fetching media for ${projectName}:`, error);
