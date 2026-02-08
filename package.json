@@ -1,6 +1,6 @@
 {
   "name": "sitematiere-nextjs",
-  "version": "0.0.79",
+  "version": "0.0.81",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -19,6 +19,8 @@
     "@aws-sdk/client-s3": "^3.985.0",
     "@aws-sdk/s3-request-presigner": "^3.985.0",
     "@cloudflare/next-on-pages": "1.13.16",
+    "@neondatabase/serverless": "^1.0.2",
+    "@prisma/adapter-neon": "^7.3.0",
     "@prisma/client": "6.19.2",
     "@types/jspdf": "^1.3.3",
     "@types/leaflet": "^1.9.21",
@@ -45,6 +47,7 @@
     "react-pdf": "^10.3.0",
     "sharp": "^0.34.5",
     "tailwind-merge": "^3.4.0",
+    "ws": "^8.19.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
@@ -55,6 +58,7 @@
     "@types/react-dom": "^19",
     "@types/react-dropzone": "^4.2.2",
     "@types/react-pdf": "^6.2.0",
+    "@types/ws": "^8.18.1",
     "eslint": "^9",
     "eslint-config-next": "15.5.2",
     "tailwindcss": "^4",
