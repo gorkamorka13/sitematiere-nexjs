@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { uploadFile, generateThumbnail, generateVideoThumbnail, getFileTypeFromMime } from "@/lib/files/blob-client";
+import { uploadFile, getFileTypeFromMime } from "@/lib/files/blob-client";
 import { validateFileSize, validateFileType, sanitizeFileName } from "@/lib/files/validation";
 import { FileType } from "@prisma/client";
 
-export const runtime = 'edge';
+// Note: Using Node.js runtime for sharp/ffmpeg support
+// Remove edge runtime to allow Node.js modules (fs, path, sharp, fluent-ffmpeg)
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -62,40 +63,9 @@ export async function POST(request: Request) {
         let height = null;
         let duration = null;
 
-        // Generate thumbnail for images
-        if (fileType === FileType.IMAGE) {
-          try {
-            const arrayBuffer = await file.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer);
-            const thumbnailBuffer = await generateThumbnail(buffer);
-
-            // Upload thumbnail
-            const thumbFile = new File([new Uint8Array(thumbnailBuffer)], `thumb_${sanitizedName}`, { type: "image/jpeg" });
-            const thumbUpload = await uploadFile(thumbFile, `${folderName}/thumbnails`);
-            thumbnailUrl = thumbUpload.url;
-
-            // Get dimensions (optional, requires metadata extraction which we skipped for now)
-          } catch (e) {
-            console.error("Error generating image thumbnail:", e);
-            // Continue without thumbnail
-          }
-        }
-        // Generate thumbnail for videos
-        else if (fileType === FileType.VIDEO) {
-          try {
-            const arrayBuffer = await file.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer);
-            const thumbnailBuffer = await generateVideoThumbnail(buffer);
-
-            // Upload thumbnail
-            const thumbFile = new File([new Uint8Array(thumbnailBuffer)], `thumb_${sanitizedName}.jpg`, { type: "image/jpeg" });
-            const thumbUpload = await uploadFile(thumbFile, `${folderName}/thumbnails`);
-            thumbnailUrl = thumbUpload.url;
-          } catch (e) {
-            console.error("Error generating video thumbnail:", e);
-            // Continue without thumbnail
-          }
-        }
+        // Thumbnail generation disabled for Cloudflare Edge compatibility
+        // Sharp and fluent-ffmpeg require Node.js runtime
+        // TODO: Implement Cloudflare-compatible thumbnail generation
 
         // 3. Create DB Record
         const dbFile = await prisma.file.create({

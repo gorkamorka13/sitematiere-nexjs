@@ -1,5 +1,3 @@
-import path from "path";
-
 // Maximum file size: 150Ko
 export const MAX_FILE_SIZE = 150 * 1024;
 
@@ -54,7 +52,7 @@ export function validateFileType(mimeType: string, fileName: string): { valid: b
     };
   }
 
-  const ext = path.extname(fileName).toLowerCase();
+  const ext = fileName.slice(fileName.lastIndexOf('.')).toLowerCase();
   if (!allowedExtensions.includes(ext)) {
     return {
       valid: false,
@@ -71,8 +69,9 @@ export function validateFileType(mimeType: string, fileName: string): { valid: b
 export function sanitizeFileName(fileName: string): string {
   // Remove non-ascii chars, replace spaces with underscores, remove special chars
   // Keep only alphanumeric, dots, underscores and hyphens
-  const name = path.parse(fileName).name;
-  const ext = path.parse(fileName).ext;
+  const lastDotIndex = fileName.lastIndexOf('.');
+  const name = lastDotIndex > 0 ? fileName.slice(0, lastDotIndex) : fileName;
+  const ext = lastDotIndex > 0 ? fileName.slice(lastDotIndex) : '';
 
   const sanitizedName = name
     .toLowerCase()
