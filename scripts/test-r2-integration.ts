@@ -9,7 +9,7 @@ class NodeFile extends Blob {
   lastModified: number;
 
   constructor(buffer: Buffer, name: string, options?: BlobPropertyBag) {
-    super([buffer], options);
+    super([new Uint8Array(buffer)], options);
     this.name = name;
     this.lastModified = Date.now();
   }
