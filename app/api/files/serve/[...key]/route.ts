@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { r2Client, R2_BUCKET_NAME } from "@/lib/storage/r2-client";
 
-export const runtime = 'edge';
+// export const runtime = 'edge'; // Commenté pour le dev local
 
 export async function GET(
   request: NextRequest,

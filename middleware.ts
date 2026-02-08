@@ -1,16 +1,18 @@
-import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
-    const session = await auth();
+    // Read the session token from cookies
+    const sessionToken = request.cookies.get("next-auth.session-token-v2")?.value;
     const isLoginPage = request.nextUrl.pathname === "/login";
 
-    if (!session && !isLoginPage) {
+    // Simple check: if no token and not on login page, redirect to login
+    if (!sessionToken && !isLoginPage) {
         return NextResponse.redirect(new URL("/login", request.url));
     }
 
-    if (session && isLoginPage) {
+    // If has token and on login page, redirect to home
+    if (sessionToken && isLoginPage) {
         return NextResponse.redirect(new URL("/", request.url));
     }
 
