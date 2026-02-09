@@ -1,0 +1,15 @@
+{
+  "name": "sitematiere-nexjs",
+  "compatibility_date": "2024-09-23",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "pages_build_output_dir": ".vercel/output/static",
+  "vars": {
+    "NEXTAUTH_URL": "https://sitematiere-nexjs.pages.dev",
+    "R2_ENDPOINT": "https://761c72f1a261752252262d26b81f58e0.r2.cloudflarestorage.com",
+    "R2_ACCESS_KEY_ID": "22f5c40e1f97aad6d3792642f156df05",
+    "R2_BUCKET_NAME": "sitematiere-files",
+    "R2_PUBLIC_URL": ""
+  }
+}

@@ -9,6 +9,7 @@ if (!['local', 'cloudflare'].includes(mode)) {
 }
 
 const files = [
+    'app/layout.tsx', // Ajout du layout global
     'app/page.tsx',
     'app/projects/[id]/page.tsx',
     'app/api/auth/[...nextauth]/route.ts',
@@ -34,14 +35,12 @@ files.forEach(relativePath => {
     let content = fs.readFileSync(absolutePath, 'utf8');
     let newContent;
 
-    // Pattern to match the runtime export line, whether commented or not, with optional trailing comments
+    // Pattern to match the runtime export line
     const runtimeRegex = /^(\/\/ )*export const runtime = ['"]edge['"];.*$/gm;
 
     if (mode === 'cloudflare') {
-        // Mode Cloudflare: Force uncommented version
         newContent = content.replace(runtimeRegex, "export const runtime = 'edge';");
     } else {
-        // Mode Local: Force commented version
         newContent = content.replace(runtimeRegex, "// export const runtime = 'edge'; // Commenté pour le dev local");
     }
 

@@ -63,6 +63,28 @@ Assurez-vous d'avoir défini les variables suivantes dans **Settings > Environme
 
 ---
 
+## 🔐 Auto-configuration des Variables et Secrets
+
+Pour éviter de configurer manuellement chaque variable dans l'interface Cloudflare, vous pouvez utiliser les méthodes suivantes :
+
+### 1. Variables d'environnement (Non-sensibles)
+Les variables comme les URLs publiques et les IDs de configuration sont stockées dans `wrangler.json`. Elles sont automatiquement envoyées lors du déploiement.
+
+### 2. Secrets (Données sensibles)
+Les secrets (mots de passe, clés privées) doivent être configurés via la CLI Wrangler. Un script d'automatisation a été créé :
+
+```powershell
+# Exécuter le script de configuration des secrets (Windows PowerShell)
+.\scripts\setup-secrets.ps1
+```
+
+Ce script configure automatiquement :
+- `DATABASE_URL`
+- `NEXTAUTH_SECRET`
+- `R2_SECRET_ACCESS_KEY`
+
+---
+
 ## ⚠️ Résolution des problèmes fréquents
 
 ### Erreur "MissingCSRF" en local
