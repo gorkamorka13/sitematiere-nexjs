@@ -61,27 +61,23 @@ Assurez-vous d'avoir défini les variables suivantes dans **Settings > Environme
 - `NEXTAUTH_URL` (URL de votre site)
 - Clés R2 (`R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, etc.)
 
----
+## 🔐 Configuration des Variables et Secrets
 
-## 🔐 Auto-configuration des Variables et Secrets
+Comme le projet est maintenant synchronisé directement avec GitHub, vous devez configurer vos variables directement dans l'interface de **Cloudflare Pages** :
 
-Pour éviter de configurer manuellement chaque variable dans l'interface Cloudflare, vous pouvez utiliser les méthodes suivantes :
-
-### 1. Variables d'environnement (Non-sensibles)
-Les variables comme les URLs publiques et les IDs de configuration sont stockées dans `wrangler.json`. Elles sont automatiquement envoyées lors du déploiement.
-
-### 2. Secrets (Données sensibles)
-Les secrets (mots de passe, clés privées) doivent être configurés via la CLI Wrangler. Un script d'automatisation a été créé :
-
-```powershell
-# Exécuter le script de configuration des secrets (Windows PowerShell)
-.\scripts\setup-secrets.ps1
-```
-
-Ce script configure automatiquement :
-- `DATABASE_URL`
-- `NEXTAUTH_SECRET`
-- `R2_SECRET_ACCESS_KEY`
+1. Allez sur votre [Tableau de bord Cloudflare](https://dash.cloudflare.com/).
+2. Allez dans **Workers & Pages** > Sélectionnez votre projet `sitematiere-nexjs`.
+3. Allez dans **Settings** > **Variables**.
+4. Dans la section **Environment variables**, cliquez sur **Add variables**.
+5. Ajoutez les variables suivantes (en utilisant les valeurs de votre fichier `.env.production`) :
+   - `DATABASE_URL` (Secret)
+   - `NEXTAUTH_SECRET` (Secret)
+   - `NEXTAUTH_URL`
+   - `R2_ENDPOINT`
+   - `R2_ACCESS_KEY_ID`
+   - `R2_SECRET_ACCESS_KEY` (Secret)
+   - `R2_BUCKET_NAME`
+6. Cliquez sur **Save**.
 
 ---
 
