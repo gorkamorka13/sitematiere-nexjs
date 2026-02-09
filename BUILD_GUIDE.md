@@ -1,6 +1,6 @@
 # Guide de Build et Déploiement
 
-Ce projet est configuré pour fonctionner dans deux environnements distincts : votre machine locale (Windows/Node.js) et Cloudflare Pages (Edge Runtime). En raison des limitations du runtime Edge en local, un système de bascule automatique est utilisé.....
+Ce projet est configuré pour fonctionner dans deux environnements distincts : votre machine locale (Windows/Node.js) et Cloudflare Pages (Edge Runtime). En raison des limitations du runtime Edge en local, un système de bascule automatique est utilisé.......
 
 ## 🚀 Commandes de base
 
@@ -52,7 +52,8 @@ Pour un déploiement réussi, configurez les paramètres suivants dans votre tab
 
 1. **Framework Preset** : `Next.js`
 2. **Build Command** : `npm run build:cloudflare`
-3. **Build Output Directory** : `.vercel/output` (ou laissez par défaut si détecté)
+3. **Build Output Directory** : `.vercel/output/static`
+4. **Deploy Command** : `npx wrangler pages deploy .vercel/output/static --project-name sitematiere-nexjs`
 
 ### Variables d'Environnement
 Assurez-vous d'avoir défini les variables suivantes dans **Settings > Environment Variables** sur Cloudflare :
