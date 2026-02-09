@@ -50,7 +50,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
                 if (parsedCredentials.success) {
                     const { username, password } = parsedCredentials.data;
-                    const user = await prisma.user.findUnique({ where: { username } });
+
+                    // Allow login with either username OR email
+                    const user = await prisma.user.findFirst({
+                        where: {
+                            OR: [
+                                { username: username },
+                                { email: username }
+                            ]
+                        }
+                    });
 
                     if (!user || !user.passwordHash) return null;
 

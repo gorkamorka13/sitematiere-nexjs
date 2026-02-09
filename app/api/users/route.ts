@@ -5,7 +5,7 @@ import { hash } from "bcrypt-ts";
 import { z } from "zod";
 import { UserRole } from "@prisma/client";
 
-export const runtime = 'edge';
+// export const runtime = 'edge'; // Commenté pour le dev local // Commenté pour le dev local
 
 const userSchema = z.object({
   username: z.string().min(1),

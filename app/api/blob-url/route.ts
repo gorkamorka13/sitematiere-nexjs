@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
  * This is necessary because blobs uploaded with access:'public' still return 403
  * due to store configuration. We need to append a token to make them accessible.
  */
-export const runtime = 'edge';
+// export const runtime = 'edge'; // Commenté pour le dev local // Commenté pour le dev local
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const blobUrl = searchParams.get('url');

@@ -5,6 +5,9 @@ import DashboardClient from "./dashboard-client";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+// export const runtime = 'edge'; // Commenté pour le dev local // Commenté pour le dev local
+
+
 
 export default async function DashboardPage() {
   const session = await auth();

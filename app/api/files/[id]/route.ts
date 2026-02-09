@@ -3,7 +3,8 @@ import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { sanitizeFileName } from "@/lib/files/validation";
 
-// export const runtime = 'edge'; // Commenté pour le dev local
+// export const runtime = 'edge'; // Commenté pour le dev local // Commenté pour le dev local
+
 
 export async function PATCH(
   request: Request,

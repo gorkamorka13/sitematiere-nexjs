@@ -2,6 +2,9 @@
 import { auth } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
+// export const runtime = 'edge'; // Commenté pour le dev local // Commenté pour le dev local
+
+
 import Link from "next/link";
 import Image from "next/image";
 import ProjectMapWrapper from "@/components/ui/project-map-wrapper";

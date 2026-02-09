@@ -3,7 +3,8 @@ import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { FileType, Prisma } from "@prisma/client";
 
-// export const runtime = 'edge'; // Commenté pour le dev local
+// export const runtime = 'edge'; // Commenté pour le dev local // Commenté pour le dev local
+
 
 export async function GET(request: Request) {
   const session = await auth();
