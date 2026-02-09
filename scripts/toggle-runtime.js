@@ -34,14 +34,15 @@ files.forEach(relativePath => {
     let content = fs.readFileSync(absolutePath, 'utf8');
     let newContent;
 
+    // Pattern to match the runtime export line, whether commented or not, with optional trailing comments
+    const runtimeRegex = /^(\/\/ )*export const runtime = ['"]edge['"];.*$/gm;
+
     if (mode === 'cloudflare') {
-        // Uncomment: remove // from the start of the line or before export const runtime
-        // Matches: // export const runtime = 'edge'; or //export const runtime = 'edge';
-        newContent = content.replace(/\/\/ ?(export const runtime = ['"]edge['"];?)/g, '$1');
+        // Mode Cloudflare: Force uncommented version
+        newContent = content.replace(runtimeRegex, "export const runtime = 'edge';");
     } else {
-        // Comment: add // before export const runtime if not already present
-        // Matches: export const runtime = 'edge'; but not // export const runtime = 'edge';
-        newContent = content.replace(/^(?!\/\/)(export const runtime = ['"]edge['"];?)/gm, '// $1 // Commenté pour le dev local');
+        // Mode Local: Force commented version
+        newContent = content.replace(runtimeRegex, "// export const runtime = 'edge'; // Commenté pour le dev local");
     }
 
     if (content !== newContent) {

@@ -1,6 +1,6 @@
 {
   "name": "sitematiere-nextjs",
-  "version": "0.0.114",
+  "version": "0.0.117",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -12,7 +12,8 @@
     "migrate:dry-run": "tsx scripts/migrate-local-to-r2.ts --dry-run",
     "migrate:r2": "tsx scripts/migrate-local-to-r2.ts",
     "migrate:r2:update-db": "tsx scripts/migrate-local-to-r2.ts --update-db",
-    "migrate:remaining": "tsx scripts/migrate-remaining.ts"
+    "migrate:remaining": "tsx scripts/migrate-remaining.ts",
+    "local": "node scripts/toggle-runtime.js local"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",

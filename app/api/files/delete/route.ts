@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
-// export const runtime = 'edge'; // Commenté pour le dev local // Commenté pour le dev local
+export const runtime = 'edge';
 
 
 export async function DELETE(request: Request) {

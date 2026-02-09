@@ -6,7 +6,7 @@ import { validateFileSize, validateFileType, sanitizeFileName } from "@/lib/file
 import { FileType } from "@prisma/client";
 
 // Cloudflare Pages requires Edge Runtime for API routes
-// export const runtime = 'edge'; // Commenté pour le dev local // Commenté pour le dev local
+export const runtime = 'edge';
 
 
 export async function POST(request: Request) {
