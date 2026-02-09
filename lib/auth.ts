@@ -22,9 +22,28 @@ declare module "next-auth" {
 export const { handlers, auth, signIn, signOut } = NextAuth({
     adapter: PrismaAdapter(prisma),
     session: { strategy: "jwt" },
+    trustHost: true,
     cookies: {
         sessionToken: {
             name: `next-auth.session-token-v2`,
+            options: {
+                httpOnly: true,
+                sameSite: "lax",
+                path: "/",
+                secure: process.env.NODE_ENV === "production",
+            },
+        },
+        csrfToken: {
+            name: `next-auth.csrf-token-v2`,
+            options: {
+                httpOnly: true,
+                sameSite: "lax",
+                path: "/",
+                secure: process.env.NODE_ENV === "production",
+            },
+        },
+        callbackUrl: {
+            name: `next-auth.callback-url-v2`,
             options: {
                 httpOnly: true,
                 sameSite: "lax",
