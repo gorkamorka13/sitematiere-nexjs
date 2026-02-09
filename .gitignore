@@ -46,3 +46,7 @@ nul
 /public/images-backup1
 /public/images
 
+
+# scripts
+/scripts/*
+!/scripts/toggle-runtime.js
