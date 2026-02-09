@@ -54,13 +54,18 @@ Pour un déploiement réussi, configurez les paramètres suivants dans votre tab
 2. **Build Command** : `npm run build:cloudflare`
 3. **Build Output Directory** : `.vercel/output/static`
 4. **Deploy Command** : `npx wrangler pages deploy .vercel/output/static --project-name sitematiere-nexjs`
+5. **Compatibility Flags**: (In Settings > Functions > Compatibility Flags)
+   - Add `nodejs_compat` to both **Production** and **Preview** environments.
 
 ### Variables d'Environnement
 Assurez-vous d'avoir défini les variables suivantes dans **Settings > Environment Variables** sur Cloudflare :
 - `DATABASE_URL` (Secret)
 - `NEXTAUTH_SECRET` (Secret)
-- `NEXTAUTH_URL` (URL de votre site)
-- Clés R2 (`R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, etc.)
+- `R2_ACCESS_KEY_ID`
+- `R2_SECRET_ACCESS_KEY` (Secret)
+- `R2_BUCKET_NAME`
+- `R2_ENDPOINT`
+- `NEXTAUTH_URL` (L'URL de votre site)
 
 ## 🔐 Configuration des Variables et Secrets
 
