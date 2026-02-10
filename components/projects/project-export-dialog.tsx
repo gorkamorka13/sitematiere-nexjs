@@ -107,14 +107,16 @@ export function ProjectExportDialog({
           offsetY = (img.height - drawHeight) / 2;
         }
 
-        // Final canvas size (scaled for quality)
-        canvas.width = 1200;
-        canvas.height = canvas.width / targetRatio;
+      // Final canvas size (scaled for quality)
+      canvas.width = 1200;
+      canvas.height = canvas.width / targetRatio;
 
-        // Draw the image cropped and centered (no rounded corners)
-        ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight, 0, 0, canvas.width, canvas.height);
+      // Draw the image cropped and centered (no rounded corners)
+      ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight, 0, 0, canvas.width, canvas.height);
 
-        resolve(canvas.toDataURL("image/jpeg", 0.9));
+      // Support transparency for PNG
+      const isPng = url.toLowerCase().endsWith('.png');
+      resolve(canvas.toDataURL(isPng ? "image/png" : "image/jpeg", 0.9));
       };
       img.onerror = () => reject(`Failed to load image at ${url}`);
       img.src = url.startsWith('http') ? url : window.location.origin + (url.startsWith('/') ? url : '/' + url);
@@ -193,67 +195,110 @@ export function ProjectExportDialog({
 
       // Helper for Section Headers
       const addSectionHeader = (title: string, currentY: number) => {
-        doc.setFillColor(indigo600[0], indigo600[1], indigo600[2]);
-        doc.rect(margin, currentY, 3, 6, "F");
-        doc.setTextColor(indigo600[0], indigo600[1], indigo600[2]);
-        doc.setFontSize(12);
+        doc.setFillColor(230, 39, 38); // Red Matière #E62726
+        doc.rect(margin, currentY, 4, 8, "F");
+        doc.setTextColor(230, 39, 38);
+        doc.setFontSize(14);
         doc.setFont("helvetica", "bold");
-        doc.text(title.toUpperCase(), margin + 6, currentY + 4.5);
+        doc.text(title.toUpperCase(), margin + 8, currentY + 6.5);
 
         doc.setDrawColor(229, 231, 235);
-        doc.line(margin, currentY + 10, pageWidth - margin, currentY + 10);
-        return currentY + 18;
+        doc.line(margin, currentY + 12, pageWidth - margin, currentY + 12);
+        return currentY + 20;
       };
 
-      // --- 1. COVER HEADER ---
-      doc.setFillColor(indigo600[0], indigo600[1], indigo600[2]);
-      doc.rect(0, 0, pageWidth, 45, "F");
-
+      // --- 1. PREMIUM HEADER (Printable) ---
+      // Left Part: Brand with Red Background (as in app menu)
+      doc.setFillColor(230, 39, 38); // #E62726 (Matière Red)
+      doc.roundedRect(margin, 10, 32, 10, 1.5, 1.5, "F");
       doc.setTextColor(255, 255, 255);
-      doc.setFontSize(24);
-      doc.setFont("helvetica", "bold");
-      doc.text("RAPPORT TECHNIQUE", margin, 22);
+      doc.setFontSize(14);
+      doc.setFont("times", "bold");
+      doc.text("Matière", margin + 16, 17, { align: "center" });
 
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "normal");
-      doc.text(`Identifiant: ${project.projectCode || project.id.substring(0,8)}`, margin, 32);
-      doc.text(`Date d'export: ${new Date().toLocaleDateString('fr-FR')}`, pageWidth - margin, 32, { align: "right" });
+      try {
+        // Logo Matière (Top Right)
+        const logoUrl = "/Matiere_logo_512.png";
+        const logoData = await loadPremiumImage(logoUrl, 1).catch(() => null);
+        if (logoData) {
+          doc.addImage(logoData, "PNG", pageWidth - margin - 15, 10, 15, 15);
+        }
+      } catch (e) {
+        console.warn("Logo could not be loaded", e);
+      }
 
-      yPos = 60;
-
-      // --- 2. MAIN TITLE ---
-      doc.setTextColor(gray900[0], gray900[1], gray900[2]);
-      doc.setFontSize(32);
-      doc.setFont("helvetica", "bold");
-      doc.text(project.name.toUpperCase(), pageWidth / 2, yPos, { align: "center" });
-      yPos += 15;
-
-      // --- 3. PROJECT INFO CARDS (Boxed) ---
-      doc.setFillColor(249, 250, 251); // Gray 50
-      doc.setDrawColor(229, 231, 235);
-      doc.roundedRect(margin, yPos, contentWidth, 22, 3, 3, "FD");
-
-      doc.setFontSize(8);
       doc.setTextColor(gray500[0], gray500[1], gray500[2]);
-      doc.text("PAYS", margin + 10, yPos + 7);
-      doc.text("TYPE DE STRUCTURE", margin + (contentWidth/3) + 5, yPos + 7);
-      doc.text("STATUT ACTUEL", margin + (2 * contentWidth/3) + 5, yPos + 7);
+      doc.setFontSize(7);
+      doc.setFont("helvetica", "normal");
+      doc.text("GROUPE MATIÈRE", margin, 24);
 
-      doc.setFontSize(11);
-      doc.setTextColor(gray900[0], gray900[1], gray900[2]);
+      doc.setDrawColor(229, 231, 235);
+      doc.line(margin, 26, pageWidth - margin, 26);
+
+      yPos = 38;
+
+      // --- 2. REPORT TITLE ---
+      doc.setTextColor(indigo600[0], indigo600[1], indigo600[2]);
+      doc.setFontSize(22);
       doc.setFont("helvetica", "bold");
-      doc.text(project.country, margin + 10, yPos + 15);
-      doc.text(project.type, margin + (contentWidth/3) + 5, yPos + 15);
+      doc.text("RAPPORT TECHNIQUE", margin, yPos);
 
-      // Status with color dot simulation
-      const statusColor = project.status === 'DONE' ? [34, 197, 94] : project.status === 'CURRENT' ? [234, 179, 8] : [99, 102, 241];
-      doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
-      doc.circle(margin + (2 * contentWidth/3) + 8, yPos + 13.5, 1.5, "F");
-      doc.text(project.status, margin + (2 * contentWidth/3) + 12, yPos + 15);
+      doc.setTextColor(gray500[0], gray500[1], gray500[2]);
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Édité le ${new Date().toLocaleDateString('fr-FR')}`, pageWidth - margin, yPos, { align: "right" });
 
-      yPos += 35;
+      yPos += 12;
 
-      // --- 4. MAIN PHOTO (Premium Fit) ---
+      // --- 3. PROJECT TITLE ---
+      doc.setTextColor(gray900[0], gray900[1], gray900[2]);
+      doc.setFontSize(26);
+      doc.setFont("helvetica", "bold");
+      doc.text(project.name.toUpperCase(), margin, yPos);
+
+      yPos += 12;
+
+      // --- 4. PROJECT DETAILS TABLE (Manual) ---
+      const tableRows = [
+        { label: "Identifiant du projet", value: project.projectCode || project.id },
+        { label: "Localisation / Pays", value: project.country },
+        { label: "Type d'ouvrage", value: project.type },
+        { label: "Statut de réalisation", value: project.status },
+        { label: "Coordonnées GPS", value: `${decimalToDMS(project.latitude, true)} | ${decimalToDMS(project.longitude, false)}` }
+      ];
+
+      const rowHeight = 8;
+      const col1Width = 50;
+      const tableTop = yPos;
+
+      doc.setFontSize(9);
+      tableRows.forEach((row, index) => {
+        const currentY = tableTop + (index * rowHeight);
+
+        // Background for zebra striping
+        if (index % 2 === 0) {
+          doc.setFillColor(249, 250, 251);
+          doc.rect(margin, currentY, contentWidth, rowHeight, "F");
+        }
+
+        // Cell Borders
+        doc.setDrawColor(243, 244, 246);
+        doc.rect(margin, currentY, contentWidth, rowHeight);
+
+        // Label
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(gray500[0], gray500[1], gray500[2]);
+        doc.text(row.label, margin + 4, currentY + 5.5);
+
+        // Value
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(gray900[0], gray900[1], gray900[2]);
+        doc.text(String(row.value), margin + col1Width + 4, currentY + 5.5);
+      });
+
+      yPos = tableTop + (tableRows.length * rowHeight) + 15;
+
+      // --- 5. MAIN PHOTO (Premium Fit) ---
       const lastPhoto = images[images.length - 1];
       if (options.lastPhoto && lastPhoto) {
         try {
@@ -266,7 +311,6 @@ export function ProjectExportDialog({
             yPos = margin + 10;
           }
 
-          // Photo without rounded corners or shadow
           doc.addImage(imgData, "JPEG", margin, yPos, imgWidth, imgHeight);
           yPos += imgHeight + 20;
         } catch (e) {
@@ -274,7 +318,7 @@ export function ProjectExportDialog({
         }
       }
 
-      // --- 4.5 MAPS (Captures) ---
+      // --- 6. MAPS (Captures) ---
       if (options.globalMap || options.projectMap) {
         setExportStatus("Préparation cartes...");
         yPos = addSectionHeader("Localisation & Contexte", yPos);
@@ -341,24 +385,52 @@ export function ProjectExportDialog({
         yPos += 18;
       }
 
-      // --- 5. DESCRIPTION ---
+      // --- 7. DESCRIPTION (ZEBRA TABLE) ---
       if (options.description && project.description) {
         yPos = addSectionHeader("Description du Projet", yPos);
 
-        doc.setTextColor(55, 65, 81);
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "normal");
-        const splitDescription = doc.splitTextToSize(project.description.replace(/\\n/g, '\n'), contentWidth);
+        const lines = project.description.replace(/\\n/g, '\n').split('\n').filter(l => l.trim().length > 0);
 
-        splitDescription.forEach((line: string) => {
-            if (yPos > pageHeight - 15) { doc.addPage(); yPos = margin + 15; }
-            doc.text(line, margin, yPos);
-            yPos += 6;
+        lines.forEach((line, index) => {
+          if (yPos > pageHeight - 20) { doc.addPage(); yPos = margin + 10; }
+
+          // Alternating background
+          if (index % 2 === 0) {
+            doc.setFillColor(249, 250, 251); // Gray-50
+            doc.rect(margin, yPos - 5, contentWidth, 8, "F");
+          }
+
+          // Check if it's a key: value pair
+          if (line.includes(':')) {
+            const [key, ...rest] = line.split(':');
+            const value = rest.join(':').trim();
+
+            doc.setTextColor(107, 114, 128); // Gray-500
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "bold");
+            doc.text(key.trim().toUpperCase(), margin + 4, yPos + 1);
+
+            doc.setTextColor(31, 41, 55); // Gray-800
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(10);
+            const splitVal = doc.splitTextToSize(value, contentWidth - 60);
+            doc.text(splitVal, margin + 55, yPos + 1);
+
+            yPos += (Array.isArray(splitVal) ? splitVal.length * 5 : 5) + 3;
+          } else {
+            // Normal text
+            doc.setTextColor(55, 65, 81);
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            const splitText = doc.splitTextToSize(line, contentWidth - 8);
+            doc.text(splitText, margin + 4, yPos + 1);
+            yPos += (Array.isArray(splitText) ? splitText.length * 5 : 5) + 3;
+          }
         });
         yPos += 12;
       }
 
-      // --- 6. PROGRESS ---
+      // --- 8. PROGRESS ---
       if (options.progress) {
         if (yPos > pageHeight - 70) { doc.addPage(); yPos = margin + 10; }
         yPos = addSectionHeader("Avancement du Chantier", yPos);
@@ -394,13 +466,13 @@ export function ProjectExportDialog({
         yPos += 10;
       }
 
-      // --- 7. DOCUMENTS & PLANS ---
-      if (options.documents && project.documents.length > 0) {
+      // --- 9. DOCUMENTS & PLANS (Conditional) ---
+      const planDocs = project.documents.filter(d => d.type === 'PLAN' || d.name.toLowerCase().includes('plan'));
+      const otherDocs = project.documents.filter(d => d.type !== 'FLAG' && d.type !== 'CLIENT_LOGO' && d.type !== 'PLAN' && !d.name.toLowerCase().includes('plan'));
+
+      if (options.documents && (planDocs.length > 0 || otherDocs.length > 0)) {
         if (yPos > pageHeight - 50) { doc.addPage(); yPos = margin + 10; }
         yPos = addSectionHeader("Plans & Documentation Technique", yPos);
-
-        const planDocs = project.documents.filter(d => d.type === 'PLAN' || d.name.toLowerCase().includes('plan'));
-        const otherDocs = project.documents.filter(d => d.type !== 'FLAG' && d.type !== 'CLIENT_LOGO' && d.type !== 'PLAN' && !d.name.toLowerCase().includes('plan'));
 
         if (planDocs.length > 0) {
             for (const plan of planDocs) {
@@ -459,19 +531,19 @@ export function ProjectExportDialog({
 
       // --- EXPORT LOGIC: PDF or ZIP ---
       const pdfFileName = `RAPPORT_TECHNIQUE_${project.name.replace(/\s+/g, '_').toUpperCase()}.pdf`;
-      
+
       if (options.documents && project.documents && project.documents.length > 0) {
         // Create ZIP with PDF and documents
         setExportStatus("Préparation du ZIP avec annexes...");
         const zip = new JSZip();
-        
+
         // Add PDF to ZIP
         const pdfBlob = doc.output('blob');
         zip.file(pdfFileName, pdfBlob);
-        
+
         // Create folder for documents
         const docsFolder = zip.folder("Documents");
-        
+
         // Download and add each document
         let docsAdded = 0;
         for (const doc of project.documents) {
@@ -482,7 +554,7 @@ export function ProjectExportDialog({
               if (response.ok) {
                 const blob = await response.blob();
                 let fileName = doc.name || `document_${doc.id}`;
-                
+
                 // Ensure file has an extension
                 if (!fileName.includes('.')) {
                   // Extract extension from URL
@@ -502,7 +574,7 @@ export function ProjectExportDialog({
                     else fileName += '.pdf'; // Default fallback
                   }
                 }
-                
+
                 docsFolder?.file(fileName, blob);
                 docsAdded++;
               }
@@ -511,7 +583,7 @@ export function ProjectExportDialog({
             console.warn(`Could not download document ${doc.id}:`, e);
           }
         }
-        
+
         // Generate and download ZIP
         setExportStatus("Génération du fichier ZIP...");
         const zipBlob = await zip.generateAsync({ type: "blob" });
@@ -527,7 +599,7 @@ export function ProjectExportDialog({
         // Just save PDF
         doc.save(pdfFileName);
       }
-      
+
       onClose();
     } catch (error) {
       console.error("PDF Generation failed:", error);
@@ -629,8 +701,8 @@ export function ProjectExportDialog({
           ) : (
             <>
               <Download className="w-4 h-4" />
-              {options.documents && project.documents && project.documents.length > 0 
-                ? "Générer ZIP avec Annexes" 
+              {options.documents && project.documents && project.documents.length > 0
+                ? "Générer ZIP avec Annexes"
                 : "Générer Rapport PDF"}
             </>
           )}

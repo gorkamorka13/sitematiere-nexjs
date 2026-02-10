@@ -1,6 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { naturalSort } from "@/lib/sort-utils";
 
 export async function getProjectMedia(projectName: string) {
   // Normalisation du nom de projet pour correspondre aux dossiers
@@ -43,6 +44,10 @@ export async function getProjectMedia(projectName: string) {
             result.pdfs.push({ url: file.blobUrl, name: file.name });
           }
         });
+
+        // Apply natural sort to images and PDFs
+        result.images = naturalSort(result.images, 'name');
+        result.pdfs = naturalSort(result.pdfs, 'name');
 
         // Si on a trouvé des fichiers en BDD, on les renvoie en priorité
         if (result.images.length > 0 || result.pdfs.length > 0) {

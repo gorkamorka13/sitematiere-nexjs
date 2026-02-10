@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { FileType, Prisma } from "@prisma/client";
+import { naturalSort } from "@/lib/sort-utils";
 
 // export const runtime = 'edge'; // Commenté pour le dev local
 
@@ -64,8 +65,10 @@ export async function GET(request: Request) {
       prisma.file.count({ where }),
     ]);
 
+    const sortedFiles = naturalSort(files, 'name');
+
     return NextResponse.json({
-      files,
+      files: sortedFiles,
       total,
       hasMore: total > page * limit,
       page,
