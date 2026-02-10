@@ -477,6 +477,13 @@ export default function DashboardClient({
                                 <FileStack className={`w-5 h-5 ${isSidebarCollapsed ? "mx-auto" : ""}`} />
                                 {!isSidebarCollapsed && <span className="text-sm font-medium group-hover:text-gray-900 dark:group-hover:text-white">Gestion Fichiers</span>}
                             </button>
+                            <a
+                                href="/image-processor"
+                                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400 transition-all group"
+                            >
+                                <ImageIcon className={`w-5 h-5 ${isSidebarCollapsed ? "mx-auto" : ""}`} />
+                                {!isSidebarCollapsed && <span className="text-sm font-medium group-hover:text-gray-900 dark:group-hover:text-white">Gestion Images</span>}
+                            </a>
                         </div>
                     )}
                 </nav>
