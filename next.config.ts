@@ -75,6 +75,20 @@ export default (phase: string) => {
       NEXT_PUBLIC_BUILD_DATE: new Date().toLocaleDateString("fr-FR"),
       NEXT_PUBLIC_CREDIT: "Michel ESPARSA",
     },
+    images: {
+      remotePatterns: [
+        {
+          protocol: 'https',
+          hostname: 'sitematiere-nexjs.pages.dev',
+          pathname: '**',
+        },
+        {
+          protocol: 'https',
+          hostname: 'pub-78c42489fd854dc3a6975810aa00edf2.r2.dev',
+          pathname: '**',
+        }
+      ],
+    },
   };
 
   // Run seed during production build
