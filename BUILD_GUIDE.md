@@ -40,9 +40,26 @@ Le script de bascule effectue les opérations suivantes :
 - **Mode local** : Commente ces lignes pour utiliser le runtime Node.js standard.
 
 ### Fichiers impactés
-Le système gère automatiquement 13 fichiers clés, notamment :
-- Les pages principales (`app/page.tsx`, `app/projects/[id]/page.tsx`)
-- Toutes les routes API (`app/api/auth`, `app/api/files/...`, `app/api/users`)
+Le système gère automatiquement le runtime pour les fichiers suivants (Pages et API) :
+- `app/layout.tsx`
+- `app/page.tsx`
+- `app/projects/[id]/page.tsx`
+- `app/export-db/page.tsx`
+- Toutes les routes API dans `app/api/...`
+
+---
+
+## 🔍 Outils de Diagnostic
+
+### Debug Endpoints
+En cas de problème sur Cloudflare, vous pouvez consulter ces endpoints :
+- `/api/debug` : Vérifie la présence des variables d'environnement et la connexion à la base de données.
+- `/api/debug/auth` : Vérifie l'état de la session d'authentification.
+
+### Scripts d'administration
+- `npx tsx scripts/reset-admin-password.ts` : Réinitialise ou crée le compte administrateur.
+- `npx tsx scripts/check-users.ts` : Liste les utilisateurs enregistrés en base.
+- `node scripts/check-env-vars.js` : Vérifie les variables d'environnement locales.
 
 ---
 
@@ -53,47 +70,23 @@ Pour un déploiement réussi, configurez les paramètres suivants dans votre tab
 1. **Framework Preset** : `Next.js`
 2. **Build Command** : `npm run build:cloudflare`
 3. **Build Output Directory** : `.vercel/output/static`
-4. **Deploy Command** : `npx wrangler pages deploy .vercel/output/static --project-name sitematiere-nexjs`
-5. **Compatibility Flags**: (In Settings > Functions > Compatibility Flags)
-   - Add `nodejs_compat` to both **Production** and **Preview** environments.
+4. **Compatibility Flags**: (Dans Settings > Functions > Compatibility Flags)
+   - Ajoutez `nodejs_compat` pour les environnements **Production** et **Preview**.
 
 ### Variables d'Environnement
-Assurez-vous d'avoir défini les variables suivantes dans **Settings > Environment Variables** sur Cloudflare :
-- `DATABASE_URL` (Secret)
-- `NEXTAUTH_SECRET` (Secret)
-- `R2_ACCESS_KEY_ID`
-- `R2_SECRET_ACCESS_KEY` (Secret)
-- `R2_BUCKET_NAME`
-- `R2_ENDPOINT`
-- `NEXTAUTH_URL` (L'URL de votre site)
-
-## 🔐 Configuration des Variables et Secrets
-
-Comme le projet est maintenant synchronisé directement avec GitHub, vous devez configurer vos variables directement dans l'interface de **Cloudflare Pages** :
-
-1. Allez sur votre [Tableau de bord Cloudflare](https://dash.cloudflare.com/).
-2. Allez dans **Workers & Pages** > Sélectionnez votre projet `sitematiere-nexjs`.
-3. Allez dans **Settings** > **Variables**.
-4. Dans la section **Environment variables**, cliquez sur **Add variables**.
-5. Ajoutez les variables suivantes (en utilisant les valeurs de votre fichier `.env.production`) :
-   - `DATABASE_URL` (Secret)
-   - `NEXTAUTH_SECRET` (Secret)
-   - `NEXTAUTH_URL`
-   - `R2_ENDPOINT`
-   - `R2_ACCESS_KEY_ID`
-   - `R2_SECRET_ACCESS_KEY` (Secret)
-   - `R2_BUCKET_NAME`
-6. Cliquez sur **Save**.
+**IMPORTANT** : Les variables doivent être définies dans l'interface Cloudflare (Settings > Variables).
+Les variables requises sont :
+- `DATABASE_URL` (Secret) : URL Neon PostgreSQL.
+- `NEXTAUTH_SECRET` (Secret) : Une chaîne aléatoire pour sécuriser les tokens.
+- `NEXTAUTH_URL` : L'URL de production (`https://sitematiere-nexjs.pages.dev`).
+- `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` (Secret), `R2_BUCKET_NAME`, `R2_ENDPOINT`, `R2_PUBLIC_URL`.
 
 ---
 
 ## ⚠️ Résolution des problèmes fréquents
 
-### Erreur "MissingCSRF" en local
-Si vous n'arrivez plus à vous connecter sur `localhost:3000` :
-1. Lancez `npm run local`.
-2. Videz les cookies de votre navigateur pour `localhost`.
-3. Vérifiez que `trustHost: true` est bien présent dans `lib/auth.ts`.
-
 ### Erreur Prisma sur Cloudflare
-Si Prisma échoue en ligne, vérifiez que `lib/prisma.ts` utilise bien le `PrismaNeon` adapter et la `Pool` de Neon Database, car les binaires Prisma standards ne fonctionnent pas en mode Edge.
+Si Prisma échoue en ligne, `lib/prisma.ts` bascule automatiquement sur l'adaptateur `@prisma/adapter-neon` via WebSockets. Assurez-vous que la version de `@prisma/adapter-neon` correspond bien à celle de `@prisma/client` dans `package.json`.
+
+### Erreur "Build failed" (Incompatibilité Type)
+Le projet utilise `@prisma/adapter-neon` version v6.19.2 pour garantir la compatibilité avec le client Edge. Ne mettez pas à jour l'adaptateur vers la v7 sans mettre à jour le client Prisma.

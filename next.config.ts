@@ -81,12 +81,13 @@ export default (phase: string) => {
   if (phase === PHASE_PRODUCTION_BUILD) {
     console.log('Running admin user seed...');
     try {
-      const { seedAdminUser } = require('./lib/seed');
+      const seedPath = path.join(process.cwd(), 'lib', 'seed');
+      const { seedAdminUser } = require(seedPath);
       seedAdminUser().catch(console.error);
     } catch (error) {
       console.error('Seed failed:', error);
     }
   }
 
-return nextConfig;
+  return nextConfig;
 };
