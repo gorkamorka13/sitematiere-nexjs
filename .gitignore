@@ -39,3 +39,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+nul
+
+# images
+/public/images1
+/public/images-backup1
+/public/images
+
+
+# scripts
+/scripts/*
+!/scripts/toggle-runtime.js

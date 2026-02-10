@@ -1,67 +1,63 @@
 "use client";
 
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Tooltip, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { useEffect, useState } from "react";
-import { useTheme } from "next-themes";
+import { useEffect } from "react";
 import { Project } from "@prisma/client";
-import Link from "next/link";
-
-// Fix for default Leaflet marker icons
-const getIcon = (status: string) => {
-    let iconUrl = "/images/pin/pin_done.png";
-    if (status === 'CURRENT') iconUrl = "/images/pin/pin_underconstruction.png";
-    if (status === 'PROSPECT') iconUrl = "/images/pin/pin_prospection.png";
-
-    return L.icon({
-        iconUrl: iconUrl,
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -32],
-    });
-};
+import { getIcon } from "@/lib/map-icons";
 
 type MultiMapProps = {
     projects: Project[];
     onSelectProject?: (project: Project) => void;
+    fitNonce?: number;
+    globalCenterNonce?: number;
+    globalCenterPoint?: [number, number] | null;
+    isCapture?: boolean;
 };
 
-function MapUpdater({ projects }: { projects: Project[] }) {
+function CenterView({ point, nonce }: { point: [number, number] | null; nonce?: number }) {
+    const map = useMap();
+
+    useEffect(() => {
+        if (!point) return;
+        // Panner vers le point en conservant le zoom actuel
+        map.setView(point, map.getZoom(), { animate: true });
+    }, [point, nonce, map]);
+
+    return null;
+}
+
+function MapUpdater({ projects, fitNonce }: { projects: Project[]; fitNonce?: number }) {
     const map = useMap();
 
     useEffect(() => {
         if (projects.length === 0) return;
 
-        const lats = projects.map(p => p.latitude).filter(l => l !== 0);
-        const longs = projects.map(p => p.longitude).filter(l => l !== 0);
+        // This effect now depends on fitNonce to prevent zooming on every project selection
+        // but still uses the latest projects list to calculate bounds.
 
-        if (lats.length > 0 && longs.length > 0) {
-            // Calculate geographic center (average)
-            const avgLat = lats.reduce((a, b) => a + b, 0) / lats.length;
-            const avgLong = longs.reduce((a, b) => a + b, 0) / longs.length;
+        const validProjects = projects.filter(p => p.latitude !== 0 && p.longitude !== 0);
 
-            // Move to center while preserving current zoom
-            map.setView([avgLat, avgLong], map.getZoom(), {
+        if (validProjects.length > 0) {
+            const bounds = L.latLngBounds(
+                validProjects.map(p => [p.latitude, p.longitude])
+            );
+
+            map.fitBounds(bounds, {
                 animate: true,
-                duration: 1
+                duration: 1,
+                padding: [50, 50],
+                maxZoom: 10
             });
         }
-    }, [projects, map]);
+    }, [projects, fitNonce, map]);
 
     return null;
 }
 
-export default function ProjectsMap({ projects, onSelectProject }: MultiMapProps) {
-    const { theme, resolvedTheme } = useTheme();
-    const [mounted, setMounted] = useState(false);
-
-    useEffect(() => {
-        setMounted(true);
-    }, []);
-
+export default function ProjectsMap({ projects, onSelectProject, fitNonce, globalCenterNonce, globalCenterPoint, isCapture }: MultiMapProps) {
     const tileUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
-    const attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
     const validProjects = projects.filter(p => p.latitude !== 0 || p.longitude !== 0);
 
@@ -70,14 +66,16 @@ export default function ProjectsMap({ projects, onSelectProject }: MultiMapProps
             center={[0, 0]}
             zoom={2}
             scrollWheelZoom={false}
+            zoomControl={!isCapture}
+            attributionControl={!isCapture}
+            preferCanvas={!isCapture}
             className="h-full w-full rounded-lg z-0"
             style={{ height: "100%", width: "100%", minHeight: "400px" }}
         >
+            <CenterView point={globalCenterPoint || null} nonce={globalCenterNonce} />
             <TileLayer
-                attribution={attribution}
                 url={tileUrl}
             />
-
             {validProjects.map((project) => (
                 <Marker
                     key={project.id}
@@ -85,21 +83,20 @@ export default function ProjectsMap({ projects, onSelectProject }: MultiMapProps
                     icon={getIcon(project.status)}
                     eventHandlers={{
                         click: () => onSelectProject?.(project),
+                        popupopen: () => onSelectProject?.(project),
                     }}
                 >
-                    <Popup>
-                        <div className="text-center">
-                            <strong className="block mb-1">{project.name}</strong>
-                            <span className="text-xs text-gray-500 block mb-2">{project.country}</span>
-                            <Link href={`/projects/${project.id}`} className="text-indigo-600 hover:text-indigo-800 text-sm font-semibold">
-                                Voir la fiche
-                            </Link>
-                        </div>
-                    </Popup>
+                    {!isCapture && (
+                        <Tooltip direction="top" offset={[0, -32]} opacity={1}>
+                            <div className="font-bold text-xs uppercase tracking-tight">
+                                {project.name}
+                            </div>
+                        </Tooltip>
+                    )}
                 </Marker>
             ))}
 
-            <MapUpdater projects={validProjects} />
+            <MapUpdater projects={validProjects} fitNonce={fitNonce} />
         </MapContainer>
     );
 }

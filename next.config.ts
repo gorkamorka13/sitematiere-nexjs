@@ -75,6 +75,22 @@ export default (phase: string) => {
       NEXT_PUBLIC_BUILD_DATE: new Date().toLocaleDateString("fr-FR"),
       NEXT_PUBLIC_CREDIT: "Michel ESPARSA",
     },
+    images: {
+      remotePatterns: [
+        {
+          protocol: 'https',
+          hostname: 'l1nmqms7zjmviefs.public.blob.vercel-storage.com',
+          port: '',
+          pathname: '/**',
+        },
+        {
+          protocol: 'https',
+          hostname: 'res.cloudinary.com',
+          port: '',
+          pathname: '/**',
+        },
+      ],
+    },
   };
 
   return nextConfig;

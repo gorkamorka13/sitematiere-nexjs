@@ -1,9 +1,13 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
-import Link from "next/link";
-import { SignOutButton } from "@/components/auth/sign-out-button"; // We will create this
 import DashboardClient from "./dashboard-client";
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const runtime = 'edge';
+
+
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -14,9 +18,9 @@ export default async function DashboardPage() {
 
   const projects = await prisma.project.findMany({
     include: {
-      images: true,
       documents: true,
       videos: true,
+      files: true,
     },
     orderBy: {
       updatedAt: 'desc',
@@ -25,8 +29,13 @@ export default async function DashboardPage() {
 
   return (
     <DashboardClient
-      initialProjects={projects}
-      user={{ name: session.user?.name, email: session.user?.email }}
+      initialProjects={projects as any}
+      user={{
+        name: session.user?.name,
+        username: (session.user as any)?.username,
+        role: (session.user as any)?.role,
+        color: (session.user as any)?.color
+      }}
     />
   );
 }
