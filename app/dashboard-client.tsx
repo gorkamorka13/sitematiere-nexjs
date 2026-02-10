@@ -33,7 +33,40 @@ const getRoleLabel = (role: UserRole) => {
     }
 };
 
-export default function DashboardClient({ initialProjects, user }: DashboardClientProps) {
+// Helper to get progress colors based on value
+const getProgressColors = (val: number) => {
+    if (val >= 100) return {
+        text: 'text-green-600 dark:text-green-400',
+        bg: 'bg-green-500',
+        bgLight: 'bg-green-100 dark:bg-green-900/30',
+        border: 'border-green-500/50',
+        shadow: 'shadow-green-200'
+    };
+    if (val > 50) return {
+        text: 'text-yellow-600 dark:text-yellow-400',
+        bg: 'bg-yellow-500',
+        bgLight: 'bg-yellow-100 dark:bg-yellow-900/30',
+        border: 'border-yellow-500/50',
+        shadow: 'shadow-yellow-200'
+    };
+    if (val > 25) return {
+        text: 'text-orange-600 dark:text-orange-400',
+        bg: 'bg-orange-500',
+        bgLight: 'bg-orange-100 dark:bg-orange-900/30',
+        border: 'border-orange-500/50',
+        shadow: 'shadow-orange-200'
+    };
+    return {
+        text: 'text-red-600 dark:text-red-400',
+        bg: 'bg-red-500',
+        bgLight: 'bg-red-100 dark:bg-red-900/30',
+        border: 'border-red-500/50',
+        shadow: 'shadow-red-200'
+    };
+};
+
+export default function DashboardClient({
+ initialProjects, user }: DashboardClientProps) {
     // Initialisation avec Sierra-Léone et projet "Sewa" si disponible
     const defaultProject = initialProjects.find(p =>
         p.country === "Sierra-Léone" && p.name === "Sewa"
@@ -735,7 +768,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors flex flex-col shrink-0">
                                 <div className="border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50 px-4 py-3 flex items-center gap-2">
                                     <Ruler className="w-4 h-4 text-purple-500" />
-                                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Avancement du Chantier</h3>
+                                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Avancement du Projet</h3>
                                 </div>
                                 <div className="p-4 lg:p-6 flex flex-col md:flex-row gap-6 lg:gap-8">
                                     {/* Global Progress Indicator */}
@@ -753,6 +786,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                                                     const avg = Math.round(total / 5);
                                                     const circumference = 40 * 2 * Math.PI;
                                                     const offset = circumference - (avg / 100) * circumference;
+                                                    const colors = getProgressColors(avg);
                                                     return (
                                                         <>
                                                             <circle
@@ -762,7 +796,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                                                                 strokeDasharray={circumference}
                                                                 strokeDashoffset={offset}
                                                                 strokeLinecap="round"
-                                                                className="text-indigo-600 dark:text-indigo-400 transition-all duration-1000 ease-out"
+                                                                className={`${colors.text} transition-all duration-1000 ease-out`}
                                                             />
                                                             <text x="48" y="52" textAnchor="middle" className="text-xl font-black fill-gray-900 dark:fill-white rotate-90" style={{ transformOrigin: 'center' }}>
                                                                 {avg}%
@@ -797,14 +831,17 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
 
                                                 <div className="flex items-center gap-4 group relative z-10">
                                                     {/* Node */}
-                                                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-all duration-500 shadow-sm ${step.val === 100
-                                                        ? 'bg-green-500 border-green-400 text-white'
-                                                        : step.val > 0
-                                                            ? 'bg-indigo-600 border-indigo-400 text-white scale-110 shadow-indigo-200 dark:shadow-none'
-                                                            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-400'
-                                                        }`}>
-                                                        {step.icon}
-                                                    </div>
+                                                    {(() => {
+                                                        const colors = getProgressColors(step.val);
+                                                        return (
+                                                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-all duration-500 shadow-sm ${step.val > 0
+                                                                ? `${colors.bg} ${colors.border} text-white scale-110 ${colors.shadow} dark:shadow-none`
+                                                                : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-400'
+                                                                }`}>
+                                                                {step.icon}
+                                                            </div>
+                                                        );
+                                                    })()}
 
                                                     {/* Content */}
                                                     <div className="flex-grow">
@@ -812,13 +849,13 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                                                             <h4 className={`text-[11px] font-bold uppercase tracking-wider transition-colors ${step.val > 0 ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500 text-[10px]'}`}>
                                                                 {step.label}
                                                             </h4>
-                                                            <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${step.val === 100 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-900 text-gray-500'}`}>
+                                                            <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${step.val > 0 ? `${getProgressColors(step.val).bgLight} ${getProgressColors(step.val).text}` : 'bg-gray-100 dark:bg-gray-900 text-gray-500'}`}>
                                                                 {step.val}%
                                                             </span>
                                                         </div>
                                                         <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-700/50 rounded-full overflow-hidden border border-gray-200/50 dark:border-gray-700/30 backdrop-blur-sm">
                                                             <div
-                                                                className={`h-full transition-all duration-1000 ease-out rounded-full ${step.val === 100 ? 'bg-green-500' : 'bg-gradient-to-r from-indigo-500 to-blue-500 shadow-[0_0_8px_rgba(79,70,229,0.3)]'}`}
+                                                                className={`h-full transition-all duration-1000 ease-out rounded-full ${getProgressColors(step.val).bg} ${step.val > 0 && step.val < 100 ? 'shadow-[0_0_8px_rgba(251,191,36,0.3)]' : ''}`}
                                                                 style={{ width: `${step.val}%` }}
                                                             />
                                                         </div>
@@ -958,10 +995,11 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                                                             <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400 font-medium">{project.country}</td>
                                                             <td className="hidden sm:table-cell whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">{project.type}</td>
                                                             <td className="hidden md:table-cell whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
-                                                                <span className={`inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ring-1 ring-inset ${project.status === 'DONE' ? 'bg-green-50 text-green-700 ring-green-600/20 dark:bg-green-900/30 dark:text-green-400 dark:ring-green-400/20' :
+                                                                <span className={`inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ring-1 ring-inset ${
+                                                                    project.status === 'DONE' ? 'bg-green-50 text-green-700 ring-green-600/20 dark:bg-green-900/30 dark:text-green-400 dark:ring-green-400/20' :
                                                                     project.status === 'CURRENT' ? 'bg-blue-50 text-blue-700 ring-blue-600/20 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-400/20' :
-                                                                        'bg-yellow-50 text-yellow-800 ring-yellow-600/20 dark:bg-yellow-900/30 dark:text-yellow-400 dark:ring-yellow-400/20'
-                                                                    }`}>
+                                                                    'bg-yellow-50 text-yellow-800 ring-yellow-600/20 dark:bg-yellow-900/30 dark:text-yellow-400 dark:ring-yellow-400/20'
+                                                                }`}>
                                                                     {project.status}
                                                                 </span>
                                                             </td>
@@ -969,6 +1007,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                                                                 <button
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
+                                                                        handleProjectSelect(project as any);
                                                                         setProjectToExport(project as any);
                                                                         setIsExportDialogOpen(true);
                                                                     }}

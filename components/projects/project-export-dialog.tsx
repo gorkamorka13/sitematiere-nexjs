@@ -66,11 +66,11 @@ export function ProjectExportDialog({
   const [captureKey, setCaptureKey] = useState<"global" | "project" | null>(null);
   const portalRef = React.useRef<HTMLDivElement | null>(null);
   const [options, setOptions] = useState({
-    globalMap: true,
-    projectMap: true,
+    globalMap: false,
+    projectMap: false,
     progress: true,
     description: true,
-    documents: true,
+    documents: false,
     lastPhoto: true,
   });
 
@@ -238,15 +238,17 @@ export function ProjectExportDialog({
       yPos = 38;
 
       // --- 2. REPORT TITLE ---
-      doc.setTextColor(indigo600[0], indigo600[1], indigo600[2]);
+      doc.setTextColor(230, 39, 38); // Match red Matière
       doc.setFontSize(22);
       doc.setFont("helvetica", "bold");
       doc.text("RAPPORT TECHNIQUE", margin, yPos);
 
-      doc.setTextColor(gray500[0], gray500[1], gray500[2]);
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
-      doc.text(`Édité le ${new Date().toLocaleDateString('fr-FR')}`, pageWidth - margin, yPos, { align: "right" });
+      const getPdfProgressColor = (val: number) => {
+          if (val >= 100) return [34, 197, 94]; // Green-500 #22C55E
+          if (val > 50) return [251, 191, 36]; // Yellow-500 #FBBF24
+          if (val > 25) return [249, 115, 22]; // Orange-500 #F97316
+          return [239, 68, 68]; // Red-500 #EF4444
+      };
 
       yPos += 12;
 
@@ -433,7 +435,7 @@ export function ProjectExportDialog({
       // --- 8. PROGRESS ---
       if (options.progress) {
         if (yPos > pageHeight - 70) { doc.addPage(); yPos = margin + 10; }
-        yPos = addSectionHeader("Avancement du Chantier", yPos);
+        yPos = addSectionHeader("Avancement du Projet", yPos);
 
         const steps = [
           { label: "Prospection", val: project.prospection },
@@ -455,7 +457,8 @@ export function ProjectExportDialog({
 
           // Progress bar
           if (step.val > 0) {
-              doc.setFillColor(indigo600[0], indigo600[1], indigo600[2]);
+              const color = getPdfProgressColor(step.val);
+              doc.setFillColor(color[0], color[1], color[2]);
               doc.roundedRect(margin + 45, yPos - 3.5, step.val, 3.5, 1.5, 1.5, "F");
           }
 

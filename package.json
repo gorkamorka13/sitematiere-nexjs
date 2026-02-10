@@ -1,6 +1,6 @@
 {
   "name": "sitematiere-nexjs",
-  "version": "0.0.139",
+  "version": "0.0.143",
   "private": true,
   "scripts": {
     "dev": "next dev",

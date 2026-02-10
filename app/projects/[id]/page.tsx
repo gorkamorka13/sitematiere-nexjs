@@ -102,23 +102,32 @@ export default async function ProjectDetailPage(props: Props) {
                         {/* Progress Card (if applicable) */}
                         <div className="overflow-hidden rounded-xl bg-white shadow ring-1 ring-black ring-opacity-5">
                             <div className="border-b border-gray-200 bg-gray-50 px-4 py-4 sm:px-6">
-                                <h3 className="text-base font-semibold leading-6 text-gray-900">Avancement</h3>
+                                <h3 className="text-base font-semibold leading-6 text-gray-900">Avancement du Projet</h3>
                             </div>
                             <div className="px-4 py-5 sm:p-6 space-y-4">
-                                {['prospection', 'studies', 'fabrication', 'transport', 'construction'].map((step) => (
-                                    <div key={step}>
-                                        <div className="flex justify-between mb-1">
-                                            <span className="text-sm font-medium text-gray-700 capitalize">{step}</span>
-                                            <span className="text-sm font-medium text-gray-700">{project[step as keyof typeof project] as number}%</span>
+                                {['prospection', 'studies', 'fabrication', 'transport', 'construction'].map((step) => {
+                                    const val = project[step as keyof typeof project] as number;
+                                    const getColor = (v: number) => {
+                                        if (v >= 100) return 'bg-green-500';
+                                        if (v > 50) return 'bg-yellow-500';
+                                        if (v > 25) return 'bg-orange-500';
+                                        return 'bg-red-500';
+                                    };
+                                    return (
+                                        <div key={step}>
+                                            <div className="flex justify-between mb-1">
+                                                <span className="text-sm font-medium text-gray-700 capitalize">{step === 'construction' ? 'Montage' : step}</span>
+                                                <span className="text-sm font-medium text-gray-700">{val}%</span>
+                                            </div>
+                                            <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                                                <div
+                                                    className={`${getColor(val)} h-2.5 rounded-full`}
+                                                    style={{ width: `${val}%` }}
+                                                ></div>
+                                            </div>
                                         </div>
-                                        <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-                                            <div
-                                                className="bg-indigo-600 h-2.5 rounded-full"
-                                                style={{ width: `${project[step as keyof typeof project]}%` }}
-                                            ></div>
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
 

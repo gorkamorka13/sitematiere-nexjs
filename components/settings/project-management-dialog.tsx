@@ -779,10 +779,10 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
             />
           </div>
 
-          {/* Avancement du Chantier */}
+          {/* Avancement du Projet */}
           <div className="space-y-4">
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-purple-500" /> Avancement du Chantier
+              <AlertCircle className="w-4 h-4 text-purple-500" /> Avancement du Projet
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               {[
@@ -1092,7 +1092,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
 
               {/* Avancement */}
               <div className="space-y-4">
-                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Avancement initial</h3>
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Avancement initial du Projet</h3>
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                   {[
                     { label: "Prospection", key: "prospection" },
