@@ -23,7 +23,9 @@ const files = [
     'app/api/users/route.ts',
     'app/api/blob-proxy/route.ts',
     'app/api/blob-url/route.ts',
-    'app/api/create-user/route.ts'
+    'app/api/create-user/route.ts',
+    'app/api/debug/route.ts',
+    'app/api/debug/auth/route.ts'
 ];
 
 files.forEach(relativePath => {
