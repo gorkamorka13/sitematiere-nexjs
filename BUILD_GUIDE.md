@@ -30,7 +30,24 @@ npm run build:cloudflare
 
 ---
 
-## 🛠 Fonctionnement technique
+## 📊 Synthèse des Commandes
+
+| Commande | Action technique | Utilisation Recommandée |
+| :--- | :--- | :--- |
+| **`npm run local`** | Commente `runtime = 'edge'` | **Développement Quotidien** : À lancer avant `npm run dev`. |
+| **`npm run cloudflare`** | Décommente `runtime = 'edge'` | **Préparation Manuelle** : Avant un Git Push (optionnel si build auto). |
+| **`npm run build:cloudflare`** | Toggle + Build Cloudflare | **Configuration Cloudflare** : Dans le champ "Build command". |
+
+---
+
+## 💡 Différences entre les commandes Cloudflare
+
+### `npm run cloudflare` vs `npm run build:cloudflare`
+- **`npm run cloudflare`** : Ne fait **que** la préparation des fichiers. Il active le mode Edge sur vos fichiers locaux. Si vous poussez votre code après cette commande, Cloudflare recevra un code déjà prêt, mais il devra quand même builder.
+- **`npm run build:cloudflare`** : C'est la commande "complète". Elle prépare les fichiers **ET** lance la compilation pour Cloudflare. C'est la commande la plus sûre à utiliser dans l'interface Cloudflare car elle garantit que les fichiers sont dans le bon état avant de commencer la compilation.
+
+> [!IMPORTANT]
+> Sur Cloudflare Pages, utilisez toujours **`npm run build:cloudflare`**. Cela évite d'avoir à se soucier de l'état (local ou edge) de votre code avant de faire un commit/push. Le serveur de build s'occupera de faire la bascule automatiquement.
 
 ### La bascule de Runtime (`scripts/toggle-runtime.js`)
 Next.js (version 15) nécessite que les routes soient explicitement marquées avec `export const runtime = 'edge'` pour fonctionner sur Cloudflare. Cependant, cette ligne provoque des erreurs sur Windows en local (conflit avec Prisma/Node).
