@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { hash } from 'bcrypt-ts';
-// export const runtime = 'edge'; // Commenté pour le dev local
+export const runtime = 'edge';
 
 export async function POST(request: NextRequest) {
   try {

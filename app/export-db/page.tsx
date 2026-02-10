@@ -2,7 +2,7 @@ import prisma from "@/lib/prisma";
 import { headers } from "next/headers";
 
 export const dynamic = "force-dynamic";
-// export const runtime = 'edge'; // Commenté pour le dev local
+export const runtime = 'edge';
 
 export default async function ExportDatabasePage({
   searchParams,

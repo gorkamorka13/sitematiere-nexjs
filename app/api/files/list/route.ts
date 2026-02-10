@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { FileType, Prisma } from "@prisma/client";
 
-// export const runtime = 'edge'; // Commenté pour le dev local
+export const runtime = 'edge';
 
 
 export async function GET(request: Request) {

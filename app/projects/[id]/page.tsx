@@ -2,7 +2,7 @@
 import { auth } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
-// export const runtime = 'edge'; // Commenté pour le dev local
+export const runtime = 'edge';
 
 
 import Link from "next/link";
