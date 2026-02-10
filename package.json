@@ -22,7 +22,7 @@
     "@aws-sdk/s3-request-presigner": "^3.985.0",
     "@cloudflare/next-on-pages": "1.13.16",
     "@neondatabase/serverless": "^1.0.2",
-    "@prisma/adapter-neon": "^7.3.0",
+    "@prisma/adapter-neon": "^6.19.2",
     "@prisma/client": "6.19.2",
     "@prisma/extension-accelerate": "^3.0.1",
     "@types/jspdf": "^1.3.3",
