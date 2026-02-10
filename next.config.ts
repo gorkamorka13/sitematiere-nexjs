@@ -75,23 +75,18 @@ export default (phase: string) => {
       NEXT_PUBLIC_BUILD_DATE: new Date().toLocaleDateString("fr-FR"),
       NEXT_PUBLIC_CREDIT: "Michel ESPARSA",
     },
-    images: {
-      remotePatterns: [
-        {
-          protocol: 'https',
-          hostname: 'l1nmqms7zjmviefs.public.blob.vercel-storage.com',
-          port: '',
-          pathname: '/**',
-        },
-        {
-          protocol: 'https',
-          hostname: 'res.cloudinary.com',
-          port: '',
-          pathname: '/**',
-        },
-      ],
-    },
   };
 
-  return nextConfig;
+  // Run seed during production build
+  if (phase === PHASE_PRODUCTION_BUILD) {
+    console.log('Running admin user seed...');
+    try {
+      const { seedAdminUser } = require('./lib/seed');
+      seedAdminUser().catch(console.error);
+    } catch (error) {
+      console.error('Seed failed:', error);
+    }
+  }
+
+return nextConfig;
 };
