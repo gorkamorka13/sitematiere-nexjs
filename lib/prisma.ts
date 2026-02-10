@@ -1,20 +1,26 @@
 import { PrismaClient } from "@prisma/client";
 
-// Note: We use dynamic imports for Edge-only packages to avoid issues in Node.js
-// but since these are Edge-compatible, we can also try static imports if the bundler allows.
-// To be safe and compatible with both, we'll use a singleton pattern.
-
 let prisma: PrismaClient;
 
 if (process.env.NEXT_RUNTIME === 'edge' || process.env.CF_PAGES === '1') {
-  // We need to import these only in edge runtime
-  // Next.js handles this during bundling
+  // Edge runtime - use Neon adapter
   const { PrismaNeon } = require('@prisma/adapter-neon');
   const { Pool } = require('@neondatabase/serverless');
 
+  if (!process.env.DATABASE_URL) {
+    throw new Error('DATABASE_URL is not set for Edge runtime');
+  }
+
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
   const adapter = new PrismaNeon(pool);
-  prisma = new PrismaClient({ adapter });
+  prisma = new PrismaClient({
+    adapter,
+    datasources: {
+      db: {
+        url: process.env.DATABASE_URL,
+      },
+    },
+  });
 } else {
   // Node.js runtime
   const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined };
