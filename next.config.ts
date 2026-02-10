@@ -86,6 +86,11 @@ export default (phase: string) => {
           protocol: 'https',
           hostname: 'pub-78c42489fd854dc3a6975810aa00edf2.r2.dev',
           pathname: '**',
+        },
+        {
+          protocol: 'https',
+          hostname: 'res.cloudinary.com',
+          pathname: '**',
         }
       ],
     },
