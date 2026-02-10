@@ -6,10 +6,10 @@ export const dynamic = "force-dynamic";
 export default async function ExportDatabasePage({
   searchParams,
 }: {
-  searchParams: { password?: string };
+  searchParams: Promise<{ password?: string }>;
 }) {
-  const headersList = headers();
-  const password = searchParams.password;
+  const headersList = await headers();
+  const { password } = await searchParams;
 
   if (password !== "export2026") {
     return (

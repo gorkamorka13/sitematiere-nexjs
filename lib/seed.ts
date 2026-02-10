@@ -1,5 +1,5 @@
 import prisma from '@/lib/prisma';
-import bcrypt from 'bcryptjs';
+import { hash } from 'bcrypt-ts';
 
 export async function seedAdminUser() {
   try {
@@ -7,10 +7,10 @@ export async function seedAdminUser() {
     const existingAdmin = await prisma.user.findUnique({
       where: { email: 'admin@sitematiere.com' }
     });
-    
+
     if (!existingAdmin) {
       // Create admin user
-      const hashedPassword = await bcrypt.hash('admin123', 12);
+      const hashedPassword = await hash('admin123', 12);
       await prisma.user.create({
         data: {
           email: 'admin@sitematiere.com',
