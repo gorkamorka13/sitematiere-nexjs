@@ -1,36 +1,38 @@
 'use client';
 
+import { ImageData, ProcessedImage } from '@/types/image-processor';
 import { ImagePreview } from './ImagePreview';
 
 interface ComparisonProps {
-  originalSrc: string;
-  processedSrc: string;
-  originalDimensions: { width: number; height: number };
-  processedDimensions: { width: number; height: number };
+  original: ImageData;
+  processed: ImageData | ProcessedImage;
 }
 
 export function Comparison({
-  originalSrc,
-  processedSrc,
-  originalDimensions,
-  processedDimensions
+  original,
+  processed,
 }: ComparisonProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div className="space-y-2">
         <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider text-center">Avant</h3>
         <ImagePreview
-          imageSrc={originalSrc}
+          imageSrc={original.src}
           title="Original"
-          dimensions={originalDimensions}
+          size={original.size}
+          dimensions={{ width: original.width, height: original.height }}
+          filename={original.file.name}
         />
       </div>
       <div className="space-y-2">
         <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider text-center">Après</h3>
         <ImagePreview
-          imageSrc={processedSrc}
+          imageSrc={processed.src}
           title="Modifié"
-          dimensions={processedDimensions}
+          size={processed.size}
+          dimensions={{ width: processed.width, height: processed.height }}
+          compressionRatio={(processed as ProcessedImage).compressionRatio}
+          filename={processed.file.name}
           isResult
         />
       </div>

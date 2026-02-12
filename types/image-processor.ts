@@ -8,6 +8,8 @@ export interface ImageData {
 
 export interface ProcessedImage extends ImageData {
   compressionRatio: number;
+  tempAction?: string;
+  tempDetails?: string;
 }
 
 export interface CropData {

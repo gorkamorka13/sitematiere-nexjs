@@ -29,10 +29,10 @@ interface UseImageProcessorReturn {
   loadImageFromUrl: (url: string, filename: string) => Promise<void>;
   resizeImageAction: (width: number, height: number, quality: number, format: ImageFormat) => Promise<void>;
   enableCrop: () => void;
-  applyCrop: (cropData: CropData) => Promise<void>; // Modified signature to just take cropData
+  applyCrop: (cropData: CropData, targetDimensions?: { width: number; height: number }) => Promise<void>;
+  commitProcessedImage: () => void;
+  cancelProcessedImage: () => void;
   cancelCrop: () => void;
-  // previewResult is often redundant if resize/crop updates state directly,
-  // but we can keep a "process" trigger if needed. For now, let's say actions trigger processing.
   downloadImage: () => void;
   loadFromHistory: (index: number) => void;
   setIsProcessing: (isProcessing: boolean) => void;
@@ -54,7 +54,7 @@ export const useImageProcessor = (): UseImageProcessorReturn => {
       id: crypto.randomUUID(),
       action,
       details,
-      thumbnail: newImage.src, // simplistic for now, could be resized for thumb
+      thumbnail: newImage.src,
       timestamp: new Date(),
       imageData: newImage
     };
@@ -86,14 +86,9 @@ export const useImageProcessor = (): UseImageProcessorReturn => {
   const loadImageFromUrl = useCallback(async (url: string, filename: string) => {
     setIsProcessing(true);
     try {
-      // Use proxy to avoid CORS issues
       const proxyUrl = `/api/proxy?url=${encodeURIComponent(url)}`;
       const response = await fetch(proxyUrl);
-
-      if (!response.ok) {
-        throw new Error(`Proxy fetch failed: ${response.statusText}`);
-      }
-
+      if (!response.ok) throw new Error(`Proxy fetch failed: ${response.statusText}`);
       const blob = await response.blob();
       const file = new File([blob], filename, { type: blob.type });
       await loadImage(file);
@@ -113,18 +108,18 @@ export const useImageProcessor = (): UseImageProcessorReturn => {
       await new Promise(r => img.onload = r);
 
       const dataUrl = resizeImage(img, width, height, quality, format);
-
-      // Convert DataURL to File size approximation
       const head = 'data:image/' + format + ';base64,';
       const size = Math.round((dataUrl.length - head.length) * 3 / 4);
 
       const newImage: ProcessedImage = {
         src: dataUrl,
-        file: currentImage.file, // Keep original file ref or create new? Keeping ref for name
+        file: currentImage.file,
         width,
         height,
         size,
-        compressionRatio: 0 // Will verify later
+        compressionRatio: 0,
+        tempAction: 'Resize',
+        tempDetails: `${width}x${height}, Q${quality}, ${format}`
       };
 
       if (originalImage) {
@@ -132,30 +127,19 @@ export const useImageProcessor = (): UseImageProcessorReturn => {
       }
 
       setProcessedImage(newImage);
-      // We don't automatically overwrite currentImage,
-      // typically we might want to "Apply" or just Download.
-      // But for history flow, let's treat processed as a potential new state
-
-      // NOTE: Logic choice: Does resize update "current" for further ops?
-      // Usually yes.
-      setCurrentImage(newImage);
-      addToHistory('Resize', `${width}x${height}, Q${quality}, ${format}`, newImage);
-
     } catch (error) {
       console.error("Resize failed", error);
     } finally {
       setIsProcessing(false);
     }
-  }, [currentImage, originalImage, addToHistory]);
+  }, [currentImage, originalImage]);
 
   const enableCrop = useCallback(() => {
     if (!currentImage) return;
     setIsCropping(true);
-    // Initialize crop data to full image or center?
-    // CropTool usually handles init
   }, [currentImage]);
 
-  const applyCrop = useCallback(async (data: CropData) => {
+  const applyCrop = useCallback(async (data: CropData, targetDimensions?: { width: number; height: number }) => {
     if (!currentImage) return;
     setIsProcessing(true);
     try {
@@ -163,8 +147,18 @@ export const useImageProcessor = (): UseImageProcessorReturn => {
       img.src = currentImage.src;
       await new Promise(r => img.onload = r);
 
-      // Default quality/format for crop usually keeps original or high
-      const dataUrl = cropImage(img, data, 100, 'jpeg'); // defaulting to jpeg high for now
+      let dataUrl = cropImage(img, data, 100, 'jpeg');
+      let finalWidth = data.width;
+      let finalHeight = data.height;
+
+      if (targetDimensions) {
+        const croppedImg = new Image();
+        croppedImg.src = dataUrl;
+        await new Promise(r => croppedImg.onload = r);
+        dataUrl = resizeImage(croppedImg, targetDimensions.width, targetDimensions.height, 95, 'jpeg');
+        finalWidth = targetDimensions.width;
+        finalHeight = targetDimensions.height;
+      }
 
       const head = 'data:image/jpeg;base64,';
       const size = Math.round((dataUrl.length - head.length) * 3 / 4);
@@ -172,47 +166,59 @@ export const useImageProcessor = (): UseImageProcessorReturn => {
       const newImage: ProcessedImage = {
         src: dataUrl,
         file: currentImage.file,
-        width: data.width,
-        height: data.height,
+        width: finalWidth,
+        height: finalHeight,
         size,
-        compressionRatio: 0
+        compressionRatio: 0,
+        tempAction: targetDimensions ? 'Crop & Resize' : 'Crop',
+        tempDetails: `${finalWidth}x${finalHeight}`
       };
+
       if (originalImage) {
         newImage.compressionRatio = calculateCompressionRatio(originalImage.size, size);
       }
 
-      setCurrentImage(newImage);
       setProcessedImage(newImage);
-      addToHistory('Crop', `${data.width}x${data.height}`, newImage);
       setIsCropping(false);
     } catch (error) {
-      console.error("Crop failed", error);
+      console.error("Crop/Resize failed", error);
     } finally {
       setIsProcessing(false);
     }
-  }, [currentImage, originalImage, addToHistory]);
+  }, [currentImage, originalImage]);
+
+  const commitProcessedImage = useCallback(() => {
+    if (!processedImage) return;
+    const newImage = { ...processedImage };
+    setCurrentImage(newImage);
+    addToHistory(newImage.tempAction || 'Edit', newImage.tempDetails || '', newImage);
+    setProcessedImage(null);
+  }, [processedImage, addToHistory]);
+
+  const cancelProcessedImage = useCallback(() => {
+    setProcessedImage(null);
+  }, []);
 
   const cancelCrop = useCallback(() => {
     setIsCropping(false);
   }, []);
 
   const downloadImage = useCallback(() => {
-    if (!processedImage) return;
+    const activeImage = processedImage || currentImage;
+    if (!activeImage) return;
     const link = document.createElement('a');
-    link.href = processedImage.src;
-    link.download = `processed-${Date.now()}.jpg`; // Could infer ext
+    link.href = activeImage.src;
+    link.download = `processed-${Date.now()}.jpg`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  }, [processedImage]);
+  }, [processedImage, currentImage]);
 
   const loadFromHistory = useCallback((index: number) => {
     const item = history[index];
     if (item) {
       setCurrentImage(item.imageData);
-      setProcessedImage({ ...item.imageData, compressionRatio: 0 }); // Re-calc ratio?
-      // Slice history to remove future items if valid "undo" behavior,
-      // or just jump state. Let's just jump state.
+      setProcessedImage(null);
     }
   }, [history]);
 
@@ -229,7 +235,7 @@ export const useImageProcessor = (): UseImageProcessorReturn => {
     currentImage,
     processedImage,
     isProcessing,
-    cropData, // managed by tool mostly
+    cropData,
     isCropping,
     history,
     loadImage,
@@ -237,6 +243,8 @@ export const useImageProcessor = (): UseImageProcessorReturn => {
     resizeImageAction,
     enableCrop,
     applyCrop,
+    commitProcessedImage,
+    cancelProcessedImage,
     cancelCrop,
     downloadImage,
     loadFromHistory,

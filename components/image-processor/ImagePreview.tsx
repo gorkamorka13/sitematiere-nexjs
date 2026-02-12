@@ -11,6 +11,7 @@ interface ImagePreviewProps {
   dimensions?: { width: number; height: number };
   compressionRatio?: number;
   isResult?: boolean;
+  filename?: string;
 }
 
 export function ImagePreview({
@@ -19,15 +20,19 @@ export function ImagePreview({
   size,
   dimensions,
   compressionRatio,
-  isResult
+  isResult,
+  filename
 }: ImagePreviewProps) {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden h-full flex flex-col">
       <div className="p-3 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50/50 dark:bg-gray-900/50">
-        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-            <ImageIcon className="w-4 h-4" />
-            {title}
-        </h3>
+        <div className="flex flex-col">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                <ImageIcon className="w-4 h-4" />
+                {title}
+            </h3>
+            {filename && <span className="text-[10px] text-gray-400 font-medium truncate max-w-[150px]">{filename}</span>}
+        </div>
         {isResult && compressionRatio !== undefined && (
           <Badge variant={compressionRatio > 0 ? "default" : "secondary"} className={compressionRatio > 0 ? "bg-green-500 hover:bg-green-600" : ""}>
             {compressionRatio > 0 ? `-${compressionRatio}%` : '0%'}
@@ -55,7 +60,7 @@ export function ImagePreview({
         {dimensions && (
           <div className="flex flex-col">
             <span className="uppercase font-bold text-[10px] tracking-wider text-gray-400">Dimensions</span>
-            <span className="font-mono text-gray-700 dark:text-gray-300">{dimensions.width} x {dimensions.height}px</span>
+            <span className="font-mono text-gray-700 dark:text-gray-300">{Math.round(dimensions.width)} x {Math.round(dimensions.height)}px</span>
           </div>
         )}
         {size !== undefined && (

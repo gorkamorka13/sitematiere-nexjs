@@ -12,7 +12,7 @@ import { DatabaseImagePicker } from '@/components/image-processor/DatabaseImageP
 import { ProjectSelectDialog } from '@/components/image-processor/ProjectSelectDialog';
 import { ConflictDialog, ConflictResolution } from '@/components/image-processor/ConflictDialog';
 import { Button } from '@/components/ui/button';
-import { Image as ImageIcon, Upload, Database, CheckCircle, AlertCircle, Loader2, X } from 'lucide-react';
+import { Image as ImageIcon, Upload, Database, Check, CheckCircle, AlertCircle, Loader2, X } from 'lucide-react';
 import AppLayout from "@/components/AppLayout";
 import ProjectManagementDialog from "@/components/settings/project-management-dialog";
 import FileManagementDialog from "@/components/settings/file-management-dialog";
@@ -38,6 +38,8 @@ export default function ImageProcessorClient({ user, initialProjects }: ImagePro
     resizeImageAction,
     enableCrop,
     applyCrop,
+    commitProcessedImage,
+    cancelProcessedImage,
     cancelCrop,
     downloadImage,
     loadFromHistory,
@@ -233,6 +235,38 @@ export default function ImageProcessorClient({ user, initialProjects }: ImagePro
                 Choisir depuis la base de données
              </Button>
           </div>
+
+          {processedImage && (
+            <div className="flex items-center justify-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 p-3 rounded-2xl flex items-center gap-4 shadow-sm">
+                    <div className="flex flex-col items-start px-2">
+                        <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Aperçu en cours</span>
+                        <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                            {processedImage.tempAction || 'Modification'}
+                            {processedImage.tempDetails ? ` : ${processedImage.tempDetails}` : ''}
+                        </span>
+                    </div>
+                    <div className="h-8 w-[1px] bg-indigo-100 dark:bg-indigo-800" />
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={cancelProcessedImage}
+                            className="h-9 text-xs font-bold uppercase tracking-wider hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20"
+                        >
+                            <X className="w-4 h-4 mr-2" /> Annuler
+                        </Button>
+                        <Button
+                            size="sm"
+                            onClick={commitProcessedImage}
+                            className="h-9 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold uppercase tracking-wider px-6 shadow-md"
+                        >
+                            <Check className="w-4 h-4 mr-2" /> Valider
+                        </Button>
+                    </div>
+                </div>
+            </div>
+          )}
         </header>
 
         {/* Drop Zone (Only if no image loaded) */}
@@ -282,10 +316,8 @@ export default function ImageProcessorClient({ user, initialProjects }: ImagePro
                             <h2 className="text-lg font-bold text-gray-900 dark:text-white">Résultat</h2>
                         </div>
                         <Comparison
-                            originalSrc={originalImage.src}
-                            processedSrc={processedImage.src}
-                            originalDimensions={{ width: originalImage.width, height: originalImage.height }}
-                            processedDimensions={{ width: processedImage.width, height: processedImage.height }}
+                            original={originalImage}
+                            processed={processedImage}
                         />
                      </div>
                 ) : (
@@ -297,6 +329,7 @@ export default function ImageProcessorClient({ user, initialProjects }: ImagePro
                                 title="Image de travail"
                                 size={currentImage.size}
                                 dimensions={{ width: currentImage.width, height: currentImage.height }}
+                                filename={currentImage.file.name}
                               />
                         </div>
                     )
