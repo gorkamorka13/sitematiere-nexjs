@@ -19,7 +19,7 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   projects      Project[] @relation("ProjectOwner")
-  
+
   @@map("users")
 }
 
@@ -39,29 +39,30 @@ model Project {
   description     String?       @db.Text
   type            ProjectType
   status          ProjectStatus @default(PROSPECT)
-  
+
   // Progression (0-100)
   prospection     Int           @default(0)
   studies         Int           @default(0) // "etudes"
   fabrication     Int           @default(0)
   transport       Int           @default(0)
   construction    Int           @default(0)
-  
+
   // Relations
   images          Image[]
   videos          Video[]
   documents       Document[]
   files           File[]
-  
+  slideshowImages SlideshowImage[]
+
   // Métadonnées
   projectCode     String?       @db.VarChar(255) // "prochantier"
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
-  
+
   // Relation propriétaire
   ownerId         String
   owner           User          @relation("ProjectOwner", fields: [ownerId], references: [id])
-  
+
   @@index([country])
   @@index([type])
   @@index([status])
@@ -86,16 +87,35 @@ enum ProjectStatus {
 
 // Modèle pour les images
 model Image {
-  id          String   @id @default(cuid())
-  url         String   // URL Vercel Blob ou S3
-  alt         String?
-  order       Int      @default(0)
-  projectId   String
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-  
+  id              String           @id @default(cuid())
+  url             String           // URL Vercel Blob ou S3
+  alt             String?
+  order           Int              @default(0)
+  projectId       String
+  project         Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt       DateTime         @default(now())
+  slideshowImages SlideshowImage[]
+
   @@index([projectId])
   @@map("images")
+}
+
+// Modèle pour la gestion des slideshows de projet
+model SlideshowImage {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  imageId     String
+  image       Image    @relation(fields: [imageId], references: [id], onDelete: Cascade)
+  order       Int      @default(0)
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([projectId, imageId])
+  @@index([projectId, order])
+  @@index([projectId, isPublished])
+  @@map("slideshow_images")
 }
 
 // Modèle pour les vidéos
@@ -106,7 +126,7 @@ model Video {
   projectId   String
   project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
-  
+
   @@index([projectId])
   @@map("videos")
 }
@@ -120,7 +140,7 @@ model Document {
   projectId   String
   project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
   createdAt   DateTime     @default(now()) // Correction from plan: should be @default(now())
-  
+
   @@index([projectId])
   @@map("documents")
 }
@@ -153,21 +173,21 @@ model File {
   size        Int       // Taille en bytes
   projectId   String?
   project     Project?   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  
+
   // Métadonnées pour miniatures
   thumbnailUrl String?  // URL miniature (images/vidéos)
   width       Int?      // Largeur (images/vidéos)
   height      Int?      // Hauteur (images/vidéos)
   duration    Int?      // Durée en secondes (vidéos/audio)
-  
+
   // Historique - Soft delete
   isDeleted   Boolean   @default(false)
   deletedAt   DateTime?
   deletedBy   String?   // User ID qui a supprimé
-  
+
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  
+
   @@index([projectId])
   @@index([isDeleted])
   @@index([fileType])

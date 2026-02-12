@@ -1,0 +1,210 @@
+"use server";
+
+import prisma from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { revalidatePath } from "next/cache";
+
+/**
+ * Get slideshow images for a project
+ * @param projectId - Project ID
+ * @param publishedOnly - If true, only return published images
+ */
+export async function getSlideshowImages(projectId: string, publishedOnly: boolean = false) {
+  try {
+    const where: any = { projectId };
+    if (publishedOnly) {
+      where.isPublished = true;
+    }
+
+    const slideshowImages = await prisma.slideshowImage.findMany({
+      where,
+      include: {
+        image: true,
+      },
+      orderBy: {
+        order: 'asc',
+      },
+    });
+
+    return { success: true, images: slideshowImages };
+  } catch (error) {
+    console.error("Error fetching slideshow images:", error);
+    return { success: false, error: "Erreur lors de la récupération des images du slideshow." };
+  }
+}
+
+/**
+ * Add an image to the slideshow (as draft)
+ */
+export async function addSlideshowImage(projectId: string, imageId: string) {
+  const session = await auth();
+
+  if (!session || (session.user as { role?: string })?.role !== "ADMIN") {
+    throw new Error("Action non autorisée. Seuls les administrateurs peuvent gérer les slideshows.");
+  }
+
+  try {
+    // Check if image already exists in slideshow
+    const existing = await prisma.slideshowImage.findUnique({
+      where: {
+        projectId_imageId: {
+          projectId,
+          imageId,
+        },
+      },
+    });
+
+    if (existing) {
+      return { success: false, error: "Cette image est déjà dans le slideshow." };
+    }
+
+    // Get the highest order number
+    const maxOrder = await prisma.slideshowImage.findFirst({
+      where: { projectId },
+      orderBy: { order: 'desc' },
+      select: { order: true },
+    });
+
+    const newOrder = (maxOrder?.order ?? -1) + 1;
+
+    const slideshowImage = await prisma.slideshowImage.create({
+      data: {
+        projectId,
+        imageId,
+        order: newOrder,
+        isPublished: false,
+      },
+      include: {
+        image: true,
+      },
+    });
+
+    revalidatePath("/slideshow");
+    revalidatePath(`/slideshow/view/${projectId}`);
+
+    return { success: true, slideshowImage };
+  } catch (error) {
+    console.error("Error adding slideshow image:", error);
+    return { success: false, error: "Erreur lors de l'ajout de l'image au slideshow." };
+  }
+}
+
+/**
+ * Remove an image from the slideshow
+ */
+export async function removeSlideshowImage(slideshowImageId: string) {
+  const session = await auth();
+
+  if (!session || (session.user as { role?: string })?.role !== "ADMIN") {
+    throw new Error("Action non autorisée. Seuls les administrateurs peuvent gérer les slideshows.");
+  }
+
+  try {
+    const slideshowImage = await prisma.slideshowImage.findUnique({
+      where: { id: slideshowImageId },
+      select: { projectId: true },
+    });
+
+    if (!slideshowImage) {
+      return { success: false, error: "Image de slideshow introuvable." };
+    }
+
+    await prisma.slideshowImage.delete({
+      where: { id: slideshowImageId },
+    });
+
+    revalidatePath("/slideshow");
+    revalidatePath(`/slideshow/view/${slideshowImage.projectId}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error removing slideshow image:", error);
+    return { success: false, error: "Erreur lors de la suppression de l'image du slideshow." };
+  }
+}
+
+/**
+ * Reorder slideshow images
+ * @param projectId - Project ID
+ * @param orderedImageIds - Array of slideshow image IDs in the new order
+ */
+export async function reorderSlideshowImages(projectId: string, orderedImageIds: string[]) {
+  const session = await auth();
+
+  if (!session || (session.user as { role?: string })?.role !== "ADMIN") {
+    throw new Error("Action non autorisée. Seuls les administrateurs peuvent gérer les slideshows.");
+  }
+
+  try {
+    // Update order for each image in a transaction
+    await prisma.$transaction(
+      orderedImageIds.map((id, index) =>
+        prisma.slideshowImage.update({
+          where: { id },
+          data: { order: index },
+        })
+      )
+    );
+
+    revalidatePath("/slideshow");
+    revalidatePath(`/slideshow/view/${projectId}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error reordering slideshow images:", error);
+    return { success: false, error: "Erreur lors de la réorganisation des images." };
+  }
+}
+
+/**
+ * Publish all current slideshow images for a project
+ */
+export async function publishSlideshow(projectId: string) {
+  const session = await auth();
+
+  if (!session || (session.user as { role?: string })?.role !== "ADMIN") {
+    throw new Error("Action non autorisée. Seuls les administrateurs peuvent publier les slideshows.");
+  }
+
+  try {
+    // Mark all slideshow images for this project as published
+    await prisma.slideshowImage.updateMany({
+      where: { projectId },
+      data: { isPublished: true },
+    });
+
+    revalidatePath("/slideshow");
+    revalidatePath(`/slideshow/view/${projectId}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error publishing slideshow:", error);
+    return { success: false, error: "Erreur lors de la publication du slideshow." };
+  }
+}
+
+/**
+ * Unpublish all slideshow images for a project (revert to draft)
+ */
+export async function unpublishSlideshow(projectId: string) {
+  const session = await auth();
+
+  if (!session || (session.user as { role?: string })?.role !== "ADMIN") {
+    throw new Error("Action non autorisée. Seuls les administrateurs peuvent gérer les slideshows.");
+  }
+
+  try {
+    await prisma.slideshowImage.updateMany({
+      where: { projectId },
+      data: { isPublished: false },
+    });
+
+    revalidatePath("/slideshow");
+    revalidatePath(`/slideshow/view/${projectId}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error unpublishing slideshow:", error);
+    return { success: false, error: "Erreur lors de la dépublication du slideshow." };
+  }
+}

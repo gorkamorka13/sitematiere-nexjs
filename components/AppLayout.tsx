@@ -12,7 +12,8 @@ import {
     Menu,
     PanelLeftClose,
     ChevronRight,
-    Users
+    Users,
+    Presentation
 } from 'lucide-react';
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import UserBadge from "@/components/settings/user-badge";
@@ -209,6 +210,13 @@ export default function AppLayout({
                             >
                                 <ImageIcon className={`w-5 h-5 ${isSidebarCollapsed ? "" : ""}`} />
                                 {!isSidebarCollapsed && <span className="text-sm font-medium">Gestion Images</span>}
+                            </Link>
+                            <Link
+                                href="/slideshow"
+                                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${isActive('/slideshow') ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400" : "hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400"} ${isSidebarCollapsed ? "justify-center" : ""}`}
+                            >
+                                <Presentation className={`w-5 h-5 ${isSidebarCollapsed ? "" : ""}`} />
+                                {!isSidebarCollapsed && <span className="text-sm font-medium">Gestion Diaporama</span>}
                             </Link>
                         </div>
                     )}
