@@ -12,6 +12,9 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
+  defaultDropAnimationSideEffects,
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -22,10 +25,10 @@ import {
 import { SortableImageCard } from '@/components/slideshow/SortableImageCard';
 import {
   getSlideshowImages,
-  addSlideshowImage,
   removeSlideshowImage,
   reorderSlideshowImages,
   publishSlideshow,
+  addImageToSlideshow,
 } from '@/app/actions/slideshow-actions';
 
 interface SlideshowImage {
@@ -57,9 +60,14 @@ export function SlideshowManager({ projects }: SlideshowManagerProps) {
   const [publishing, setPublishing] = useState(false);
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [hasUnpublishedChanges, setHasUnpublishedChanges] = useState(false);
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -94,16 +102,24 @@ export function SlideshowManager({ projects }: SlideshowManagerProps) {
     }
   };
 
-  const handleAddImage = async (imageUrl: string, filename: string) => {
+  const handleAddImage = async (imageUrl: string, filename: string, fileId: string) => {
     if (!selectedProjectId) return;
 
-    // Extract image ID from the database (we need to find it by URL)
-    // For now, we'll need to pass the image ID directly
-    // This is a simplified version - in production, you'd query by URL
-    setShowImagePicker(false);
-
-    // Reload to get the updated list
-    await loadSlideshowImages();
+    setLoading(true);
+    try {
+      const result = await addImageToSlideshow(selectedProjectId, fileId);
+      if (result.success) {
+        setShowImagePicker(false);
+        await loadSlideshowImages();
+      } else {
+        alert(result.error || 'Erreur lors de l\'ajout de l\'image');
+      }
+    } catch (error) {
+      console.error('Error adding image:', error);
+      alert('Erreur lors de l\'ajout de l\'image');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRemoveImage = async (slideshowImageId: string) => {
@@ -125,21 +141,25 @@ export function SlideshowManager({ projects }: SlideshowManagerProps) {
     }
   };
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
+    setActiveId(null);
 
     if (over && active.id !== over.id) {
-      setSlideshowImages((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over.id);
+      const oldIndex = slideshowImages.findIndex((item) => item.id === active.id);
+      const newIndex = slideshowImages.findIndex((item) => item.id === over.id);
 
-        const newItems = arrayMove(items, oldIndex, newIndex);
+      const newItems = arrayMove(slideshowImages, oldIndex, newIndex);
 
-        // Save the new order
-        saveOrder(newItems);
+      // Optimistic update
+      setSlideshowImages(newItems);
 
-        return newItems;
-      });
+      // Save the new order - CALLED OUTSIDE state updater
+      await saveOrder(newItems);
     }
   };
 
@@ -292,6 +312,7 @@ export function SlideshowManager({ projects }: SlideshowManagerProps) {
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
             >
               <SortableContext
@@ -311,6 +332,29 @@ export function SlideshowManager({ projects }: SlideshowManagerProps) {
                   ))}
                 </div>
               </SortableContext>
+              <DragOverlay
+                dropAnimation={{
+                  sideEffects: defaultDropAnimationSideEffects({
+                    styles: {
+                      active: {
+                        opacity: '0.4',
+                      },
+                    },
+                  }),
+                }}
+              >
+                {activeId ? (
+                  <div className="shadow-2xl opacity-90 scale-[1.02]">
+                    <SortableImageCard
+                      id={activeId}
+                      image={slideshowImages.find((img) => img.id === activeId)!.image}
+                      order={slideshowImages.findIndex((img) => img.id === activeId) + 1}
+                      isPublished={slideshowImages.find((img) => img.id === activeId)!.isPublished}
+                      onRemove={() => {}}
+                    />
+                  </div>
+                ) : null}
+              </DragOverlay>
             </DndContext>
           )}
 

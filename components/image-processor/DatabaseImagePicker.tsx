@@ -14,7 +14,7 @@ import { FileDeleteDialog } from '@/components/files/file-delete-dialog';
 interface DatabaseImagePickerProps {
     isOpen: boolean;
     onClose: () => void;
-    onSelect: (imageUrl: string, filename: string) => void;
+    onSelect: (imageUrl: string, filename: string, fileId: string) => void;
 }
 
 export function DatabaseImagePicker({ isOpen, onClose, onSelect }: DatabaseImagePickerProps) {
@@ -197,7 +197,7 @@ export function DatabaseImagePicker({ isOpen, onClose, onSelect }: DatabaseImage
         if (selectedId) {
             const file = allFiles.find(f => f.id === selectedId);
             if (file) {
-                onSelect(file.blobUrl, file.name);
+                onSelect(file.blobUrl, file.name, file.id);
                 onClose();
             }
         }

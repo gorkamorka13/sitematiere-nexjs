@@ -96,17 +96,7 @@ export default (phase: string) => {
     },
   };
 
-  // Run seed during production build
-  if (phase === PHASE_PRODUCTION_BUILD) {
-    console.log('Running admin user seed...');
-    try {
-      const seedPath = path.join(process.cwd(), 'lib', 'seed');
-      const { seedAdminUser } = require(seedPath);
-      seedAdminUser().catch(console.error);
-    } catch (error) {
-      console.error('Seed failed:', error);
-    }
-  }
+  // Seed logic moved to a separate script or managed via prisma seed
 
   return nextConfig;
 };

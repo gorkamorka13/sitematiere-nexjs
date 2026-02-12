@@ -90,6 +90,50 @@ export async function addSlideshowImage(projectId: string, imageId: string) {
 }
 
 /**
+ * Add an image from the File table to the slideshow
+ */
+export async function addImageToSlideshow(projectId: string, fileId: string) {
+  const session = await auth();
+
+  if (!session || (session.user as { role?: string })?.role !== "ADMIN") {
+    throw new Error("Action non autorisée. Seuls les administrateurs peuvent gérer les slideshows.");
+  }
+
+  try {
+    // 1. Get file details
+    const file = await prisma.file.findUnique({
+      where: { id: fileId }
+    });
+
+    if (!file || file.fileType !== 'IMAGE') {
+      return { success: false, error: "Fichier image introuvable." };
+    }
+
+    // 2. Ensure Image record exists
+    let image = await prisma.image.findFirst({
+      where: { url: file.blobUrl, projectId }
+    });
+
+    if (!image) {
+      image = await prisma.image.create({
+        data: {
+          url: file.blobUrl,
+          alt: file.name,
+          projectId,
+          order: 0
+        }
+      });
+    }
+
+    // 3. Add to slideshow via existing logic
+    return await addSlideshowImage(projectId, image.id);
+  } catch (error) {
+    console.error("Error adding image to slideshow:", error);
+    return { success: false, error: "Erreur lors de l'ajout de l'image au slideshow." };
+  }
+}
+
+/**
  * Remove an image from the slideshow
  */
 export async function removeSlideshowImage(slideshowImageId: string) {
