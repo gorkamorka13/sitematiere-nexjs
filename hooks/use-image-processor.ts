@@ -26,6 +26,7 @@ interface UseImageProcessorReturn {
 
   // Actions
   loadImage: (file: File) => Promise<void>;
+  loadImageFromUrl: (url: string, filename: string) => Promise<void>;
   resizeImageAction: (width: number, height: number, quality: number, format: ImageFormat) => Promise<void>;
   enableCrop: () => void;
   applyCrop: (cropData: CropData) => Promise<void>; // Modified signature to just take cropData
@@ -34,6 +35,7 @@ interface UseImageProcessorReturn {
   // but we can keep a "process" trigger if needed. For now, let's say actions trigger processing.
   downloadImage: () => void;
   loadFromHistory: (index: number) => void;
+  setIsProcessing: (isProcessing: boolean) => void;
   reset: () => void;
 }
 
@@ -80,6 +82,27 @@ export const useImageProcessor = (): UseImageProcessorReturn => {
       setIsProcessing(false);
     }
   }, []);
+
+  const loadImageFromUrl = useCallback(async (url: string, filename: string) => {
+    setIsProcessing(true);
+    try {
+      // Use proxy to avoid CORS issues
+      const proxyUrl = `/api/proxy?url=${encodeURIComponent(url)}`;
+      const response = await fetch(proxyUrl);
+
+      if (!response.ok) {
+        throw new Error(`Proxy fetch failed: ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+      const file = new File([blob], filename, { type: blob.type });
+      await loadImage(file);
+    } catch (error) {
+      console.error("Failed to load image from URL", error);
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [loadImage]);
 
   const resizeImageAction = useCallback(async (width: number, height: number, quality: number, format: ImageFormat) => {
     if (!currentImage) return;
@@ -210,12 +233,14 @@ export const useImageProcessor = (): UseImageProcessorReturn => {
     isCropping,
     history,
     loadImage,
+    loadImageFromUrl,
     resizeImageAction,
     enableCrop,
     applyCrop,
     cancelCrop,
     downloadImage,
     loadFromHistory,
+    setIsProcessing,
     reset
   };
 };

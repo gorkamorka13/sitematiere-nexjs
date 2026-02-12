@@ -41,6 +41,7 @@ export function FileExplorer() {
     const [projectFilter, setProjectFilter] = useState("ALL"); // New Project Filter State
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [refreshTrigger, setRefreshTrigger] = useState(0);
+    const [sortConfig, setSortConfig] = useState<{ key: 'name' | 'fileType' | 'size' | 'createdAt'; direction: 'asc' | 'desc' } | null>({ key: 'name', direction: 'asc' });
 
     // Auto-select country when project is selected
     useEffect(() => {
@@ -54,7 +55,7 @@ export function FileExplorer() {
 
 
     // Derived state for display (computed after state declarations)
-    const files = allFiles.filter(f => {
+    const filteredFiles = allFiles.filter(f => {
         // Filter by search query
         if (searchQuery && !f.name.toLowerCase().includes(searchQuery.toLowerCase())) {
             return false;
@@ -81,6 +82,32 @@ export function FileExplorer() {
 
         return true;
     });
+
+    const files = [...filteredFiles].sort((a, b) => {
+        if (!sortConfig) return 0;
+        const { key, direction } = sortConfig;
+
+        let valA = a[key];
+        let valB = b[key];
+
+        if (key === 'createdAt') {
+            valA = new Date(valA).getTime();
+            valB = new Date(valB).getTime();
+        }
+
+        if (valA < valB) return direction === 'asc' ? -1 : 1;
+        if (valA > valB) return direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    const toggleSort = (key: 'name' | 'fileType' | 'size' | 'createdAt') => {
+        setSortConfig(current => {
+            if (current?.key === key) {
+                return { key, direction: current.direction === 'asc' ? 'desc' : 'asc' };
+            }
+            return { key, direction: 'asc' };
+        });
+    };
 
     // Mock Toast for now if component doesn't exist, or try to import it.
     // I'll skip the import for now and use console.
@@ -276,6 +303,8 @@ export function FileExplorer() {
                         onRename={startRename}
                         onPreview={setPreviewFile}
                         onContextMenu={handleContextMenu}
+                        sortConfig={sortConfig}
+                        onSort={toggleSort}
                     />
                 )}
 

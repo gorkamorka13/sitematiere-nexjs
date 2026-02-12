@@ -242,6 +242,16 @@ export function CropTool({ imageSrc, onApply, onCancel }: CropToolProps) {
                             }}
                             onMouseDown={onMouseDownMove}
                         >
+                            {/* Dimensions Display */}
+                            <div className="absolute top-0 left-0 bg-black/70 text-white text-[10px] px-1.5 py-0.5 pointer-events-none rounded-br-sm border-b border-r border-white/20 font-mono">
+                                {(() => {
+                                    if (!imageRef.current) return '0 x 0';
+                                    const scaleX = imageRef.current.naturalWidth / imageRef.current.width;
+                                    const scaleY = imageRef.current.naturalHeight / imageRef.current.height;
+                                    return `${Math.round(crop.width * scaleX)} × ${Math.round(crop.height * scaleY)} px`;
+                                })()}
+                            </div>
+
                             {/* Grid Lines (Rule of Thirds) */}
                             <div className="absolute inset-0 flex flex-col pointer-events-none opacity-50">
                                 <div className="flex-1 border-b border-white/30" />

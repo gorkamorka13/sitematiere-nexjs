@@ -1,7 +1,7 @@
 "use client";
 
 import { FileType as PrismaFileType } from "@prisma/client";
-import { FileIcon, ImageIcon, FileText, Video, Archive, MoreVertical, Calendar } from "lucide-react";
+import { FileIcon, ImageIcon, FileText, Video, Archive, MoreVertical, Calendar, ChevronUp, ChevronDown } from "lucide-react";
 import Image from "next/image";
 import { formatBytes } from "@/lib/utils";
 
@@ -16,9 +16,11 @@ interface FileListProps {
     onRename?: (file: FileData) => void;
     onPreview?: (file: FileData) => void;
     onContextMenu?: (e: React.MouseEvent, id: string) => void;
+    sortConfig?: { key: 'name' | 'fileType' | 'size' | 'createdAt'; direction: 'asc' | 'desc' } | null;
+    onSort?: (key: 'name' | 'fileType' | 'size' | 'createdAt') => void;
 }
 
-export function FileList({ files, selectedIds, onSelect, onRename, onPreview, onContextMenu }: FileListProps) {
+export function FileList({ files, selectedIds, onSelect, onRename, onPreview, onContextMenu, sortConfig, onSort }: FileListProps) {
     if (files.length === 0) {
          return (
             <div className="flex flex-col items-center justify-center p-12 text-muted-foreground">
@@ -27,18 +29,43 @@ export function FileList({ files, selectedIds, onSelect, onRename, onPreview, on
         );
     }
 
+    const renderSortIcon = (key: 'name' | 'fileType' | 'size' | 'createdAt') => {
+        if (sortConfig?.key !== key) return null;
+        return sortConfig.direction === 'asc' ? <ChevronUp className="w-4 h-4 ml-1 inline" /> : <ChevronDown className="w-4 h-4 ml-1 inline" />;
+    };
+
     return (
         <div className="w-full overflow-auto p-4 pb-20">
             <table className="w-full text-sm">
                 <thead>
-                    <tr className="border-b text-left text-muted-foreground">
+                    <tr className="border-b text-left text-muted-foreground select-none">
                         <th className="pb-3 pl-2 w-10">
                             {/* Checkbox All? */}
                         </th>
-                        <th className="pb-3 pl-2 font-medium">Nom</th>
-                        <th className="pb-3 font-medium hidden sm:table-cell">Type</th>
-                        <th className="pb-3 font-medium">Taille</th>
-                        <th className="pb-3 font-medium hidden md:table-cell">Date</th>
+                        <th
+                            className="pb-3 pl-2 font-medium cursor-pointer hover:text-foreground transition-colors"
+                            onClick={() => onSort?.('name')}
+                        >
+                            Nom {renderSortIcon('name')}
+                        </th>
+                        <th
+                            className="pb-3 font-medium hidden sm:table-cell cursor-pointer hover:text-foreground transition-colors"
+                            onClick={() => onSort?.('fileType')}
+                        >
+                            Type {renderSortIcon('fileType')}
+                        </th>
+                        <th
+                            className="pb-3 font-medium cursor-pointer hover:text-foreground transition-colors"
+                            onClick={() => onSort?.('size')}
+                        >
+                            Taille {renderSortIcon('size')}
+                        </th>
+                        <th
+                            className="pb-3 font-medium hidden md:table-cell cursor-pointer hover:text-foreground transition-colors"
+                            onClick={() => onSort?.('createdAt')}
+                        >
+                            Date {renderSortIcon('createdAt')}
+                        </th>
                         <th className="pb-3 w-10"></th>
                     </tr>
                 </thead>
