@@ -111,13 +111,16 @@ export function FileSearch({
             onChange={(e) => onProjectChange(e.target.value)}
             className="px-4 py-2 text-sm bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 min-w-[150px]"
           >
-            <option value="ALL">Tous les projets</option>
+            <option value="ALL">Tous les projets ({projects.length})</option>
             {hasOrphanedFiles && <option value="ORPHANED">Sans projet</option>}
-            {projects.map(([id, name]) => (
-              <option key={id} value={id}>
-                {name}
-              </option>
-            ))}
+            {projects.map(([id, name]) => {
+              const isSpecial = id === 'project-flags' || id === 'project-clients' || name === 'Flag' || name === 'client';
+              return (
+                <option key={id} value={id}>
+                  {isSpecial ? `🔴 ${name}` : name}
+                </option>
+              );
+            })}
           </select>
 
           {/* Country Filter Dropdown */}
@@ -126,7 +129,7 @@ export function FileSearch({
             onChange={(e) => onCountryChange(e.target.value)}
             className="px-4 py-2 text-sm bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
           >
-            <option value="Tous">Tous les pays</option>
+            <option value="Tous">Tous les pays ({countries.length})</option>
             {hasFilesNoCountry && <option value="Autre">Autre (sans pays)</option>}
             {countries.map((country) => (
               <option key={country} value={country}>

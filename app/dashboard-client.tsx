@@ -137,6 +137,15 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
         });
     }, [initialProjects, selectedCountry, selectedName, selectedTypes, selectedStatuses]);
 
+    // Extraire le drapeau et le logo du client pour le projet sélectionné
+    const { flagDoc, logoDoc } = useMemo(() => {
+        const docs = (selectedProject as any)?.documents || [];
+        return {
+            flagDoc: docs.find((d: any) => d.type === "FLAG"),
+            logoDoc: docs.find((d: any) => d.type === "CLIENT_LOGO" || d.name.replace(/_/g, ' ').toLowerCase().includes('logo'))
+        };
+    }, [selectedProject]);
+
     // Auto-select first project when filtered list changes significantly
     useEffect(() => {
         if (filteredProjects.length > 0) {
@@ -615,6 +624,31 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                                 <div className="flex items-center gap-2">
                                     <FileText className="w-4 h-4 text-indigo-500" />
                                     <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Description</h3>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    {flagDoc && (
+                                        <div className="flex items-center gap-1.5 px-2 py-1 bg-white/50 dark:bg-black/20 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm shrink-0">
+                                            <div className="w-7 h-4.5 relative rounded-[2px] overflow-hidden border border-gray-100 dark:border-gray-800 bg-gray-100 dark:bg-gray-800">
+                                                <img
+                                                    src={flagDoc.url.startsWith('http') || flagDoc.url.startsWith('/') ? flagDoc.url : `/${flagDoc.url}`}
+                                                    alt=""
+                                                    className="w-full h-full object-cover"
+                                                    onError={(e) => (e.currentTarget.style.display = 'none')}
+                                                />
+                                            </div>
+                                            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-tight hidden sm:inline-block">{selectedProject?.country}</span>
+                                        </div>
+                                    )}
+                                    {logoDoc && (
+                                        <div className="h-7 px-2 py-1 bg-white/50 dark:bg-black/20 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm flex items-center shrink-0">
+                                            <img
+                                                src={logoDoc.url.startsWith('http') || logoDoc.url.startsWith('/') ? logoDoc.url : `/${logoDoc.url}`}
+                                                alt=""
+                                                className="h-full max-w-[100px] object-contain opacity-90"
+                                                onError={(e) => (e.currentTarget.style.display = 'none')}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                             <div className="p-4 text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line overflow-y-auto custom-scrollbar">

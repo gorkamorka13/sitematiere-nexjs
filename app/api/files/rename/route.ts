@@ -28,11 +28,20 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "File not found" }, { status: 404 });
     }
 
-    // Update DB
+    // Update DB (File table)
     await prisma.file.update({
       where: { id: fileId },
       data: { name: sanitizedName }
     });
+
+    // Synchronize with Image table (used by slideshows)
+    // We update the 'alt' field for all images that match this file's URL
+    if (currentFile.blobUrl) {
+      await prisma.image.updateMany({
+        where: { url: currentFile.blobUrl },
+        data: { alt: sanitizedName }
+      });
+    }
 
     // Note: We don't rename the Blob file itself because it's complicated (copy + delete)
     // and not strictly necessary as long as the DB link works.

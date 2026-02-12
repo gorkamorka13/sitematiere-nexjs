@@ -23,38 +23,82 @@ export async function updateProject(formData: ProjectUpdateInput) {
   const validatedData = ProjectUpdateSchema.parse(formData);
 
   try {
-    await prisma.$transaction([
-      prisma.project.update({
-        where: { id: validatedData.id },
-        data: {
-          latitude: validatedData.latitude,
-          longitude: validatedData.longitude,
-          description: validatedData.description,
-          prospection: validatedData.prospection,
-          studies: validatedData.studies,
-          fabrication: validatedData.fabrication,
-          transport: validatedData.transport,
-          construction: validatedData.construction,
-        },
-      }),
-      // Mise à jour du nom du drapeau si fourni
-      ...(validatedData.flagName ? [
-        prisma.document.updateMany({
-          where: { projectId: validatedData.id, type: "FLAG" },
-          data: { url: validatedData.flagName }
-        })
-      ] : []),
-      // Mise à jour de l'URL du logo client si fourni
-      ...(validatedData.clientLogoName ? [
-        prisma.document.updateMany({
-          where: { projectId: validatedData.id, type: "CLIENT_LOGO" },
-          data: { url: validatedData.clientLogoName }
-        })
-      ] : []),
-    ]);
+    // Mise à jour du projet
+    await prisma.project.update({
+      where: { id: validatedData.id },
+      data: {
+        latitude: validatedData.latitude,
+        longitude: validatedData.longitude,
+        description: validatedData.description,
+        prospection: validatedData.prospection,
+        studies: validatedData.studies,
+        fabrication: validatedData.fabrication,
+        transport: validatedData.transport,
+        construction: validatedData.construction,
+      },
+    });
+
+    // Mise à jour ou création du document "FLAG"
+    if (validatedData.flagName !== undefined) {
+      const existingFlag = await prisma.document.findFirst({
+        where: { projectId: validatedData.id, type: "FLAG" }
+      });
+
+      if (validatedData.flagName !== "") {
+        if (existingFlag) {
+          await prisma.document.update({
+            where: { id: existingFlag.id },
+            data: { url: validatedData.flagName }
+          });
+        } else {
+          await prisma.document.create({
+            data: {
+              projectId: validatedData.id,
+              type: "FLAG",
+              url: validatedData.flagName,
+              name: "Drapeau",
+            }
+          });
+        }
+      } else if (existingFlag) {
+        // Supprimer l'association si le champ est vidé
+        await prisma.document.delete({
+          where: { id: existingFlag.id }
+        });
+      }
+    }
+
+    // Mise à jour ou création du document "CLIENT_LOGO"
+    if (validatedData.clientLogoName !== undefined) {
+      const existingLogo = await prisma.document.findFirst({
+        where: { projectId: validatedData.id, type: "CLIENT_LOGO" }
+      });
+
+      if (validatedData.clientLogoName !== "") {
+        if (existingLogo) {
+          await prisma.document.update({
+            where: { id: existingLogo.id },
+            data: { url: validatedData.clientLogoName }
+          });
+        } else {
+          await prisma.document.create({
+            data: {
+              projectId: validatedData.id,
+              type: "CLIENT_LOGO",
+              url: validatedData.clientLogoName,
+              name: "Logo Client",
+            }
+          });
+        }
+      } else if (existingLogo) {
+        // Supprimer l'association si le champ est vidé
+        await prisma.document.delete({
+          where: { id: existingLogo.id }
+        });
+      }
+    }
 
     revalidatePath("/");
-
     return { success: true };
   } catch (error) {
     console.error("Erreur lors de la mise à jour du projet:", error);

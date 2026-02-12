@@ -80,7 +80,9 @@ export function FileMoveDialog({ fileIds, currentProjectId, onClose, onMove }: F
                                 `}
                             >
                                 <Folder className="w-4 h-4" />
-                                <span className="truncate">{project.name}</span>
+                                <span className="truncate">
+                                    {(project.id === 'project-flags' || project.id === 'project-clients' || project.name === 'Flag' || project.name === 'client') ? `🔴 ${project.name}` : project.name}
+                                </span>
                                 {project.id === currentProjectId && <span className="ml-auto text-xs opacity-70">(Actuel)</span>}
                             </button>
                         ))

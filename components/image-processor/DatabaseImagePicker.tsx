@@ -15,15 +15,16 @@ interface DatabaseImagePickerProps {
     isOpen: boolean;
     onClose: () => void;
     onSelect: (imageUrl: string, filename: string, fileId: string) => void;
+    initialProjectFilter?: string;
 }
 
-export function DatabaseImagePicker({ isOpen, onClose, onSelect }: DatabaseImagePickerProps) {
+export function DatabaseImagePicker({ isOpen, onClose, onSelect, initialProjectFilter }: DatabaseImagePickerProps) {
     const [allFiles, setAllFiles] = useState<FileData[]>([]);
     const [loading, setLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [fileTypeFilter, setFileTypeFilter] = useState('ALL');
     const [countryFilter, setCountryFilter] = useState('Tous');
-    const [projectFilter, setProjectFilter] = useState('ALL');
+    const [projectFilter, setProjectFilter] = useState(initialProjectFilter || 'ALL');
     const [selectedId, setSelectedId] = useState<string | null>(null);
 
     // Context Menu & Action States
@@ -47,7 +48,7 @@ export function DatabaseImagePicker({ isOpen, onClose, onSelect }: DatabaseImage
         setSearchQuery('');
         setFileTypeFilter('ALL');
         setCountryFilter('Tous');
-        setProjectFilter('ALL');
+        setProjectFilter(initialProjectFilter || 'ALL');
     };
 
     const fetchFiles = async () => {

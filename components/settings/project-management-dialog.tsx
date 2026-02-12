@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { X, Save, MapPin, AlignLeft, FolderOpen, AlertCircle, CheckCircle2, Globe, Search, Undo2, Redo2, Plus, Trash2, Edit, UploadCloud } from "lucide-react";
+import { X, Save, MapPin, AlignLeft, FolderOpen, AlertCircle, CheckCircle2, Globe, Search, Undo2, Redo2, Plus, Trash2, Edit, UploadCloud, Image as ImageIcon } from "lucide-react";
 import { Project, Document as ProjectDocument, ProjectType, ProjectStatus, UserRole } from "@prisma/client";
 import { updateProject, createProject, deleteProject } from "@/app/actions/project-actions";
 import EditableMapWrapper from "@/components/ui/editable-map-wrapper";
 import { decimalToDMS, dmsToDecimal, isValidLatitude, isValidLongitude } from "@/lib/coordinate-utils";
 import { FileUploadZone } from "../files/file-upload-zone";
 import { FileUploadProgress, FileUploadState } from "../files/file-upload-progress";
+import { DatabaseImagePicker } from "../image-processor/DatabaseImagePicker";
 
 interface ProjectManagementDialogProps {
   projects: Project[];
@@ -98,6 +99,8 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
   // Historique des positions pour undo/redo
   const [positionHistory, setPositionHistory] = useState<{ lat: number; lng: number }[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [isFlagPickerOpen, setIsFlagPickerOpen] = useState(false);
+  const [isLogoPickerOpen, setIsLogoPickerOpen] = useState(false);
 
   // Handle map marker position change
   const handleMapPositionChange = (lat: number, lng: number, isFinal: boolean = true) => {
@@ -161,7 +164,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
     if (activeTab === 'modify' && selectedProjectId) {
       const project = projects.find(p => p.id === selectedProjectId);
       if (project) {
-        setPositionHistory([{ lat: project.latitude, lng: project.longitude }]);
+        setPositionHistory([{ lat: project.latitude ?? 0, lng: project.longitude ?? 0 }]);
         setHistoryIndex(0);
       }
     }
@@ -209,12 +212,12 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
       setStatus(null);
 
       // Mettre à jour le formulaire
-      const newLat = field === 'latitude' ? decimal : formData.latitude;
-      const newLng = field === 'longitude' ? decimal : formData.longitude;
+      const newLat = field === 'latitude' ? decimal : (formData.latitude ?? 0);
+      const newLng = field === 'longitude' ? decimal : (formData.longitude ?? 0);
 
       setFormData(prev => ({
         ...prev,
-        [field]: decimal
+        [field]: decimal ?? 0
       }));
 
       // Ajouter à l'historique
@@ -285,8 +288,8 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
         const logoDoc = project.documents?.find((d) => d.type === "CLIENT_LOGO" || d.name.toLowerCase().includes('logo'));
 
         setFormData({
-          latitude: project.latitude,
-          longitude: project.longitude,
+          latitude: project.latitude ?? 0,
+          longitude: project.longitude ?? 0,
           description: project.description || "",
           prospection: project.prospection || 0,
           studies: project.studies || 0,
@@ -470,10 +473,13 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
         fabrication: formData.fabrication,
         transport: formData.transport,
         construction: formData.construction,
+        flagName: formData.flagName,
+        clientLogoName: formData.clientLogoName,
       });
 
       if (result.success) {
         setStatus({ type: 'success', message: "Projet mis à jour avec succès !" });
+        // Optionnel: on pourrait rafraîchir la liste des projets ici si nécessaire
       } else {
         setStatus({ type: 'error', message: result.error || "Une erreur est survenue." });
       }
@@ -690,7 +696,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
             <div>
               <input
                 type="text"
-                value={coordinateFormat === 'decimal' ? formData.latitude : decimalToDMS(formData.latitude, true)}
+                value={coordinateFormat === 'decimal' ? (formData.latitude ?? 0) : decimalToDMS(formData.latitude ?? 0, true)}
                 onChange={(e) => handleCoordinateChange(e.target.value, 'latitude')}
                 disabled={!selectedProjectId}
                 className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 transition-all dark:text-white font-mono text-sm"
@@ -703,7 +709,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
             <div>
               <input
                 type="text"
-                value={coordinateFormat === 'decimal' ? formData.longitude : decimalToDMS(formData.longitude, false)}
+                value={coordinateFormat === 'decimal' ? (formData.longitude ?? 0) : decimalToDMS(formData.longitude ?? 0, false)}
                 onChange={(e) => handleCoordinateChange(e.target.value, 'longitude')}
                 disabled={!selectedProjectId}
                 className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 transition-all dark:text-white font-mono text-sm"
@@ -808,62 +814,122 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
             </div>
           </div>
 
-          {/* Identité Visuelle */}
           <div className="space-y-4">
             <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
               <FolderOpen className="w-4 h-4" /> Identité Visuelle
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Drapeau */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
-                  Drapeau
-                  {selectedProjectId && formData.flagName && (
-                    <img
-                      src={formData.flagName.startsWith('http') ? formData.flagName : `/${formData.flagName}`}
-                      alt="Drapeau"
-                      className="w-8 h-6 object-cover rounded shadow-sm ml-auto"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
-                    />
-                  )}
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Drapeau du Pays
                 </label>
-                <input
-                  type="text"
-                  value={formData.flagName}
-                  onChange={(e) => setFormData({ ...formData, flagName: e.target.value })}
-                  disabled={!selectedProjectId}
-                  className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white text-sm"
-                  placeholder="ex: images/flags/sierra-leone.png"
-                />
+                <div className="flex items-center gap-3">
+                  <div className="relative group w-24 h-16 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 flex items-center justify-center shrink-0 shadow-sm">
+                    {formData.flagName ? (
+                      <img
+                        src={formData.flagName.startsWith('http') || formData.flagName.startsWith('/') ? formData.flagName : `/${formData.flagName}`}
+                        alt="Drapeau"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <ImageIcon className="w-6 h-6 text-gray-300" />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setIsFlagPickerOpen(true)}
+                      className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold uppercase tracking-widest"
+                    >
+                      Choisir
+                    </button>
+                  </div>
+                  <div className="flex-1">
+                    <button
+                      type="button"
+                      onClick={() => setIsFlagPickerOpen(true)}
+                      className="w-full px-4 py-2 text-left bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl hover:border-indigo-400 transition-all text-xs text-gray-500 dark:text-gray-400 truncate"
+                    >
+                      {formData.flagName ? formData.flagName.split('/').pop() : "Sélectionner une image..."}
+                    </button>
+                    {formData.flagName && (
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, flagName: "" })}
+                        className="text-[10px] text-red-500 font-bold uppercase mt-1 ml-1 hover:underline"
+                      >
+                        Supprimer
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
+
               {/* Logo Client */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                   Logo Client
-                  {selectedProjectId && formData.clientLogoName && (
-                    <img
-                      src={formData.clientLogoName.startsWith('http') ? formData.clientLogoName : `/${formData.clientLogoName}`}
-                      alt="Logo client"
-                      className="h-6 w-auto object-contain ml-auto"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
-                    />
-                  )}
                 </label>
-                <input
-                  type="text"
-                  value={formData.clientLogoName}
-                  onChange={(e) => setFormData({ ...formData, clientLogoName: e.target.value })}
-                  disabled={!selectedProjectId}
-                  className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white text-sm"
-                  placeholder="ex: images/logos/slra.png"
-                />
+                <div className="flex items-center gap-3">
+                  <div className="relative group w-24 h-16 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 flex items-center justify-center shrink-0 shadow-sm">
+                    {formData.clientLogoName ? (
+                      <img
+                        src={formData.clientLogoName.startsWith('http') || formData.clientLogoName.startsWith('/') ? formData.clientLogoName : `/${formData.clientLogoName}`}
+                        alt="Logo"
+                        className="max-w-[80%] max-h-[80%] object-contain"
+                      />
+                    ) : (
+                      <ImageIcon className="w-6 h-6 text-gray-300" />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setIsLogoPickerOpen(true)}
+                      className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold uppercase tracking-widest"
+                    >
+                      Choisir
+                    </button>
+                  </div>
+                  <div className="flex-1">
+                    <button
+                      type="button"
+                      onClick={() => setIsLogoPickerOpen(true)}
+                      className="w-full px-4 py-2 text-left bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl hover:border-indigo-400 transition-all text-xs text-gray-500 dark:text-gray-400 truncate"
+                    >
+                      {formData.clientLogoName ? formData.clientLogoName.split('/').pop() : "Sélectionner une image..."}
+                    </button>
+                    {formData.clientLogoName && (
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, clientLogoName: "" })}
+                        className="text-[10px] text-red-500 font-bold uppercase mt-1 ml-1 hover:underline"
+                      >
+                        Supprimer
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
+
+          {/* Pickers */}
+          <DatabaseImagePicker
+            isOpen={isFlagPickerOpen}
+            onClose={() => setIsFlagPickerOpen(false)}
+            initialProjectFilter="project-flags"
+            onSelect={(url) => {
+              setFormData({ ...formData, flagName: url });
+              setIsFlagPickerOpen(false);
+            }}
+          />
+          <DatabaseImagePicker
+            isOpen={isLogoPickerOpen}
+            onClose={() => setIsLogoPickerOpen(false)}
+            initialProjectFilter="project-clients"
+            onSelect={(url) => {
+              setFormData({ ...formData, clientLogoName: url });
+              setIsLogoPickerOpen(false);
+            }}
+          />
 
           {/* Status Messages */}
           {status && (
@@ -1008,12 +1074,17 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
               <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-center">
                 <input
                   type="text"
-                  value={coordinateFormat === 'decimal' ? createFormData.latitude : decimalToDMS(createFormData.latitude, true)}
+                  value={coordinateFormat === 'decimal' ? (createFormData.latitude ?? 0) : decimalToDMS(createFormData.latitude ?? 0, true)}
                   onChange={(e) => {
-                    const val = coordinateFormat === 'dms' ? dmsToDecimal(e.target.value) : parseFloat(e.target.value) || 0;
-                    setCreateFormData(prev => ({ ...prev, latitude: val }));
-                    setPositionHistory(h => [...h.slice(0, historyIndex + 1), { lat: val, lng: createFormData.longitude }].slice(-50));
-                    setHistoryIndex(prev => Math.min(prev + 1, 49));
+                    try {
+                      const val = coordinateFormat === 'dms' ? dmsToDecimal(e.target.value) : parseFloat(e.target.value) || 0;
+                      setCreateFormData(prev => ({ ...prev, latitude: val }));
+                      setPositionHistory(h => [...h.slice(0, historyIndex + 1), { lat: val, lng: createFormData.longitude ?? 0 }].slice(-50));
+                      setHistoryIndex(prev => Math.min(prev + 1, 49));
+                      setStatus(null);
+                    } catch (err) {
+                      setStatus({ type: 'error', message: `Format ${coordinateFormat === 'dms' ? 'DMS' : 'décimal'} invalide` });
+                    }
                   }}
                   className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white font-mono text-sm"
                   placeholder="Latitude"
@@ -1021,12 +1092,17 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                 />
                 <input
                   type="text"
-                  value={coordinateFormat === 'decimal' ? createFormData.longitude : decimalToDMS(createFormData.longitude, false)}
+                  value={coordinateFormat === 'decimal' ? (createFormData.longitude ?? 0) : decimalToDMS(createFormData.longitude ?? 0, false)}
                   onChange={(e) => {
-                    const val = coordinateFormat === 'dms' ? dmsToDecimal(e.target.value) : parseFloat(e.target.value) || 0;
-                    setCreateFormData(prev => ({ ...prev, longitude: val }));
-                    setPositionHistory(h => [...h.slice(0, historyIndex + 1), { lat: createFormData.latitude, lng: val }].slice(-50));
-                    setHistoryIndex(prev => Math.min(prev + 1, 49));
+                    try {
+                      const val = coordinateFormat === 'dms' ? dmsToDecimal(e.target.value) : parseFloat(e.target.value) || 0;
+                      setCreateFormData(prev => ({ ...prev, longitude: val }));
+                      setPositionHistory(h => [...h.slice(0, historyIndex + 1), { lat: createFormData.latitude ?? 0, lng: val }].slice(-50));
+                      setHistoryIndex(prev => Math.min(prev + 1, 49));
+                      setStatus(null);
+                    } catch (err) {
+                      setStatus({ type: 'error', message: `Format ${coordinateFormat === 'dms' ? 'DMS' : 'décimal'} invalide` });
+                    }
                   }}
                   className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white font-mono text-sm"
                   placeholder="Longitude"
