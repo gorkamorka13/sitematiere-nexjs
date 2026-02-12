@@ -28,6 +28,21 @@ export async function getProjectMedia(projectName: string) {
     });
 
     if (project) {
+      // 1. Chercher d'abord les images définies dans le slideshow (respecte l'ordre manuel)
+      const slideshowImages = await prisma.slideshowImage.findMany({
+        where: { projectId: project.id },
+        include: { image: true },
+        orderBy: { order: 'asc' }
+      });
+
+      if (slideshowImages.length > 0) {
+        result.images = slideshowImages.map(si => ({
+          url: si.image.url,
+          name: si.image.alt || si.image.url.split('/').pop() || 'Photo'
+        }));
+      }
+
+      // 2. Chercher les fichiers (Table File) pour les PDFs et fallback images
       const files = await prisma.file.findMany({
         where: {
           projectId: project.id,
@@ -37,22 +52,24 @@ export async function getProjectMedia(projectName: string) {
       });
 
       if (files.length > 0) {
-        files.forEach((file: any) => { // Using any as a quick fix for type mismatch in some editors
-          if (file.fileType === 'IMAGE') {
+        files.forEach((file: any) => {
+          // Si on n'a pas de slideshow défini, on prend les images du dossier File
+          if (slideshowImages.length === 0 && file.fileType === 'IMAGE') {
             result.images.push({ url: file.blobUrl, name: file.name });
-          } else if (file.fileType === 'DOCUMENT' && file.mimeType === 'application/pdf') {
+          }
+          // Dans tous les cas, on prend les PDFs
+          else if (file.fileType === 'DOCUMENT' && file.mimeType === 'application/pdf') {
             result.pdfs.push({ url: file.blobUrl, name: file.name });
           }
         });
 
-        // Apply natural sort to images and PDFs
-        result.images = naturalSort(result.images, 'name');
+        // Appliquer le tri naturel uniquement si on utilise le fallback images ou pour les PDFs
+        if (slideshowImages.length === 0) {
+          result.images = naturalSort(result.images, 'name');
+        }
         result.pdfs = naturalSort(result.pdfs, 'name');
 
-        // Si on a trouvé des fichiers en BDD, on les renvoie en priorité
-        if (result.images.length > 0 || result.pdfs.length > 0) {
-          return result;
-        }
+        return result;
       }
     }
 

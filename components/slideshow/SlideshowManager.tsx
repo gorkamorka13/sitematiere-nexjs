@@ -30,6 +30,7 @@ import {
   publishSlideshow,
   addImageToSlideshow,
 } from '@/app/actions/slideshow-actions';
+import { SlideshowPreviewModal } from './SlideshowPreviewModal';
 
 interface SlideshowImage {
   id: string;
@@ -59,6 +60,7 @@ export function SlideshowManager({ projects }: SlideshowManagerProps) {
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [showImagePicker, setShowImagePicker] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const [hasUnpublishedChanges, setHasUnpublishedChanges] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -248,9 +250,19 @@ export function SlideshowManager({ projects }: SlideshowManagerProps) {
               ) : (
                 <>
                   <Upload className="w-4 h-4 mr-2" />
-                  Publier Slideshow
+                  Publier
                 </>
               )}
+            </Button>
+
+            <Button
+              onClick={() => setShowPreview(true)}
+              disabled={slideshowImages.length === 0}
+              variant="outline"
+              className="border-gray-200 dark:border-gray-700 font-bold uppercase tracking-widest text-xs px-6"
+            >
+              <Eye className="w-4 h-4 mr-2" />
+              Tester
             </Button>
           </div>
         )}
@@ -372,6 +384,14 @@ export function SlideshowManager({ projects }: SlideshowManagerProps) {
         isOpen={showImagePicker}
         onClose={() => setShowImagePicker(false)}
         onSelect={handleAddImage}
+      />
+
+      {/* Slideshow Preview Modal */}
+      <SlideshowPreviewModal
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+        images={slideshowImages}
+        projectName={selectedProject?.name}
       />
     </div>
   );
