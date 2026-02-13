@@ -1,7 +1,7 @@
 "use client";
 
 import { FileUploadItem } from "./file-upload-item";
-import { UploadCloud, CheckCircle2, XCircle } from "lucide-react";
+import { UploadCloud, CheckCircle2 } from "lucide-react";
 
 export interface FileUploadState {
   file: File;

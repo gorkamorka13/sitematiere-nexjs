@@ -1,7 +1,7 @@
 "use client";
 // Force rebuild
 
-import { useDropzone, DropzoneOptions } from "react-dropzone";
+import { useDropzone } from "react-dropzone";
 import { UploadCloud, FileUp } from "lucide-react";
 import { useCallback } from "react";
 import { MAX_FILE_SIZE, ALLOWED_FILE_TYPES } from "@/lib/files/validation";
