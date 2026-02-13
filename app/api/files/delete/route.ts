@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { deleteFile } from "@/lib/files/blob-edge";
+import { extractKeyFromUrl } from "@/lib/storage/r2-operations";
 
+// Cloudflare Pages requires Edge Runtime for API routes
 // export const runtime = 'edge'; // Commenté pour le dev local
 
 
@@ -21,25 +24,84 @@ export async function DELETE(request: Request) {
     }
 
     if (permanent) {
-      // Hard delete not implemented yet to be safe, but typically would remove from Blob then DB
-      // For Phase 2 we are focusing on Soft Delete as per spec
-      // If permanent is requested, we could implement it, but spec says "Soft delete default"
-      // Let's implement Soft Delete first.
-    }
+      console.log(`[DELETE API] Starting permanent deletion for ${fileIds.length} files`);
 
-    // Soft delete
-    await prisma.file.updateMany({
-      where: {
-        id: { in: fileIds }
-      },
-      data: {
-        isDeleted: true,
-        deletedAt: new Date(),
-        deletedBy: session.user.id
+      // 1. Get files details before deleting them
+      const filesToDelete = await prisma.file.findMany({
+        where: { id: { in: fileIds } }
+      });
+
+      const deletedCount = filesToDelete.length;
+      const urlsToDelete = filesToDelete.map(f => f.blobUrl);
+
+      for (const file of filesToDelete) {
+        // 2. Delete main file from Cloudflare R2
+        try {
+          const key = file.blobPath || extractKeyFromUrl(file.blobUrl);
+          if (key) {
+            console.log(`[DELETE API] Deleting blob: ${key}`);
+            await deleteFile(key);
+          }
+        } catch (error) {
+          console.error(`[DELETE API] Error deleting blob for file ${file.id}:`, error);
+        }
+
+        // 3. Delete thumbnail if exists
+        if (file.thumbnailUrl) {
+          try {
+            const thumbKey = extractKeyFromUrl(file.thumbnailUrl);
+            if (thumbKey) {
+              console.log(`[DELETE API] Deleting thumbnail: ${thumbKey}`);
+              await deleteFile(thumbKey);
+            }
+          } catch (error) {
+            console.error(`[DELETE API] Error deleting thumbnail for file ${file.id}:`, error);
+          }
+        }
       }
-    });
 
-    return NextResponse.json({ success: true, count: fileIds.length });
+      // 4. Delete related entries in other tables (Image, Video, Document)
+      // Since these maps to same URLs, we clean them up as well
+      console.log(`[DELETE API] Cleaning up related DB entries for ${urlsToDelete.length} URLs`);
+
+      await Promise.all([
+        prisma.image.deleteMany({ where: { url: { in: urlsToDelete } } }),
+        prisma.video.deleteMany({ where: { url: { in: urlsToDelete } } }),
+        prisma.document.deleteMany({ where: { url: { in: urlsToDelete } } }),
+      ]);
+
+      // 5. Finally delete from File table
+      await prisma.file.deleteMany({
+        where: { id: { in: fileIds } }
+      });
+
+      console.log(`[DELETE API] Permanent deletion complete`);
+      return NextResponse.json({
+        success: true,
+        permanent: true,
+        count: deletedCount
+      });
+
+    } else {
+      // Soft delete
+      console.log(`[DELETE API] Performing soft delete for ${fileIds.length} files`);
+      await prisma.file.updateMany({
+        where: {
+          id: { in: fileIds }
+        },
+        data: {
+          isDeleted: true,
+          deletedAt: new Date(),
+          deletedBy: session.user.id
+        }
+      });
+
+      return NextResponse.json({
+        success: true,
+        permanent: false,
+        count: fileIds.length
+      });
+    }
 
   } catch (error) {
     console.error("Delete files error:", error);

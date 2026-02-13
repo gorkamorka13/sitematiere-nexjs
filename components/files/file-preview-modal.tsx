@@ -8,8 +8,8 @@ import { ImageViewer } from "./image-viewer";
 import dynamic from "next/dynamic";
 
 const PDFViewer = dynamic(() => import("./pdf-viewer").then((mod) => mod.PDFViewer), {
-  ssr: false,
-  loading: () => <div className="text-white text-center">Chargement du lecteur PDF...</div>,
+    ssr: false,
+    loading: () => <div className="text-white text-center">Chargement du lecteur PDF...</div>,
 });
 
 interface FilePreviewModalProps {
@@ -48,7 +48,7 @@ export function FilePreviewModal({ file, files, onClose, onNavigate }: FilePrevi
             case "IMAGE":
                 return <ImageViewer url={file.blobUrl} alt={file.name} />;
             case "VIDEO":
-                return <VideoPlayer url={file.blobUrl} />;
+                return <VideoPlayer url={file.blobUrl} mimeType={file.mimeType} />;
             case "DOCUMENT":
                 // Basic check for PDF
                 if (file.mimeType === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
@@ -89,14 +89,14 @@ export function FilePreviewModal({ file, files, onClose, onNavigate }: FilePrevi
                     </span>
                 </div>
                 <div className="flex items-center gap-4">
-                     <a
+                    <a
                         href={file.blobUrl}
                         download={file.name}
                         className="p-2 hover:bg-white/10 rounded-full transition-colors"
                         title="Télécharger"
-                     >
+                    >
                         <Download className="w-6 h-6" />
-                     </a>
+                    </a>
                     <button
                         onClick={onClose}
                         className="p-2 hover:bg-white/10 rounded-full transition-colors"
@@ -109,28 +109,28 @@ export function FilePreviewModal({ file, files, onClose, onNavigate }: FilePrevi
 
             {/* Main Content Area */}
             <div className="flex-1 relative overflow-hidden flex items-center justify-center p-4">
-                 {/* Navigation Buttons */}
-                 {hasPrevious && (
+                {/* Navigation Buttons */}
+                {hasPrevious && (
                     <button
                         onClick={handlePrevious}
                         className="absolute left-4 z-20 p-3 bg-black/50 hover:bg-black/80 text-white rounded-full transition-all group"
                     >
                         <ChevronLeft className="w-8 h-8 group-hover:scale-110 transition-transform" />
                     </button>
-                 )}
-                 {hasNext && (
+                )}
+                {hasNext && (
                     <button
                         onClick={handleNext}
                         className="absolute right-4 z-20 p-3 bg-black/50 hover:bg-black/80 text-white rounded-full transition-all group"
                     >
                         <ChevronRight className="w-8 h-8 group-hover:scale-110 transition-transform" />
                     </button>
-                 )}
+                )}
 
-                 {/* Content */}
-                 <div className="w-full h-full max-w-6xl mx-auto flex items-center justify-center">
+                {/* Content */}
+                <div className="w-full h-full max-w-6xl mx-auto flex items-center justify-center">
                     {renderContent()}
-                 </div>
+                </div>
             </div>
         </div>
     );

@@ -29,7 +29,9 @@ export async function uploadToR2(file: File, key: string): Promise<string> {
  */
 export function getFileUrl(key: string): string {
   if (R2_PUBLIC_URL) {
-    return `${R2_PUBLIC_URL}/${key}`;
+    // Encoded parts but keep slashes
+    const encodedKey = key.split('/').map(segment => encodeURIComponent(segment)).join('/');
+    return `${R2_PUBLIC_URL}/${encodedKey}`;
   }
   // Fallback to API route if no public URL configured
   return `/api/files/serve/${encodeURIComponent(key)}`;

@@ -11,7 +11,7 @@ interface FileDeleteDialogProps {
 }
 
 export function FileDeleteDialog({ fileCount, isPermanent = false, onClose, onConfirm }: FileDeleteDialogProps) {
-    const [permanent, setPermanent] = useState(isPermanent);
+    const [permanent, setPermanent] = useState(isPermanent || true);
     const [submitting, setSubmitting] = useState(false);
 
     const handleSubmit = async () => {
