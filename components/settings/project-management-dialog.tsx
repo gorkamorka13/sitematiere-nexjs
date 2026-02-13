@@ -915,33 +915,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
             </div>
           </div>
 
-          {/* Pickers */}
-          <DatabaseImagePicker
-            isOpen={isFlagPickerOpen}
-            onClose={() => setIsFlagPickerOpen(false)}
-            initialProjectFilter="project-flags"
-            onSelect={(url) => {
-              if (activeTab === 'create') {
-                setCreateFormData({ ...createFormData, flagName: url });
-              } else {
-                setFormData({ ...formData, flagName: url });
-              }
-              setIsFlagPickerOpen(false);
-            }}
-          />
-          <DatabaseImagePicker
-            isOpen={isLogoPickerOpen}
-            onClose={() => setIsLogoPickerOpen(false)}
-            initialProjectFilter="project-clients"
-            onSelect={(url) => {
-              if (activeTab === 'create') {
-                setCreateFormData({ ...createFormData, clientLogoName: url });
-              } else {
-                setFormData({ ...formData, clientLogoName: url });
-              }
-              setIsLogoPickerOpen(false);
-            }}
-          />
+
 
           {/* Status Messages */}
           {status && (
@@ -1318,6 +1292,18 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                 />
               </div>
 
+
+
+              {/* Status Messages */}
+              {status && (
+                <div className={`p-4 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2 ${
+                  status.type === 'success' ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-100 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-100 dark:border-red-800'
+                }`}>
+                  {status.type === 'success' ? <CheckCircle2 className="w-5 h-5 flex-shrink-0" /> : <AlertCircle className="w-5 h-5 flex-shrink-0" />}
+                  <span className="text-sm font-medium">{status.message}</span>
+                </div>
+              )}
+
               <div className="flex justify-end gap-3 pt-4">
                 <button
                   type="button"
@@ -1491,6 +1477,34 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
               )}
             </div>
           )}
+
+          {/* Pickers - Global */}
+          <DatabaseImagePicker
+            isOpen={isFlagPickerOpen}
+            onClose={() => setIsFlagPickerOpen(false)}
+            initialProjectFilter="project-flags"
+            onSelect={(url) => {
+              if (activeTab === 'create') {
+                setCreateFormData({ ...createFormData, flagName: url });
+              } else {
+                setFormData({ ...formData, flagName: url });
+              }
+              setIsFlagPickerOpen(false);
+            }}
+          />
+          <DatabaseImagePicker
+            isOpen={isLogoPickerOpen}
+            onClose={() => setIsLogoPickerOpen(false)}
+            initialProjectFilter="project-clients"
+            onSelect={(url) => {
+              if (activeTab === 'create') {
+                setCreateFormData({ ...createFormData, clientLogoName: url });
+              } else {
+                setFormData({ ...formData, clientLogoName: url });
+              }
+              setIsLogoPickerOpen(false);
+            }}
+          />
 
         </div>
       </div>
