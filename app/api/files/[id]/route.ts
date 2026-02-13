@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { sanitizeFileName } from "@/lib/files/validation";
-import { Prisma } from "@prisma/client";
+
 
 // export const runtime = 'edge'; // Commenté pour le dev local
 

@@ -19,12 +19,12 @@ import { DatabaseImagePicker } from '@/components/image-processor/DatabaseImageP
 import { ProjectSelectDialog } from '@/components/image-processor/ProjectSelectDialog';
 import { ConflictDialog, ConflictResolution } from '@/components/image-processor/ConflictDialog';
 import { Button } from '@/components/ui/button';
-import { Image as ImageIcon, Upload, Database, Check, CheckCircle, AlertCircle, Loader2, X } from 'lucide-react';
+import { Upload, Database, Check, CheckCircle, AlertCircle, Loader2, X } from 'lucide-react';
 import AppLayout from "@/components/AppLayout";
 import ProjectManagementDialog from "@/components/settings/project-management-dialog";
 import FileManagementDialog from "@/components/settings/file-management-dialog";
 import SettingsDialogs from "@/components/settings/settings-dialogs";
-import { UserRole, Project, Document as ProjectDocument, Video as ProjectVideo } from "@prisma/client";
+import { UserRole, Project } from "@prisma/client";
 
 interface ImageProcessorClientProps {
     user: { name?: string | null; username?: string | null; role?: UserRole; color?: string | null };
@@ -92,7 +92,7 @@ export default function ImageProcessorClient({ user, initialProjects }: ImagePro
 
       try {
           console.log("[UPLOAD] Starting upload for file:", file.name, "to project:", projectId);
-          
+
           const formData = new FormData();
           formData.append('file', file);
           formData.append('projectId', projectId);
@@ -101,14 +101,14 @@ export default function ImageProcessorClient({ user, initialProjects }: ImagePro
           }
 
           console.log("[UPLOAD] Sending request to /api/files/upload");
-          
+
           const uploadRes = await fetch('/api/files/upload', {
               method: 'POST',
               body: formData
           });
 
           console.log("[UPLOAD] Response status:", uploadRes.status);
-          
+
           const result = await uploadRes.json();
           console.log("[UPLOAD] Response result:", result);
 

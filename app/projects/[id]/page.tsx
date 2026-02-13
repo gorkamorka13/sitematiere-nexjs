@@ -172,10 +172,12 @@ export default async function ProjectDetailPage(props: Props) {
                                         <div key={img.id} className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 group">
                                             {/* Using simple img tag for external urls or local paths without optimization configuration */}
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img
+                                            <Image
                                                 src={normalizeImageUrl(img.url)}
                                                 alt={img.alt || project.name}
-                                                className="object-cover w-full h-full text-xs text-gray-400 group-hover:scale-105 transition-transform duration-300"
+                                                fill
+                                                sizes="(max-width: 768px) 50vw, 33vw"
+                                                className="object-cover transition-transform duration-300 group-hover:scale-105"
                                             />
                                         </div>
                                     ))

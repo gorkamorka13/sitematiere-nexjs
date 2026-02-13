@@ -9,7 +9,7 @@ export default async function ExportDatabasePage({
 }: {
   searchParams: Promise<{ password?: string }>;
 }) {
-  const headersList = await headers();
+  // const headersList = await headers();
   const { password } = await searchParams;
 
   if (password !== "export2026") {

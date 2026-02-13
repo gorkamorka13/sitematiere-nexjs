@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, Plus, Trash2, Save, Upload, Eye, Search, X } from 'lucide-react';
+import { Loader2, Plus, Upload, Eye, Search, X } from 'lucide-react';
 import { DatabaseImagePicker } from '@/components/image-processor/DatabaseImagePicker';
 import {
   DndContext,

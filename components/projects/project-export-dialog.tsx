@@ -11,8 +11,6 @@ import {
   BarChart3,
   Paperclip,
   X,
-  Calendar,
-  Layers,
 } from "lucide-react";
 import { Project, Document as ProjectDocument, Video as ProjectVideo } from "@prisma/client";
 import jsPDF from "jspdf";

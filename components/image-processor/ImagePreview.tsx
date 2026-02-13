@@ -1,6 +1,6 @@
 'use client';
 
-import { formatFileSize, calculateAspectRatio } from '@/lib/image-utils';
+import { formatFileSize } from '@/lib/image-utils';
 import { Badge } from '@/components/ui/badge';
 import { ImageIcon } from 'lucide-react';
 

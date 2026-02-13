@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { X, ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 import { normalizeImageUrl } from '@/lib/utils/image-url';
 
 interface SlideshowImage {
@@ -106,10 +107,12 @@ export function SlideshowViewer({ images, projectName }: SlideshowViewerProps) {
       {/* Main Image Container */}
       <div className={`relative ${isFullscreen ? 'h-screen' : 'h-[70vh]'} bg-gray-900 rounded-2xl overflow-hidden group`}>
         {/* Image */}
-        <img
+        <Image
           src={normalizeImageUrl(currentImage.image.url)}
           alt={currentImage.image.alt || `Image ${currentIndex + 1}`}
-          className="w-full h-full object-contain"
+          fill
+          className="object-contain"
+          priority
         />
 
         {/* Overlay Controls */}
@@ -187,10 +190,12 @@ export function SlideshowViewer({ images, projectName }: SlideshowViewerProps) {
                 : 'opacity-60 hover:opacity-100'
                 }`}
             >
-              <img
+              <Image
                 src={normalizeImageUrl(img.image.url)}
                 alt={img.image.alt || `Thumbnail ${index + 1}`}
-                className="w-full h-full object-cover"
+                fill
+                className="object-cover"
+                sizes="96px"
               />
               {index === currentIndex && (
                 <div className="absolute inset-0 bg-indigo-500/20" />

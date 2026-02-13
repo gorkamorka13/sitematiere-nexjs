@@ -1,9 +1,9 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, Loader2, Image as ImageIcon } from 'lucide-react';
-import { ImageData } from '@/types/image-processor';
+import { Upload, Loader2 } from 'lucide-react';
+// import { ImageData } from '@/types/image-processor';
 
 interface DropZoneProps {
   onImageLoad: (file: File) => void;

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, ReactNode } from 'react';
+import { useState, ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Image from 'next/image';
 import {
     LayoutDashboard,
     FolderOpen,
@@ -100,10 +101,12 @@ export default function AppLayout({
                 {/* Branding Header */}
                 <div className="flex items-center justify-between px-4 h-20 border-b border-gray-100 dark:border-gray-700 shrink-0">
                     <div className="flex items-center gap-3 min-w-0">
-                        <img
+                        <Image
                             src="/Matiere_logo_512.png"
                             alt="Matière Logo"
-                            className="w-10 h-10 object-contain shrink-0"
+                            width={40}
+                            height={40}
+                            className="object-contain shrink-0"
                         />
                         {!isSidebarCollapsed && (
                             <span className="matiere text-xl tracking-tight truncate">

@@ -20,7 +20,7 @@ interface DebugInfo {
 
 // export const runtime = 'edge'; // Commenté pour le dev local
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   const debugInfo: DebugInfo = {
     timestamp: new Date().toISOString(),
     environment: {

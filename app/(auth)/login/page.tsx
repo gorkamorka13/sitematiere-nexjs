@@ -46,10 +46,13 @@ export default function LoginPage() {
                     <div className="flex flex-col items-center mb-8">
                         <div className="relative mb-4">
                             {/* Logo identical to sidebar but larger */}
-                            <img
+                            <Image
                                 src="/Matiere_logo_512.png"
                                 alt="Matière Logo"
+                                width={128}
+                                height={128}
                                 className="w-32 h-32 object-contain drop-shadow-xl"
+                                priority
                             />
                         </div>
 

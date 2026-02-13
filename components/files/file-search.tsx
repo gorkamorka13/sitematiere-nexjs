@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, FileType } from "lucide-react";
+import { Search } from "lucide-react";
 
 interface FileSearchProps {
   searchQuery: string;

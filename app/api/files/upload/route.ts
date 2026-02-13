@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { uploadFile, getFileTypeFromMime } from "@/lib/files/blob-edge";
 import { validateFileSize, validateFileType, sanitizeFileName } from "@/lib/files/validation";
-import { FileType } from "@prisma/client";
+// Duplicate import removed
 
 // Cloudflare Pages requires Edge Runtime for API routes
 // export const runtime = 'edge'; // Commenté pour le dev local
@@ -11,7 +11,7 @@ import { FileType } from "@prisma/client";
 
 export async function POST(request: Request) {
   console.log("[UPLOAD API] Starting upload request");
-  
+
   const session = await auth();
   console.log("[UPLOAD API] Session:", session?.user ? "Authenticated" : "Not authenticated", "Role:", session?.user?.role);
 
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     console.log("[UPLOAD API] Access denied - Not authenticated");
     return NextResponse.json({ error: "Access denied - Not authenticated" }, { status: 403 });
   }
-  
+
   const userRole = session.user.role;
   if (userRole !== "ADMIN" && userRole !== "USER") {
     console.log("[UPLOAD API] Access denied - Role:", userRole);
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     const files = formData.getAll("file") as File[];
     const projectId = formData.get("projectId") as string;
     console.log("[UPLOAD API] ProjectId from form:", projectId);
-    
+
     let targetProjectId: string | null = projectId;
     let folderName = projectId;
 
@@ -148,7 +148,7 @@ export async function POST(request: Request) {
     }
 
     console.log("[UPLOAD API] Upload complete. Files uploaded:", uploadedFiles.length, "Errors:", errors.length);
-    
+
     return NextResponse.json({
       success: true,
       files: uploadedFiles,

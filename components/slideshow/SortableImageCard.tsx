@@ -4,6 +4,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Trash2, CheckCircle2, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 import { normalizeImageUrl } from '@/lib/utils/image-url';
 
 interface SortableImageCardProps {
@@ -63,10 +64,12 @@ export function SortableImageCard({
 
       {/* Image Preview */}
       <div className="relative w-24 h-24 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-800 flex-shrink-0">
-        <img
+        <Image
           src={normalizeImageUrl(image.url)}
           alt={image.alt || `Image ${order}`}
-          className="w-full h-full object-cover"
+          fill
+          sizes="96px"
+          className="object-cover"
         />
       </div>
 
