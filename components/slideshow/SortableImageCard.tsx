@@ -102,15 +102,46 @@ export function SortableImageCard({
         )}
       </div>
 
-      {/* Remove Button */}
-      <Button
-        onClick={onRemove}
-        variant="ghost"
-        size="sm"
-        className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-      >
-        <Trash2 className="w-4 h-4" />
-      </Button>
+      {/* Remove Button - Two-step confirmation logic */}
+      <div className="relative">
+        <Button
+          type="button"
+          onMouseDown={(e) => {
+            console.log('[SortableImageCard] onMouseDown trash:', id);
+            e.stopPropagation();
+          }}
+          onClick={(e) => {
+            console.log('[SortableImageCard] onClick trash:', id);
+            e.stopPropagation();
+            e.preventDefault();
+
+            // Toggle confirmation state locally
+            const button = e.currentTarget;
+            if (button.getAttribute('data-confirm') === 'true') {
+              console.log('[SortableImageCard] Second click - confirmed removal');
+              button.setAttribute('data-confirm', 'false');
+              onRemove();
+            } else {
+              console.log('[SortableImageCard] First click - asking for confirmation');
+              button.setAttribute('data-confirm', 'true');
+
+              // Reset after 4 seconds if not clicked again
+              setTimeout(() => {
+                if (button) button.setAttribute('data-confirm', 'false');
+              }, 4000);
+            }
+          }}
+          variant="ghost"
+          size="sm"
+          className="group relative flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all cursor-pointer z-50 px-3 data-[confirm=true]:bg-red-600 data-[confirm=true]:text-white data-[confirm=true]:hover:bg-red-700"
+          data-confirm="false"
+        >
+          <Trash2 className="w-4 h-4" />
+          <span className="max-w-0 overflow-hidden whitespace-nowrap text-[10px] font-bold uppercase transition-all group-data-[confirm=true]:max-w-[100px] group-data-[confirm=true]:ml-1">
+            Supprimer ?
+          </span>
+        </Button>
+      </div>
     </div>
   );
 }

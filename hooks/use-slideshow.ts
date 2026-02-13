@@ -33,6 +33,7 @@ export function useSlideshow({ initialProjectId = '' }: UseSlideshowProps = {}) 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [hasUnpublishedChanges, setHasUnpublishedChanges] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
@@ -42,17 +43,18 @@ export function useSlideshow({ initialProjectId = '' }: UseSlideshowProps = {}) 
       return;
     }
 
+    console.log('[useSlideshow] Loading images for project:', selectedProjectId);
     setLoading(true);
     try {
       const result = await getSlideshowImages(selectedProjectId, false);
-
       if (result.success && result.images) {
-        setSlideshowImages(result.images as SlideshowImage[]);
-        const hasUnpublished = result.images.some((img: SlideshowImage) => !img.isPublished);
+        const images = result.images as SlideshowImage[];
+        setSlideshowImages(images);
+        const hasUnpublished = images.some((img: SlideshowImage) => !img.isPublished);
         setHasUnpublishedChanges(hasUnpublished);
       }
     } catch (error) {
-      console.error('Error loading slideshow:', error);
+      console.error('[useSlideshow] Error loading slideshow:', error);
       setToast({ message: "Erreur lors du chargement du slideshow", type: 'error' });
     } finally {
       setLoading(false);
@@ -66,15 +68,17 @@ export function useSlideshow({ initialProjectId = '' }: UseSlideshowProps = {}) 
     try {
       const result = await addImageToSlideshow(selectedProjectId, fileId);
       if (result.success) {
-        router.refresh();
+        // After adding, we definitely have unpublished changes
+        setHasUnpublishedChanges(true);
         await loadSlideshowImages();
+        router.refresh();
         return true;
       } else {
         setToast({ message: result.error || 'Erreur lors de l\'ajout', type: 'error' });
         return false;
       }
     } catch (error) {
-      console.error('Error adding image:', error);
+      console.error('[useSlideshow] Error adding image:', error);
       setToast({ message: 'Erreur lors de l\'ajout de l\'image', type: 'error' });
       return false;
     } finally {
@@ -83,25 +87,34 @@ export function useSlideshow({ initialProjectId = '' }: UseSlideshowProps = {}) 
   };
 
   const removeImage = async (slideshowImageId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir retirer cette image du slideshow ?')) {
-      return false;
-    }
+    console.log('[useSlideshow] removeImage hook execution start for:', slideshowImageId);
+    setDeletingId(slideshowImageId);
 
     try {
+      console.log('[useSlideshow] Calling server action removeSlideshowImage...');
       const result = await removeSlideshowImage(slideshowImageId);
+      console.log('[useSlideshow] Server action result:', result);
+
       if (result.success) {
-        setSlideshowImages(prev => prev.filter(img => img.id !== slideshowImageId));
-        setHasUnpublishedChanges(true);
-        router.refresh();
+        setSlideshowImages(prev => {
+          const updated = prev.filter(img => img.id !== slideshowImageId);
+          // Only show banner if there are OTHER images that are unpublished
+          const hasUnpublished = updated.some(img => !img.isPublished);
+          setHasUnpublishedChanges(hasUnpublished);
+          return updated;
+        });
+        // We don't necessarily need router.refresh() if we update state locally
         return true;
       } else {
         setToast({ message: result.error || 'Erreur lors de la suppression', type: 'error' });
         return false;
       }
     } catch (error) {
-      console.error('Error removing image:', error);
+      console.error('[useSlideshow] Error removing image:', error);
       setToast({ message: 'Erreur lors de la suppression', type: 'error' });
       return false;
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -109,7 +122,8 @@ export function useSlideshow({ initialProjectId = '' }: UseSlideshowProps = {}) 
     if (!selectedProjectId) return;
 
     const newItems = arrayMove(slideshowImages, oldIndex, newIndex);
-    setSlideshowImages(newItems); // Optimistic update
+    setSlideshowImages(newItems);
+    setHasUnpublishedChanges(true); // Reordering is always an unpublished change
 
     setSaving(true);
     try {
@@ -118,13 +132,12 @@ export function useSlideshow({ initialProjectId = '' }: UseSlideshowProps = {}) 
 
       if (!result.success) {
         setToast({ message: result.error || 'Erreur sauvegarde ordre', type: 'error' });
-        await loadSlideshowImages(); // Revert on error
+        await loadSlideshowImages();
       } else {
-        setHasUnpublishedChanges(true);
         router.refresh();
       }
     } catch (error) {
-      console.error('Error saving order:', error);
+      console.error('[useSlideshow] Error saving order:', error);
       setToast({ message: 'Erreur lors de la sauvegarde de l\'ordre', type: 'error' });
     } finally {
       setSaving(false);
@@ -134,23 +147,23 @@ export function useSlideshow({ initialProjectId = '' }: UseSlideshowProps = {}) 
   const publish = async () => {
     if (!selectedProjectId) return;
 
-    if (!confirm('Êtes-vous sûr de vouloir publier ce slideshow ? Il sera visible publiquement.')) {
-      return;
-    }
-
     setPublishing(true);
     try {
+      console.log('[useSlideshow] Calling publish server action...');
       const result = await publishSlideshow(selectedProjectId);
+      console.log('[useSlideshow] Publish result:', result);
+
       if (result.success) {
         setToast({ message: 'Slideshow publié avec succès !', type: 'success' });
         setHasUnpublishedChanges(false);
+        // Refresh local state to show all images as "Published"
+        setSlideshowImages(prev => prev.map(img => ({ ...img, isPublished: true })));
         router.refresh();
-        await loadSlideshowImages();
       } else {
         setToast({ message: result.error || 'Erreur publication', type: 'error' });
       }
     } catch (error) {
-      console.error('Error publishing:', error);
+      console.error('[useSlideshow] Error publishing:', error);
       setToast({ message: 'Erreur lors de la publication', type: 'error' });
     } finally {
       setPublishing(false);
@@ -164,6 +177,7 @@ export function useSlideshow({ initialProjectId = '' }: UseSlideshowProps = {}) 
     loading,
     saving,
     publishing,
+    deletingId,
     hasUnpublishedChanges,
     toast,
     setToast,

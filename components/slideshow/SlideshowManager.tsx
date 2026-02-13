@@ -184,10 +184,24 @@
                                 </div>
                             )}
 
-                            <Button
-                                onClick={publish}
-                                disabled={publishing || slideshowImages.length === 0}
-                                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase tracking-widest text-xs px-6"
+                             <Button
+                                onClick={(e) => {
+                                    const button = e.currentTarget;
+                                    if (button.getAttribute('data-confirm') === 'true') {
+                                        console.log('[SlideshowManager] Second click - confirmed publishing');
+                                        button.setAttribute('data-confirm', 'false');
+                                        publish();
+                                    } else {
+                                        console.log('[SlideshowManager] First click - asking for publish confirmation');
+                                        button.setAttribute('data-confirm', 'true');
+                                        setTimeout(() => {
+                                            if (button) button.setAttribute('data-confirm', 'false');
+                                        }, 4000);
+                                    }
+                                }}
+                                disabled={publishing || loading || slideshowImages.length === 0}
+                                className="group relative min-w-[120px] bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase tracking-widest text-xs px-6 data-[confirm=true]:bg-green-600 data-[confirm=true]:text-white data-[confirm=true]:hover:bg-green-700 transition-all duration-300"
+                                data-confirm="false"
                             >
                                 {publishing ? (
                                     <>
@@ -195,10 +209,15 @@
                                         Publication...
                                     </>
                                 ) : (
-                                    <>
-                                        <Upload className="w-4 h-4 mr-2" />
-                                        Publier
-                                    </>
+                                    <div className="flex items-center justify-center gap-2">
+                                        <Upload className={`w-4 h-4 transition-transform ${publishing ? 'animate-bounce' : ''}`} />
+                                        <span className="block group-data-[confirm=true]:hidden">
+                                            Publier
+                                        </span>
+                                        <span className="hidden group-data-[confirm=true]:block whitespace-nowrap">
+                                            Confirmer ?
+                                        </span>
+                                    </div>
                                 )}
                             </Button>
 
