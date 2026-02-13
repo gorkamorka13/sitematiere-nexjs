@@ -19,6 +19,7 @@ const files = [
     'app/api/files/serve/[...key]/route.ts',
     'app/api/files/upload/route.ts',
     'app/api/files/rename/route.ts',
+    'app/api/files/restore/route.ts',
     'app/api/files/statistics/route.ts',
     'app/api/users/route.ts',
     'app/api/blob-proxy/route.ts',
