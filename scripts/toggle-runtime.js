@@ -27,6 +27,8 @@ const files = [
     'app/api/create-user/route.ts',
     'app/api/debug/route.ts',
     'app/api/debug/auth/route.ts',
+    'app/api/projects/route.ts',
+    'app/api/proxy/route.ts',
     'app/export-db/page.tsx'
 ];
 
