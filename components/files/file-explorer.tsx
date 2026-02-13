@@ -134,11 +134,11 @@ export function FileExplorer() {
         } finally {
             setLoading(false);
         }
-    }, [fileTypeFilter, refreshTrigger]);
+    }, [fileTypeFilter]);
 
     useEffect(() => {
         fetchFiles();
-    }, [fetchFiles]);
+    }, [fetchFiles, refreshTrigger]);
 
     const handleSelect = (id: string, multi: boolean) => {
         const newSelection = new Set(multi ? selectedIds : []);

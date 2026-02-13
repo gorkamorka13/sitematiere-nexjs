@@ -2,19 +2,19 @@
 
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { getProjectMedia } from "@/app/actions/project-media";
-import Link from "next/link";
-import { SignOutButton } from "@/components/auth/sign-out-button";
+import Image from "next/image";
+
 import { Project, ProjectStatus, ProjectType, UserRole, Document as ProjectDocument, Video as ProjectVideo } from "@prisma/client";
 import ProjectsMapWrapper from "@/components/ui/projects-map-wrapper";
 import ProjectMapWrapper from "@/components/ui/project-map-wrapper";
-import { ModeToggle } from "@/components/ui/mode-toggle";
-import { Search, Ruler, Factory, Truck, HardHat, FileText, FolderOpen, Folders, Image as ImageIcon, Video, ExternalLink, Play, Pause, SkipBack, SkipForward, ChevronLeft, ChevronRight, Square, Users, LayoutDashboard, PanelLeftClose, Menu, X as CloseIcon, FileStack, Download } from "lucide-react";
+
+import { Search, Ruler, Factory, Truck, HardHat, FileText, FolderOpen, Image as ImageIcon, Video, Play, Pause, SkipBack, SkipForward, ChevronLeft, ChevronRight, Square, Download } from "lucide-react";
 import { ProjectExportDialog } from "@/components/projects/project-export-dialog";
 import AppLayout from "@/components/AppLayout";
 import ProjectManagementDialog from "@/components/settings/project-management-dialog";
 import FileManagementDialog from "@/components/settings/file-management-dialog";
 import SettingsDialogs from "@/components/settings/settings-dialogs";
-import UserBadge from "@/components/settings/user-badge";
+
 import { normalizeImageUrl } from "@/lib/utils/image-url";
 
 type DashboardClientProps = {
@@ -28,20 +28,7 @@ type ProjectWithDocuments = Project & {
     videos?: ProjectVideo[];
 };
 
-const getRoleLabel = (role: UserRole) => {
-    switch (role) {
-        case "ADMIN":
-            return "Administrateur";
-        case "USER":
-            return "Utilisateur";
-        case "VISITOR":
-            return "Visiteur";
-        default:
-            return role;
-    }
-};
 
-// Helper to get progress colors based on value
 const getProgressColors = (val: number) => {
     if (val >= 100) return {
         text: 'text-green-600 dark:text-green-400',
@@ -179,7 +166,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
         }
     }, []);
 
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
 
     useEffect(() => {
         if (selectedProject) {
@@ -198,38 +185,9 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
         return projects.map(p => p.name).sort();
     }, [initialProjects, selectedCountry]);
 
-    // Touch Swipe Logic for Mobile Menu
-    const [touchStartX, setTouchStartX] = useState<number | null>(null);
-    const [touchStartY, setTouchStartY] = useState<number | null>(null);
 
-    const handleTouchStart = (e: React.TouchEvent) => {
-        setTouchStartX(e.targetTouches[0].clientX);
-        setTouchStartY(e.targetTouches[0].clientY);
-    };
 
-    const handleTouchEnd = (e: React.TouchEvent) => {
-        if (touchStartX === null || touchStartY === null) return;
 
-        const touchEndX = e.changedTouches[0].clientX;
-        const touchEndY = e.changedTouches[0].clientY;
-
-        const deltaX = touchEndX - touchStartX;
-        const deltaY = Math.abs(touchEndY - touchStartY);
-
-        // Seul les swipes horizontaux significatifs (> 50px) sont pris en compte
-        if (Math.abs(deltaX) > deltaY && Math.abs(deltaX) > 50) {
-            if (deltaX > 0 && touchStartX < 50 && !isMobileMenuOpen) {
-                // Swipe à droite depuis le bord gauche -> Ouvrir
-                setIsMobileMenuOpen(true);
-            } else if (deltaX < 0 && isMobileMenuOpen) {
-                // Swipe à gauche -> Fermer
-                setIsMobileMenuOpen(false);
-            }
-        }
-
-        setTouchStartX(null);
-        setTouchStartY(null);
-    };
 
     // Map Projects for Global Map (Reflects country, type, status filters but NOT name filter)
     const mapProjects = useMemo(() => {
@@ -635,23 +593,23 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                                     {flagDoc && (
                                         <div className="flex items-center gap-1.5 px-2 py-1 bg-white/50 dark:bg-black/20 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm shrink-0">
                                             <div className="w-7 h-4.5 relative rounded-[2px] overflow-hidden border border-gray-100 dark:border-gray-800 bg-gray-100 dark:bg-gray-800">
-                                                <img
+                                                <Image
                                                     src={normalizeImageUrl(flagDoc.url)}
                                                     alt=""
-                                                    className="w-full h-full object-cover"
-                                                    onError={(e) => (e.currentTarget.style.display = 'none')}
+                                                    fill
+                                                    className="object-cover"
                                                 />
                                             </div>
                                             <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-tight hidden sm:inline-block">{selectedProject?.country}</span>
                                         </div>
                                     )}
                                     {logoDoc && (
-                                        <div className="h-7 px-2 py-1 bg-white/50 dark:bg-black/20 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm flex items-center shrink-0">
-                                            <img
+                                        <div className="h-7 px-2 py-1 bg-white/50 dark:bg-black/20 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm flex items-center shrink-0 relative w-[100px]">
+                                            <Image
                                                 src={normalizeImageUrl(logoDoc.url)}
                                                 alt=""
-                                                className="h-full max-w-[100px] object-contain opacity-90"
-                                                onError={(e) => (e.currentTarget.style.display = 'none')}
+                                                fill
+                                                className="object-contain opacity-90"
                                             />
                                         </div>
                                     )}
@@ -919,10 +877,11 @@ function PhotoGalleryWithControls({ selectedProject, dynamicImages, isLoading }:
             <div className="relative flex-grow flex flex-col min-h-[350px]">
                 <div className="flex-grow p-4">
                     <div className="relative w-full h-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900 group">
-                        <img
+                        <Image
                             src={normalizeImageUrl(images[currentIndex].url)}
                             alt={images[currentIndex].name || `Photo ${currentIndex + 1}`}
-                            className="object-contain w-full h-full transition-opacity duration-500"
+                            fill
+                            className="object-contain transition-opacity duration-500"
                         />
                         <div className="absolute inset-0 flex items-center justify-between p-4 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button onClick={prevSlide} className="p-2 bg-black/30 hover:bg-black/50 text-white rounded-full backdrop-blur-sm transition-colors"><ChevronLeft className="w-6 h-6" /></button>
@@ -958,42 +917,6 @@ function PhotoGalleryWithControls({ selectedProject, dynamicImages, isLoading }:
     );
 }
 
-// Helper Component for Progression Cards
-function ProgressCard({ label, value, icon, color }: { label: string; value: number; icon: React.ReactNode; color: string }) {
-    return (
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-all hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-900 group">
-            <div className="flex items-center gap-3 mb-3">
-                <div className={`p-2 rounded-lg ${color.replace('bg-', 'bg-').replace('500', '500/10')} text-${color.split('-')[1]}-600 dark:text-${color.split('-')[1]}-400`}>
-                    {icon}
-                </div>
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{label}</span>
-            </div>
-            <div className="flex items-end justify-between mb-1">
-                <span className="text-2xl font-bold text-gray-900 dark:text-white">{value}%</span>
-            </div>
-            <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
-                <div className={`h-full ${color} transition-all duration-1000 ease-out`} style={{ width: `${value}%` }} />
-            </div>
-        </div>
-    );
-}
 
-// Helper Component for Action Cards
-function ActionCard({ label, description, icon, href, disabled }: { label: string; description: string; icon: React.ReactNode; href: string; disabled: boolean }) {
-    return (
-        <Link
-            href={href}
-            className={`flex items-center gap-4 bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-all ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-900 group'}`}
-            onClick={(e) => disabled && e.preventDefault()}
-        >
-            <div className={`p-3 rounded-xl bg-gray-50 dark:bg-gray-900 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/30 transition-colors`}>
-                {icon}
-            </div>
-            <div className="flex-grow">
-                <h4 className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{label}</h4>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-tight mt-0.5">{description}</p>
-            </div>
-            {!disabled && <ExternalLink className="w-3 h-3 text-gray-300 group-hover:text-indigo-400" />}
-        </Link>
-    );
-}
+
+

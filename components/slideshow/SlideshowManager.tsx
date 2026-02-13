@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2, Plus, Trash2, Save, Upload, Eye, Search, X } from 'lucide-react';
 import { DatabaseImagePicker } from '@/components/image-processor/DatabaseImagePicker';
@@ -137,16 +137,7 @@ export function SlideshowManager({ projects }: SlideshowManagerProps) {
     }
   }, [searchQuery, filteredProjects, selectedProjectId]);
 
-  // Load slideshow images when project changes
-  useEffect(() => {
-    if (selectedProjectId) {
-      loadSlideshowImages();
-    } else {
-      setSlideshowImages([]);
-    }
-  }, [selectedProjectId]);
-
-  const loadSlideshowImages = async () => {
+  const loadSlideshowImages = useCallback(async () => {
     if (!selectedProjectId) return;
 
     setLoading(true);
@@ -165,7 +156,16 @@ export function SlideshowManager({ projects }: SlideshowManagerProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedProjectId]);
+
+  // Load slideshow images when project changes
+  useEffect(() => {
+    if (selectedProjectId) {
+      loadSlideshowImages();
+    } else {
+      setSlideshowImages([]);
+    }
+  }, [selectedProjectId, loadSlideshowImages]);
 
   const handleAddImage = async (imageUrl: string, filename: string, fileId: string) => {
     if (!selectedProjectId) return;

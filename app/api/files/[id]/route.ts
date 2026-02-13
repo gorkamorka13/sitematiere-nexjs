@@ -69,8 +69,8 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  _request: Request,
+  { params: _params }: { params: Promise<{ id: string }> }
 ) {
   // We already have a bulk delete route, but proper REST suggests singular delete here too.
   // Skipping for now as we focus on Rename.

@@ -1,8 +1,4 @@
 import * as React from "react"
-import * as LabelPrimitive from "@radix-ui/react-label" // Usually label is radix but I didn't install it.
-// I will use standard label for now to avoid install if possible, OR check if label was installed?
-// Package.json didn't show radix-ui/react-label.
-// So I will make a simple HTML label wrapper.
 
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"

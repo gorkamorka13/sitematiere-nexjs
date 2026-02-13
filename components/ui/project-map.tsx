@@ -21,12 +21,12 @@ type MapProps = {
     status?: string | null;
     projectName?: string;
     country?: string;
-    popupText?: string;
+    // popupText?: string; // Removed unused prop
     nonce?: number;
     isCapture?: boolean;
 };
 
-export default function ProjectMap({ latitude, longitude, status, projectName, country, popupText, nonce, isCapture }: MapProps) {
+export default function ProjectMap({ latitude, longitude, status, projectName, country, nonce, isCapture }: MapProps) {
     const tileUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 
     return (

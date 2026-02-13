@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { X, Save, MapPin, AlignLeft, FolderOpen, AlertCircle, CheckCircle2, Globe, Search, Undo2, Redo2, Plus, Trash2, Edit, UploadCloud, Image as ImageIcon } from "lucide-react";
+import NextImage from "next/image";
 import { Project, Document as ProjectDocument, ProjectType, ProjectStatus, UserRole } from "@prisma/client";
 import { updateProject, createProject, deleteProject } from "@/app/actions/project-actions";
 import EditableMapWrapper from "@/components/ui/editable-map-wrapper";
@@ -232,7 +233,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
         return newHistory;
       });
       setHistoryIndex(prev => Math.min(prev + 1, 49));
-    } catch (err) {
+    } catch {
       // Invalid format, don't update
       setStatus({ type: 'error', message: `Format ${coordinateFormat === 'dms' ? 'DMS' : 'décimal'} invalide` });
     }
@@ -332,7 +333,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
 
   const processUploads = async (projectId: string) => {
     setIsUploading(true);
-    const uploadPromises = uploads.map(async (upload, index) => {
+    const uploadPromises = uploads.map(async (upload) => {
       if (upload.status === "success") return;
 
       updateUploadStatus(upload.file, { status: "uploading", progress: 0 });
@@ -422,7 +423,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
       } else {
         setStatus({ type: 'error', message: result.error || "Une erreur est survenue." });
       }
-    } catch (error) {
+    } catch {
       setStatus({ type: 'error', message: "Erreur de communication avec le serveur." });
     } finally {
       setIsSubmitting(false);
@@ -448,7 +449,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
       } else {
         setStatus({ type: 'error', message: result.error || "Une erreur est survenue." });
       }
-    } catch (error) {
+    } catch {
       setStatus({ type: 'error', message: "Erreur de communication avec le serveur." });
     } finally {
       setIsSubmitting(false);
@@ -487,7 +488,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
       } else {
         setStatus({ type: 'error', message: result.error || "Une erreur est survenue." });
       }
-    } catch (error) {
+    } catch {
       setStatus({ type: 'error', message: "Erreur de communication avec le serveur." });
     } finally {
       setIsSubmitting(false);
@@ -829,12 +830,13 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                   Drapeau du Pays
                 </label>
                 <div className="flex items-center gap-3">
-                  <div className="relative group w-24 h-16 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 flex items-center justify-center shrink-0 shadow-sm">
+                    <div className="relative group w-24 h-16 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 flex items-center justify-center shrink-0 shadow-sm">
                     {formData.flagName ? (
-                      <img
+                      <NextImage
                         src={formData.flagName.startsWith('http') || formData.flagName.startsWith('/') ? formData.flagName : `/${formData.flagName}`}
                         alt="Drapeau"
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
                       />
                     ) : (
                       <ImageIcon className="w-6 h-6 text-gray-300" />
@@ -876,10 +878,11 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                 <div className="flex items-center gap-3">
                   <div className="relative group w-24 h-16 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 flex items-center justify-center shrink-0 shadow-sm">
                     {formData.clientLogoName ? (
-                      <img
+                      <NextImage
                         src={formData.clientLogoName.startsWith('http') || formData.clientLogoName.startsWith('/') ? formData.clientLogoName : `/${formData.clientLogoName}`}
                         alt="Logo"
-                        className="max-w-[80%] max-h-[80%] object-contain"
+                        fill
+                        className="object-contain p-2"
                       />
                     ) : (
                       <ImageIcon className="w-6 h-6 text-gray-300" />
@@ -1068,7 +1071,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                       setPositionHistory(h => [...h.slice(0, historyIndex + 1), { lat: val, lng: createFormData.longitude ?? 0 }].slice(-50));
                       setHistoryIndex(prev => Math.min(prev + 1, 49));
                       setStatus(null);
-                    } catch (err) {
+                    } catch {
                       setStatus({ type: 'error', message: `Format ${coordinateFormat === 'dms' ? 'DMS' : 'décimal'} invalide` });
                     }
                   }}
@@ -1086,7 +1089,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                       setPositionHistory(h => [...h.slice(0, historyIndex + 1), { lat: createFormData.latitude ?? 0, lng: val }].slice(-50));
                       setHistoryIndex(prev => Math.min(prev + 1, 49));
                       setStatus(null);
-                    } catch (err) {
+                    } catch {
                       setStatus({ type: 'error', message: `Format ${coordinateFormat === 'dms' ? 'DMS' : 'décimal'} invalide` });
                     }
                   }}
@@ -1192,10 +1195,11 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                     <div className="flex items-center gap-3">
                       <div className="relative group w-24 h-16 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 flex items-center justify-center shrink-0 shadow-sm">
                         {createFormData.flagName ? (
-                          <img
+                          <NextImage
                             src={createFormData.flagName.startsWith('http') || createFormData.flagName.startsWith('/') ? createFormData.flagName : `/${createFormData.flagName}`}
                             alt="Drapeau"
-                            className="w-full h-full object-cover"
+                            fill
+                            className="object-cover"
                           />
                         ) : (
                           <ImageIcon className="w-6 h-6 text-gray-300" />
@@ -1237,10 +1241,11 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                     <div className="flex items-center gap-3">
                       <div className="relative group w-24 h-16 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 flex items-center justify-center shrink-0 shadow-sm">
                         {createFormData.clientLogoName ? (
-                          <img
+                          <NextImage
                             src={createFormData.clientLogoName.startsWith('http') || createFormData.clientLogoName.startsWith('/') ? createFormData.clientLogoName : `/${createFormData.clientLogoName}`}
                             alt="Logo"
-                            className="max-w-[80%] max-h-[80%] object-contain"
+                            fill
+                            className="object-contain p-2"
                           />
                         ) : (
                           <ImageIcon className="w-6 h-6 text-gray-300" />
@@ -1388,7 +1393,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
 
                     {showSuggestions && searchSuggestions.length > 0 && (
                       <div className="absolute z-[110] w-full mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-48 overflow-auto animate-in fade-in slide-in-from-top-2 duration-200">
-                        {searchSuggestions.map((project: Project, index: number) => (
+                        {searchSuggestions.map((project: Project) => (
                           <button
                             key={project.id}
                             type="button"

@@ -35,21 +35,21 @@ export function DatabaseImagePicker({ isOpen, onClose, onSelect, initialProjectF
     const [moveFileIds, setMoveFileIds] = useState<string[] | null>(null);
     const [deleteFileIds, setDeleteFileIds] = useState<string[] | null>(null);
 
+    const resetFilters = useCallback(() => {
+        setSelectedId(null);
+        setSearchQuery('');
+        setFileTypeFilter('ALL');
+        setCountryFilter('Tous');
+        setProjectFilter(initialProjectFilter || 'ALL');
+    }, [initialProjectFilter]);
+
     // Fetch files when modal opens
     useEffect(() => {
         if (isOpen) {
             fetchFiles();
             resetFilters();
         }
-    }, [isOpen]);
-
-    const resetFilters = () => {
-        setSelectedId(null);
-        setSearchQuery('');
-        setFileTypeFilter('ALL');
-        setCountryFilter('Tous');
-        setProjectFilter(initialProjectFilter || 'ALL');
-    };
+    }, [isOpen, resetFilters]);
 
     const fetchFiles = async () => {
         setLoading(true);

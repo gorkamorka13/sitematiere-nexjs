@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, AlertTriangle, Trash2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 
 interface FileDeleteDialogProps {
     fileCount: number;
@@ -11,7 +11,7 @@ interface FileDeleteDialogProps {
 }
 
 export function FileDeleteDialog({ fileCount, isPermanent = false, onClose, onConfirm }: FileDeleteDialogProps) {
-    const [permanent, setPermanent] = useState(isPermanent || true);
+    const [permanent, setPermanent] = useState<boolean>(isPermanent || true);
     const [submitting, setSubmitting] = useState(false);
 
     const handleSubmit = async () => {

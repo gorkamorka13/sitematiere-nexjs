@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import { CropData } from '@/types/image-processor';
 import { Button } from '@/components/ui/button';
 import { Check, X, RotateCcw, RotateCw, Image as ImageIcon, ArrowLeft } from 'lucide-react';
@@ -10,6 +10,8 @@ interface CropToolProps {
   onApply: (cropData: CropData, targetDimensions?: { width: number; height: number }) => void;
   onCancel: () => void;
 }
+
+const TARGET_RATIO = 850 / 525;
 
 export function CropTool({ imageSrc, onApply, onCancel }: CropToolProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -22,7 +24,7 @@ export function CropTool({ imageSrc, onApply, onCancel }: CropToolProps) {
   const moveOffset = useRef({ x: 0, y: 0 });
 
   // Target aspect ratio
-  const TARGET_RATIO = 850 / 525;
+  // const TARGET_RATIO = 850 / 525;
 
   // Initialize crop to 850x525 (Target) or cover if image is smaller
   const initializeCrop = useCallback(() => {
@@ -111,7 +113,7 @@ export function CropTool({ imageSrc, onApply, onCancel }: CropToolProps) {
 
       const coords = getRelativeCoords(e);
       const { width: imgW, height: imgH } = imageRef.current.getBoundingClientRect();
-      const clamp = (val: number, min: number, max: number) => Math.min(Math.max(val, min), max);
+      // const clamp = (val: number, min: number, max: number) => Math.min(Math.max(val, min), max);
 
       setCrop(prev => {
           if (!prev) return null;

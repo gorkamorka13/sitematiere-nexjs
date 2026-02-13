@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { uploadToR2, deleteFromR2, getFileUrl } from '../storage/r2-operations';
+import { uploadToR2, deleteFromR2 } from '../storage/r2-operations';
 import sharp from 'sharp';
 import { FileType } from '@prisma/client';
 import ffmpeg from 'fluent-ffmpeg';

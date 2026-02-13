@@ -1,6 +1,6 @@
 "use client";
 
-import { Trash2, Grid, List as ListIcon, Loader2, RefreshCw, Upload, CheckSquare } from "lucide-react";
+import { Trash2, Grid, List as ListIcon, Loader2, RefreshCw } from "lucide-react";
 
 interface FileToolbarProps {
   selectedCount: number;
@@ -9,7 +9,7 @@ interface FileToolbarProps {
   onDelete: () => void;
   onRefresh: () => void;
   isRefreshing?: boolean;
-  onSelectAll?: () => void;
+  // onSelectAll?: () => void; // Removed unused prop
   hasSelection?: boolean;
 }
 
@@ -20,7 +20,7 @@ export function FileToolbar({
   onDelete,
   onRefresh,
   isRefreshing,
-  onSelectAll,
+  // onSelectAll, // Removed unused prop
 }: FileToolbarProps) {
   return (
     <div className="flex items-center justify-between p-2 bg-muted/40 rounded-lg">
