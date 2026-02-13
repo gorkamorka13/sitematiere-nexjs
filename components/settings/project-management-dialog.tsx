@@ -80,6 +80,8 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
     fabrication: 0,
     transport: 0,
     construction: 0,
+    flagName: "",
+    clientLogoName: "",
   });
 
   const [confirmName, setConfirmName] = useState("");
@@ -408,6 +410,8 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
           fabrication: 0,
           transport: 0,
           construction: 0,
+          flagName: "",
+          clientLogoName: "",
         });
         setUploads([]);
 
@@ -917,7 +921,11 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
             onClose={() => setIsFlagPickerOpen(false)}
             initialProjectFilter="project-flags"
             onSelect={(url) => {
-              setFormData({ ...formData, flagName: url });
+              if (activeTab === 'create') {
+                setCreateFormData({ ...createFormData, flagName: url });
+              } else {
+                setFormData({ ...formData, flagName: url });
+              }
               setIsFlagPickerOpen(false);
             }}
           />
@@ -926,7 +934,11 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
             onClose={() => setIsLogoPickerOpen(false)}
             initialProjectFilter="project-clients"
             onSelect={(url) => {
-              setFormData({ ...formData, clientLogoName: url });
+              if (activeTab === 'create') {
+                setCreateFormData({ ...createFormData, clientLogoName: url });
+              } else {
+                setFormData({ ...formData, clientLogoName: url });
+              }
               setIsLogoPickerOpen(false);
             }}
           />
@@ -1192,7 +1204,105 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                 </div>
               </div>
 
-              {/* Phase 3: File Upload */}
+              {/* Identite Visuelle */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                  <FolderOpen className="w-4 h-4" /> Identite Visuelle
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Drapeau */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      Drapeau du Pays
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <div className="relative group w-24 h-16 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 flex items-center justify-center shrink-0 shadow-sm">
+                        {createFormData.flagName ? (
+                          <img
+                            src={createFormData.flagName.startsWith('http') || createFormData.flagName.startsWith('/') ? createFormData.flagName : `/${createFormData.flagName}`}
+                            alt="Drapeau"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <ImageIcon className="w-6 h-6 text-gray-300" />
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setIsFlagPickerOpen(true)}
+                          className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold uppercase tracking-widest"
+                        >
+                          Choisir
+                        </button>
+                      </div>
+                      <div className="flex-1">
+                        <button
+                          type="button"
+                          onClick={() => setIsFlagPickerOpen(true)}
+                          className="w-full px-4 py-2 text-left bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl hover:border-indigo-400 transition-all text-xs text-gray-500 dark:text-gray-400 truncate"
+                        >
+                          {createFormData.flagName ? createFormData.flagName.split('/').pop() : "Selectionner une image..."}
+                        </button>
+                        {createFormData.flagName && (
+                          <button
+                            type="button"
+                            onClick={() => setCreateFormData({ ...createFormData, flagName: "" })}
+                            className="text-[10px] text-red-500 font-bold uppercase mt-1 ml-1 hover:underline"
+                          >
+                            Supprimer
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Logo Client */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      Logo Client
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <div className="relative group w-24 h-16 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 flex items-center justify-center shrink-0 shadow-sm">
+                        {createFormData.clientLogoName ? (
+                          <img
+                            src={createFormData.clientLogoName.startsWith('http') || createFormData.clientLogoName.startsWith('/') ? createFormData.clientLogoName : `/${createFormData.clientLogoName}`}
+                            alt="Logo"
+                            className="max-w-[80%] max-h-[80%] object-contain"
+                          />
+                        ) : (
+                          <ImageIcon className="w-6 h-6 text-gray-300" />
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setIsLogoPickerOpen(true)}
+                          className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold uppercase tracking-widest"
+                        >
+                          Choisir
+                        </button>
+                      </div>
+                      <div className="flex-1">
+                        <button
+                          type="button"
+                          onClick={() => setIsLogoPickerOpen(true)}
+                          className="w-full px-4 py-2 text-left bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl hover:border-indigo-400 transition-all text-xs text-gray-500 dark:text-gray-400 truncate"
+                        >
+                          {createFormData.clientLogoName ? createFormData.clientLogoName.split('/').pop() : "Selectionner une image..."}
+                        </button>
+                        {createFormData.clientLogoName && (
+                          <button
+                            type="button"
+                            onClick={() => setCreateFormData({ ...createFormData, clientLogoName: "" })}
+                            className="text-[10px] text-red-500 font-bold uppercase mt-1 ml-1 hover:underline"
+                          >
+                            Supprimer
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Phase 3: File Upload */}\r\n
               <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-700">
                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
                   <UploadCloud className="w-4 h-4 text-blue-500" /> Documents et Photos (Optionnel)

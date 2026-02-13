@@ -135,6 +135,30 @@ export async function createProject(formData: ProjectCreateInput) {
       },
     });
 
+    // Créer le document "FLAG" si fourni
+    if (validatedData.flagName && validatedData.flagName !== "") {
+      await prisma.document.create({
+        data: {
+          projectId: project.id,
+          type: "FLAG",
+          url: validatedData.flagName,
+          name: "Drapeau",
+        }
+      });
+    }
+
+    // Créer le document "CLIENT_LOGO" si fourni
+    if (validatedData.clientLogoName && validatedData.clientLogoName !== "") {
+      await prisma.document.create({
+        data: {
+          projectId: project.id,
+          type: "CLIENT_LOGO",
+          url: validatedData.clientLogoName,
+          name: "Logo Client",
+        }
+      });
+    }
+
     revalidatePath("/");
 
     return { success: true, projectId: project.id };

@@ -30,6 +30,8 @@ export const ProjectCreateSchema = z.object({
   fabrication: z.number().min(0).max(100).default(0),
   transport: z.number().min(0).max(100).default(0),
   construction: z.number().min(0).max(100).default(0),
+  flagName: z.string().optional(),
+  clientLogoName: z.string().optional(),
 });
 
 export type ProjectCreateInput = z.infer<typeof ProjectCreateSchema>;
