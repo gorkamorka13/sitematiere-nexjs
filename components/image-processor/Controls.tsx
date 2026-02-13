@@ -1,6 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+
+// Extend Window interface for custom dispatch function
+declare global {
+  interface Window {
+    dispatchUploadEvent?: () => void;
+  }
+}
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -103,7 +110,7 @@ export function Controls({
             onCheckedChange={(checked) => setMaintainAspect(checked as boolean)}
           />
           <Label htmlFor="aspect" className="text-sm text-gray-600 dark:text-gray-400 font-normal">
-            Conserver le ratio d'aspect
+            Conserver le ratio d&apos;aspect
           </Label>
         </div>
       </div>
@@ -172,7 +179,7 @@ export function Controls({
                 disabled={isProcessing}
                 className="w-full"
             >
-                <Crop className="w-4 h-4 mr-2" /> Recadrer l'image
+                <Crop className="w-4 h-4 mr-2" /> Recadrer l&apos;image
             </Button>
 
             <div className="grid grid-cols-2 gap-3">
@@ -185,7 +192,7 @@ export function Controls({
                     <Download className="w-4 h-4 mr-2" /> Sur mon PC
                 </Button>
                 <Button
-                    onClick={() => (window as any).dispatchUploadEvent?.()}
+                    onClick={() => window.dispatchUploadEvent?.()}
                     variant="secondary"
                     disabled={isProcessing}
                     className="bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400"

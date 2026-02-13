@@ -26,7 +26,7 @@ export function ConflictDialog({ isOpen, fileName, onResolve }: ConflictDialogPr
                     <div className="space-y-2">
                         <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight">Fichier existant</h3>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                            Un fichier nommé <span className="font-bold text-gray-900 dark:text-gray-200">"{fileName}"</span> existe déjà dans ce projet. Que souhaitez-vous faire ?
+                            Un fichier nommé <span className="font-bold text-gray-900 dark:text-gray-200">&quot;{fileName}&quot;</span> existe déjà dans ce projet. Que souhaitez-vous faire ?
                         </p>
                     </div>
                 </div>
@@ -55,7 +55,7 @@ export function ConflictDialog({ isOpen, fileName, onResolve }: ConflictDialogPr
                         className="w-full justify-start gap-3 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                     >
                         <X className="w-4 h-4" />
-                        <span>Annuler l'enregistrement</span>
+                        <span>Annuler l&apos;enregistrement</span>
                     </Button>
                 </div>
             </div>

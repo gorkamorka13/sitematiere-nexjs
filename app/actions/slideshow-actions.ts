@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { Prisma } from "@prisma/client";
 
 /**
  * Get slideshow images for a project
@@ -11,7 +12,7 @@ import { revalidatePath } from "next/cache";
  */
 export async function getSlideshowImages(projectId: string, publishedOnly: boolean = false) {
   try {
-    const where: any = { projectId };
+    const where: Prisma.SlideshowImageWhereInput = { projectId };
     if (publishedOnly) {
       where.isPublished = true;
     }
@@ -39,8 +40,8 @@ export async function getSlideshowImages(projectId: string, publishedOnly: boole
 export async function addSlideshowImage(projectId: string, imageId: string) {
   const session = await auth();
 
-  if (!session || (session.user as { role?: string })?.role !== "ADMIN") {
-    throw new Error("Action non autorisée. Seuls les administrateurs peuvent gérer les slideshows.");
+  if (!session?.user || session.user.role !== "ADMIN") {
+    return { success: false, error: "Action non autorisée. Seuls les administrateurs peuvent gérer les slideshows." };
   }
 
   try {
@@ -95,8 +96,8 @@ export async function addSlideshowImage(projectId: string, imageId: string) {
 export async function addImageToSlideshow(projectId: string, fileId: string) {
   const session = await auth();
 
-  if (!session || (session.user as { role?: string })?.role !== "ADMIN") {
-    throw new Error("Action non autorisée. Seuls les administrateurs peuvent gérer les slideshows.");
+  if (!session?.user || session.user.role !== "ADMIN") {
+    return { success: false, error: "Action non autorisée. Seuls les administrateurs peuvent gérer les slideshows." };
   }
 
   try {
@@ -139,8 +140,8 @@ export async function addImageToSlideshow(projectId: string, fileId: string) {
 export async function removeSlideshowImage(slideshowImageId: string) {
   const session = await auth();
 
-  if (!session || (session.user as { role?: string })?.role !== "ADMIN") {
-    throw new Error("Action non autorisée. Seuls les administrateurs peuvent gérer les slideshows.");
+  if (!session?.user || session.user.role !== "ADMIN") {
+    return { success: false, error: "Action non autorisée. Seuls les administrateurs peuvent gérer les slideshows." };
   }
 
   try {
@@ -175,8 +176,8 @@ export async function removeSlideshowImage(slideshowImageId: string) {
 export async function reorderSlideshowImages(projectId: string, orderedImageIds: string[]) {
   const session = await auth();
 
-  if (!session || (session.user as { role?: string })?.role !== "ADMIN") {
-    throw new Error("Action non autorisée. Seuls les administrateurs peuvent gérer les slideshows.");
+  if (!session?.user || session.user.role !== "ADMIN") {
+    return { success: false, error: "Action non autorisée. Seuls les administrateurs peuvent gérer les slideshows." };
   }
 
   try {
@@ -206,8 +207,8 @@ export async function reorderSlideshowImages(projectId: string, orderedImageIds:
 export async function publishSlideshow(projectId: string) {
   const session = await auth();
 
-  if (!session || (session.user as { role?: string })?.role !== "ADMIN") {
-    throw new Error("Action non autorisée. Seuls les administrateurs peuvent publier les slideshows.");
+  if (!session?.user || session.user.role !== "ADMIN") {
+    return { success: false, error: "Action non autorisée. Seuls les administrateurs peuvent publier les slideshows." };
   }
 
   try {
@@ -233,8 +234,8 @@ export async function publishSlideshow(projectId: string) {
 export async function unpublishSlideshow(projectId: string) {
   const session = await auth();
 
-  if (!session || (session.user as { role?: string })?.role !== "ADMIN") {
-    throw new Error("Action non autorisée. Seuls les administrateurs peuvent gérer les slideshows.");
+  if (!session?.user || session.user.role !== "ADMIN") {
+    return { success: false, error: "Action non autorisée. Seuls les administrateurs peuvent gérer les slideshows." };
   }
 
   try {

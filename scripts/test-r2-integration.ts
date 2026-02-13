@@ -17,6 +17,7 @@ class NodeFile extends Blob {
 
 // Polyfill global File if needed (Node 20+ has it, but just in case)
 if (!global.File) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (global as any).File = NodeFile;
 }
 

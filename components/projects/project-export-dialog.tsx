@@ -612,7 +612,16 @@ export function ProjectExportDialog({
     }
   };
 
-  const OptionRow = ({ id, label, icon: Icon, color, checked, onChange }: any) => (
+  interface OptionRowProps {
+    id: string;
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+    color: string;
+    checked: boolean;
+    onChange: (checked: boolean) => void;
+  }
+
+  const OptionRow = ({ id, label, icon: Icon, color, checked, onChange }: OptionRowProps) => (
     <div
       className="flex items-center space-x-3 p-3 rounded-xl border border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/40 hover:bg-gray-50 dark:hover:bg-gray-900/60 transition-colors cursor-pointer"
       onClick={() => onChange(!checked)}
@@ -646,7 +655,7 @@ export function ProjectExportDialog({
 
       <div className="p-6 overflow-y-auto max-h-[60vh] custom-scrollbar">
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 font-medium">
-          Générez un document professionnel pour l'ouvrage <span className="text-indigo-600 font-bold">{project.name}</span>.
+          Générez un document professionnel pour l&apos;ouvrage <span className="text-indigo-600 font-bold">{project.name}</span>.
         </p>
 
         <div className="space-y-3">

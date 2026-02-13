@@ -20,21 +20,20 @@ export default async function DashboardPage() {
     include: {
       documents: true,
       videos: true,
-      files: true,
     },
     orderBy: {
-      updatedAt: 'desc',
+      createdAt: 'desc',
     },
   });
 
   return (
     <DashboardClient
-      initialProjects={projects as any}
+      initialProjects={projects}
       user={{
         name: session.user?.name,
-        username: (session.user as any)?.username,
-        role: (session.user as any)?.role,
-        color: (session.user as any)?.color
+        username: session.user?.username,
+        role: session.user?.role,
+        color: session.user?.color
       }}
     />
   );

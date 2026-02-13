@@ -23,13 +23,14 @@ export async function GET(request: NextRequest) {
         csrfToken: request.cookies.has('next-auth.csrf-token-v2'),
       }
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
     return NextResponse.json({
       timestamp: new Date().toISOString(),
       authenticated: false,
       error: {
-        message: error.message,
-        name: error.name,
+        message: err.message,
+        name: err.name,
       }
     }, { status: 500 });
   }

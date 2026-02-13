@@ -57,9 +57,9 @@ export default async function SlideshowViewPage({ params }: PageProps) {
       projectName={project.name}
       user={{
         name: session.user?.name,
-        username: (session.user as any)?.username,
-        role: (session.user as any)?.role,
-        color: (session.user as any)?.color
+        username: session.user?.username,
+        role: session.user?.role,
+        color: session.user?.color
       }}
     />
   );

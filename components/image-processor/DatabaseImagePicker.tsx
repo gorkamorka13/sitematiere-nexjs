@@ -224,7 +224,7 @@ export function DatabaseImagePicker({ isOpen, onClose, onSelect, initialProjectF
                             <Search className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-gray-900 dark:text-white uppercase tracking-tight">Bibliothèque d'Images</h2>
+                            <h2 className="text-lg font-bold text-gray-900 dark:text-white uppercase tracking-tight">Bibliothèque d&apos;Images</h2>
                             <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-none mt-1">Sélectionnez une image pour traitement</p>
                         </div>
                     </div>
@@ -289,7 +289,7 @@ export function DatabaseImagePicker({ isOpen, onClose, onSelect, initialProjectF
                     {renamingFile && (
                         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
                             <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-2xl w-full max-w-sm border border-gray-200 dark:border-gray-800 animate-in zoom-in-95 duration-200">
-                                <h3 className="text-lg font-bold mb-4 dark:text-white">Renommer l'image</h3>
+                                <h3 className="text-lg font-bold mb-4 dark:text-white">Renommer l&apos;image</h3>
                                 <input
                                     type="text"
                                     value={newName}

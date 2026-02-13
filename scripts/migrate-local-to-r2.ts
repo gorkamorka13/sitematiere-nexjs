@@ -172,7 +172,7 @@ async function main() {
 
   let totalSuccess = 0;
   let totalFailed = 0;
-  const allErrors: any[] = [];
+  const allErrors: Array<{ file: string; error: string }> = [];
 
   for (const dir of existingDirs) {
     console.log(`\n📂 Migrating directory: ${path.basename(dir)}`);

@@ -115,15 +115,15 @@ export function CropTool({ imageSrc, onApply, onCancel }: CropToolProps) {
 
       setCrop(prev => {
           if (!prev) return null;
-          let newCrop = { ...prev };
+          const newCrop = { ...prev };
 
           if (dragHandle === 'nw') {
               const right = prev.x + prev.width;
               const bottom = prev.y + prev.height;
 
               // Maintain aspect ratio
-              let newW = right - coords.x;
-              let newH = newW / TARGET_RATIO;
+              const newW = right - coords.x;
+              const newH = newW / TARGET_RATIO;
 
               const newX = right - newW;
               const newY = bottom - newH;
@@ -137,8 +137,8 @@ export function CropTool({ imageSrc, onApply, onCancel }: CropToolProps) {
           } else if (dragHandle === 'ne') {
               const bottom = prev.y + prev.height;
 
-              let newW = coords.x - prev.x;
-              let newH = newW / TARGET_RATIO;
+              const newW = coords.x - prev.x;
+              const newH = newW / TARGET_RATIO;
 
               const newY = bottom - newH;
 
@@ -150,8 +150,8 @@ export function CropTool({ imageSrc, onApply, onCancel }: CropToolProps) {
           } else if (dragHandle === 'sw') {
               const right = prev.x + prev.width;
 
-              let newW = right - coords.x;
-              let newH = newW / TARGET_RATIO;
+              const newW = right - coords.x;
+              const newH = newW / TARGET_RATIO;
 
               const newX = right - newW;
 
@@ -161,8 +161,8 @@ export function CropTool({ imageSrc, onApply, onCancel }: CropToolProps) {
                   newCrop.height = newH;
               }
           } else if (dragHandle === 'se') {
-              let newW = coords.x - prev.x;
-              let newH = newW / TARGET_RATIO;
+              const newW = coords.x - prev.x;
+              const newH = newW / TARGET_RATIO;
 
               if (prev.x + newW <= imgW && prev.y + newH <= imgH && newW >= 50 && newH >= 50) {
                   newCrop.width = newW;

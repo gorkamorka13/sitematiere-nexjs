@@ -139,7 +139,7 @@ export default async function ProjectDetailPage(props: Props) {
                                     <h3 className="text-base font-semibold leading-6 text-gray-900">Documents</h3>
                                 </div>
                                 <ul role="list" className="divide-y divide-gray-100 px-4 py-5 sm:p-6">
-                                    {project.documents.map((doc: any) => (
+                                    {project.documents.map((doc) => (
                                         <li key={doc.id} className="flex items-center justify-between py-2">
                                             <div className="flex items-center truncate">
                                                 <svg className="h-5 w-5 flex-shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
@@ -168,7 +168,7 @@ export default async function ProjectDetailPage(props: Props) {
                             </div>
                             <div className="p-4 grid grid-cols-2 gap-4">
                                 {project.images.length > 0 ? (
-                                    project.images.map((img: any) => (
+                                    project.images.map((img) => (
                                         <div key={img.id} className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 group">
                                             {/* Using simple img tag for external urls or local paths without optimization configuration */}
                                             {/* eslint-disable-next-line @next/next/no-img-element */}

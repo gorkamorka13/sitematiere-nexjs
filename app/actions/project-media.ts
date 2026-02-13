@@ -52,7 +52,7 @@ export async function getProjectMedia(projectName: string) {
       });
 
       if (files.length > 0) {
-        files.forEach((file: any) => {
+        files.forEach((file) => {
           // Si on n'a pas de slideshow défini, on prend les images du dossier File
           if (slideshowImages.length === 0 && file.fileType === 'IMAGE') {
             result.images.push({ url: file.blobUrl, name: file.name });

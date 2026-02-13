@@ -1,15 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
+interface DebugInfo {
+  timestamp: string;
+  environment: {
+    nodeEnv: string | undefined;
+    runtime: string;
+    cfPages: string | undefined;
+  };
+  envVarsPresent: Record<string, boolean>;
+  envVarsPartialValues: Record<string, string>;
+  databaseConnection: {
+    status: string;
+    error: null | Record<string, string>;
+    userCount: number;
+    firstUser?: unknown;
+  };
+}
+
 // export const runtime = 'edge'; // Commenté pour le dev local
 
 export async function GET(request: NextRequest) {
-  const debugInfo: any = {
+  const debugInfo: DebugInfo = {
     timestamp: new Date().toISOString(),
     environment: {
       nodeEnv: process.env.NODE_ENV,
       runtime: process.env.NEXT_RUNTIME || 'unknown',
-      cfPages: process.env.CF_PAGES || 'not set',
+      cfPages: process.env.CF_PAGES,
     },
     envVarsPresent: {
       DATABASE_URL: !!process.env.DATABASE_URL,
@@ -54,18 +71,18 @@ export async function GET(request: NextRequest) {
     });
 
     debugInfo.databaseConnection.firstUser = firstUser;
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
     debugInfo.databaseConnection.status = 'error';
     debugInfo.databaseConnection.error = {
-      message: error.message,
-      code: error.code,
-      name: error.name,
+      message: err.message,
+      name: err.name,
     };
   }
 
   return NextResponse.json(debugInfo, {
     headers: {
-      'Cache-Control': 'no-store, no-cache, must-revalidate',
+      'Cache-Control': 'no-store, max-age=0',
     },
   });
 }

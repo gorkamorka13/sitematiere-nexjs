@@ -1,5 +1,5 @@
-// Maximum file size: 150Ko
-export const MAX_FILE_SIZE = 150 * 1024;
+// Maximum file size: 10Mo
+export const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 export const ALLOWED_FILE_TYPES = {
   // Images

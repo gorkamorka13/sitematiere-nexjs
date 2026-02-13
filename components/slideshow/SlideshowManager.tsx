@@ -128,6 +128,15 @@ export function SlideshowManager({ projects }: SlideshowManagerProps) {
     setSelectedName('');
   };
 
+  // Auto-select project if only one result from search
+  useEffect(() => {
+    if (searchQuery && filteredProjects.length === 1 && !selectedProjectId) {
+      const project = filteredProjects[0];
+      setSelectedProjectId(project.id);
+      setSelectedName(project.name);
+    }
+  }, [searchQuery, filteredProjects, selectedProjectId]);
+
   // Load slideshow images when project changes
   useEffect(() => {
     if (selectedProjectId) {
@@ -148,7 +157,7 @@ export function SlideshowManager({ projects }: SlideshowManagerProps) {
         setSlideshowImages(result.images as SlideshowImage[]);
 
         // Check if there are unpublished changes
-        const hasUnpublished = result.images.some((img: any) => !img.isPublished);
+        const hasUnpublished = result.images.some((img: SlideshowImage) => !img.isPublished);
         setHasUnpublishedChanges(hasUnpublished);
       }
     } catch (error) {
@@ -426,10 +435,52 @@ export function SlideshowManager({ projects }: SlideshowManagerProps) {
           </span>
           {selectedProjectId && (
             <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
-              ✓ Projet sélectionné: {filteredProjects.find(p => p.id === selectedProjectId)?.name}
+              ✓ Projet sélectionné: {projects.find(p => p.id === selectedProjectId)?.name}
             </span>
           )}
         </div>
+
+        {/* Clickable Project List */}
+        {(searchQuery || selectedCountry) && filteredProjects.length > 0 && filteredProjects.length <= 10 && (
+          <div className="mt-4">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Résultats</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+              {filteredProjects.map((project) => (
+                <button
+                  key={project.id}
+                  onClick={() => {
+                    setSelectedProjectId(project.id);
+                    setSelectedName(project.name);
+                  }}
+                  className={`text-left p-3 rounded-lg border transition-all ${selectedProjectId === project.id
+                    ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-500 text-indigo-900 dark:text-indigo-100'
+                    : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700 text-gray-900 dark:text-white'
+                    }`}
+                >
+                  <div className="font-medium text-sm">{project.name}</div>
+                  {project.country && (
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{project.country}</div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* No Results Message */}
+        {(searchQuery || selectedCountry) && filteredProjects.length === 0 && (
+          <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
+            <p className="text-sm text-amber-800 dark:text-amber-200">
+              <span className="font-bold">Aucun projet trouvé</span> avec les critères de recherche actuels.
+            </p>
+            <button
+              onClick={resetFilters}
+              className="mt-2 text-xs text-amber-700 dark:text-amber-300 underline hover:no-underline"
+            >
+              Réinitialiser les filtres
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Slideshow Content */}
@@ -463,7 +514,7 @@ export function SlideshowManager({ projects }: SlideshowManagerProps) {
             <div className="flex flex-col items-center justify-center py-12 text-gray-400">
               <Eye className="w-16 h-16 mb-4 opacity-20" />
               <p className="text-lg font-medium mb-2">Aucune image dans ce slideshow</p>
-              <p className="text-sm">Cliquez sur "Ajouter une image" pour commencer</p>
+              <p className="text-sm">Cliquez sur &quot;Ajouter une image&quot; pour commencer</p>
             </div>
           ) : (
             <DndContext
@@ -518,7 +569,7 @@ export function SlideshowManager({ projects }: SlideshowManagerProps) {
           {saving && (
             <div className="mt-4 flex items-center gap-2 text-sm text-indigo-600 dark:text-indigo-400">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Sauvegarde de l'ordre...</span>
+              <span>Sauvegarde de l&apos;ordre...</span>
             </div>
           )}
         </div>

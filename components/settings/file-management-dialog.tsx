@@ -317,7 +317,7 @@ export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileM
                                         <h4 className="text-sm font-bold text-indigo-900 dark:text-indigo-200 mb-1">Informations Administration</h4>
                                         <p className="text-xs text-indigo-700/80 dark:text-indigo-300/60 leading-relaxed italic">
                                             Ceci est le tableau de bord global pour les administrateurs.
-                                            Il permet de surveiller l'utilisation du stockage et de gérer tous les fichiers du système.
+                                            Il permet de surveiller l&apos;utilisation du stockage et de gérer tous les fichiers du système.
                                         </p>
                                     </div>
                                 </div>
@@ -338,7 +338,7 @@ export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileM
                             <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 text-sm text-blue-800 dark:text-blue-200">
                                 <p className="flex items-center gap-2">
                                     <Info className="h-4 w-4" />
-                                    <strong>Note:</strong> Sélectionnez un projet cible (WIP). Pour l'instant, les fichiers seront orphelins.
+                                    <strong>Note:</strong> Sélectionnez un projet cible (WIP). Pour l&apos;instant, les fichiers seront orphelins.
                                 </p>
                             </div>
 
@@ -359,7 +359,7 @@ export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileM
                         onClick={onClose}
                         className="px-8 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-xs font-black uppercase tracking-widest rounded-xl hover:scale-105 transition-all active:scale-95 shadow-lg shadow-gray-200 dark:shadow-none"
                     >
-                        Fermer l'administration
+                        Fermer l&apos;administration
                     </button>
                 </footer>
             </div>

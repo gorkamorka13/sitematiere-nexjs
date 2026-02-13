@@ -22,6 +22,12 @@ type DashboardClientProps = {
     user: { name?: string | null; username?: string | null; role?: UserRole; color?: string | null };
 };
 
+// Extended Project type with optional documents and videos relation
+type ProjectWithDocuments = Project & {
+    documents?: ProjectDocument[];
+    videos?: ProjectVideo[];
+};
+
 const getRoleLabel = (role: UserRole) => {
     switch (role) {
         case "ADMIN":
@@ -85,7 +91,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
     const [selectedStatuses, setSelectedStatuses] = useState<ProjectStatus[]>([]);
 
     // State for Selected Project (for right map)
-    const [selectedProject, setSelectedProject] = useState<Project | null>(defaultProject || initialProjects[0] || null);
+    const [selectedProject, setSelectedProject] = useState<ProjectWithDocuments | null>(defaultProject as ProjectWithDocuments || initialProjects[0] as ProjectWithDocuments || null);
 
     // State for dynamic media from filesystem
     const [dynamicMedia, setDynamicMedia] = useState<{
@@ -98,7 +104,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
     const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
     const [isFileManagementOpen, setIsFileManagementOpen] = useState(false);
     const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
-    const [projectToExport, setProjectToExport] = useState<(Project & { documents: ProjectDocument[]; videos: ProjectVideo[] }) | null>(null);
+    const [projectToExport, setProjectToExport] = useState<ProjectWithDocuments | null>(null);
     const [mapNonce, setMapNonce] = useState<number>(0);
     const [fitNonce, setFitNonce] = useState<number>(0);
     const [globalCenterNonce, setGlobalCenterNonce] = useState<number>(0);
@@ -140,10 +146,10 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
 
     // Extraire le drapeau et le logo du client pour le projet sélectionné
     const { flagDoc, logoDoc } = useMemo(() => {
-        const docs = (selectedProject as any)?.documents || [];
+        const docs = (selectedProject as ProjectWithDocuments | null)?.documents || [];
         return {
-            flagDoc: docs.find((d: any) => d.type === "FLAG"),
-            logoDoc: docs.find((d: any) => d.type === "CLIENT_LOGO" || d.name.replace(/_/g, ' ').toLowerCase().includes('logo'))
+            flagDoc: docs.find((d) => d.type === "FLAG"),
+            logoDoc: docs.find((d) => d.type === "CLIENT_LOGO" || d.name.replace(/_/g, ' ').toLowerCase().includes('logo'))
         };
     }, [selectedProject]);
 
@@ -750,8 +756,8 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    handleProjectSelect(project as any);
-                                                                    setProjectToExport(project as any);
+                                                                handleProjectSelect(project);
+                                                                    setProjectToExport(project as ProjectWithDocuments);
                                                                     setIsExportDialogOpen(true);
                                                                 }}
                                                                 className="flex items-center gap-1.5 ml-auto text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/40 px-3 py-1.5 rounded-lg transition-colors group"
@@ -806,7 +812,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
             <ProjectExportDialog
                 isOpen={isExportDialogOpen}
                 onClose={() => setIsExportDialogOpen(false)}
-                project={projectToExport}
+                project={projectToExport as (Project & { documents: ProjectDocument[]; videos: ProjectVideo[] }) | null}
                 allProjects={initialProjects}
                 filteredProjects={mapProjects}
                 images={dynamicMedia.images}
@@ -847,7 +853,7 @@ function PdfViewer({ documents }: { documents: { url: string; name: string }[] }
 // Photo Gallery Component avec diaporama intégré
 function PhotoGalleryWithControls({ selectedProject, dynamicImages, isLoading }: { selectedProject: Project | null; dynamicImages: { url: string; name: string }[]; isLoading: boolean; }) {
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [isPlaying, setIsPlaying] = useState(true);
+    const [isPlaying, setIsPlaying] = useState(false);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const images = dynamicImages;
 

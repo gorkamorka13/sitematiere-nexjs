@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { sanitizeFileName } from "@/lib/files/validation";
+import { Prisma } from "@prisma/client";
 
 // export const runtime = 'edge'; // Commenté pour le dev local
 
@@ -32,7 +33,7 @@ export async function PATCH(
       return NextResponse.json({ error: "File not found" }, { status: 404 });
     }
 
-    const dataToUpdate: any = {};
+    const dataToUpdate: { name?: string; projectId?: string } = {};
     if (name) dataToUpdate.name = sanitizeFileName(name);
     if (projectId) {
       // Verify project exists

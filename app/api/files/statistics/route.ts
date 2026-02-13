@@ -35,7 +35,7 @@ export async function GET() {
     let totalVideos = 0;
     let totalOthers = 0;
 
-    fileCounts.forEach((group: any) => {
+    fileCounts.forEach((group) => {
       const count = group._count.id;
       if (group.fileType === 'IMAGE') totalImages = count;
       else if (group.fileType === 'DOCUMENT') totalPdfs = count;

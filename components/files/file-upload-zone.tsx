@@ -61,7 +61,7 @@ export function FileUploadZone({ onFilesSelected, disabled }: FileUploadZoneProp
             : "Cliquez pour sélectionner ou glissez-déposez des fichiers ici"}
         </p>
         <p className="text-xs text-muted-foreground">
-          Images (JPG, PNG, WebP), PDF, Documents (DOCX, XLSX) jusqu'à 150Ko
+          Images (JPG, PNG, WebP), PDF, Documents (DOCX, XLSX) jusqu&apos;à 150Ko
         </p>
       </div>
     </div>

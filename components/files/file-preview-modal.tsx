@@ -71,7 +71,7 @@ export function FilePreviewModal({ file, files, onClose, onNavigate }: FilePrevi
             default:
                 return (
                     <div className="flex flex-col items-center justify-center h-full text-white">
-                        <p>Format de fichier non supporté pour l'aperçu.</p>
+                        <p>Format de fichier non supporté pour l&apos;aperçu.</p>
                         <p className="text-sm text-gray-400 mt-2">({file.mimeType})</p>
                     </div>
                 );

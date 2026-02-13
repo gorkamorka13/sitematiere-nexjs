@@ -1319,7 +1319,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                     return (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <p className="text-xs text-gray-500 uppercase font-bold">Nom de l'ouvrage</p>
+                          <p className="text-xs text-gray-500 uppercase font-bold">Nom de l&apos;ouvrage</p>
                           <p className="text-lg font-bold text-gray-900 dark:text-white">{project.name}</p>
                         </div>
                         <div className="space-y-1">
@@ -1336,7 +1336,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
 
                   <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
                     <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                      Veuillez taper <span className="text-red-600 dark:text-red-400 font-mono">"{projects.find(p => p.id === selectedProjectId)?.name}"</span> pour confirmer la suppression :
+                      Veuillez taper <span className="text-red-600 dark:text-red-400 font-mono">&quot;{projects.find(p => p.id === selectedProjectId)?.name}&quot;</span> pour confirmer la suppression :
                     </label>
                     <input
                       type="text"

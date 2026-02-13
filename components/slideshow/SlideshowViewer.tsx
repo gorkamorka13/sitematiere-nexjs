@@ -82,7 +82,7 @@ export function SlideshowViewer({ images, projectName }: SlideshowViewerProps) {
             Ce diaporama ne contient aucune image pour le moment.
           </p>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-            Le slideshow n'a pas encore été publié ou ne contient pas d'images.
+            Le slideshow n&apos;a pas encore été publié ou ne contient pas d&apos;images.
           </p>
         </div>
       </div>

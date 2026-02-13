@@ -40,8 +40,8 @@ export async function GET(
 
       return new NextResponse(stream, { headers });
 
-    } catch (error: any) {
-      if (error.name === "NoSuchKey") {
+    } catch (error: unknown) {
+      if (error instanceof Error && error.name === "NoSuchKey") {
         return NextResponse.json({ error: "File not found" }, { status: 404 });
       }
       throw error;

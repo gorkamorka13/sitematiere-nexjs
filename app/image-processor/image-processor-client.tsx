@@ -1,6 +1,13 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+
+// Extend Window interface for custom dispatch function
+declare global {
+  interface Window {
+    dispatchUploadEvent?: () => void;
+  }
+}
 import { useImageProcessor } from '@/hooks/use-image-processor';
 import { DropZone } from '@/components/image-processor/DropZone';
 import { Controls } from '@/components/image-processor/Controls';
@@ -21,7 +28,7 @@ import { UserRole, Project, Document as ProjectDocument, Video as ProjectVideo }
 
 interface ImageProcessorClientProps {
     user: { name?: string | null; username?: string | null; role?: UserRole; color?: string | null };
-    initialProjects: any[]; // Used for dialogs
+    initialProjects: Project[]; // Used for dialogs
 }
 
 export default function ImageProcessorClient({ user, initialProjects }: ImageProcessorClientProps) {
@@ -61,11 +68,11 @@ export default function ImageProcessorClient({ user, initialProjects }: ImagePro
 
   // Custom event listener for the "Save to Database" button in Controls
   useEffect(() => {
-      (window as any).dispatchUploadEvent = () => {
+      window.dispatchUploadEvent = () => {
           setShowProjectSelect(true);
       };
       return () => {
-        delete (window as any).dispatchUploadEvent;
+        delete window.dispatchUploadEvent;
       };
   }, []);
 
@@ -84,6 +91,8 @@ export default function ImageProcessorClient({ user, initialProjects }: ImagePro
       setConflictData(null);
 
       try {
+          console.log("[UPLOAD] Starting upload for file:", file.name, "to project:", projectId);
+          
           const formData = new FormData();
           formData.append('file', file);
           formData.append('projectId', projectId);
@@ -91,26 +100,41 @@ export default function ImageProcessorClient({ user, initialProjects }: ImagePro
               formData.append('overwrite', 'true');
           }
 
+          console.log("[UPLOAD] Sending request to /api/files/upload");
+          
           const uploadRes = await fetch('/api/files/upload', {
               method: 'POST',
               body: formData
           });
 
+          console.log("[UPLOAD] Response status:", uploadRes.status);
+          
           const result = await uploadRes.json();
+          console.log("[UPLOAD] Response result:", result);
 
           if (uploadRes.status === 409 && result.conflict) {
+              console.log("[UPLOAD] Conflict detected");
               setConflictData({ fileName: result.fileName, projectId, file });
               return;
           }
 
-          if (uploadRes.ok && result.success) {
+          if (uploadRes.ok && result.success && result.files.length > 0) {
+              console.log("[UPLOAD] Success! File uploaded:", result.files);
               setNotification({ type: 'success', message: 'Image enregistrée avec succès !' });
+          } else if (result.errors && result.errors.length > 0) {
+              console.error("[UPLOAD] Failed with errors:", JSON.stringify(result.errors, null, 2));
+              const errorMsg = result.errors[0]?.error || result.error || 'Erreur inconnue';
+              console.error("[UPLOAD] First error message:", errorMsg);
+              alert(`Erreur lors de l'upload:\n${errorMsg}`);
+              setNotification({ type: 'error', message: `Échec : ${errorMsg}` });
           } else {
+              console.error("[UPLOAD] Failed:", result.error);
               setNotification({ type: 'error', message: `Échec : ${result.error || 'Erreur inconnue'}` });
           }
-      } catch (error: any) {
-          console.error("Upload error", error);
-          setNotification({ type: 'error', message: `Erreur réseau : ${error.message}` });
+      } catch (error: unknown) {
+          console.error("[UPLOAD] Error:", error);
+          const err = error instanceof Error ? error : new Error(String(error));
+          setNotification({ type: 'error', message: `Erreur réseau : ${err.message}` });
       } finally {
           setIsUploading(false);
           setTimeout(() => setNotification(null), 5000);
@@ -127,16 +151,17 @@ export default function ImageProcessorClient({ user, initialProjects }: ImagePro
           const actualBlob = await res.blob();
 
           const ext = currentImage.src.split(';')[0].split('/')[1] || 'png';
-          const filename = (originalImage as any)?.file?.name
-            ? `mod_${(originalImage as any).file.name.replace(/\.[^/.]+$/, "")}.${ext}`
+          const filename = originalImage?.file?.name
+            ? `mod_${originalImage.file.name.replace(/\.[^/.]+$/, "")}.${ext}`
             : `processed_${Date.now()}.${ext}`;
 
           const file = new File([actualBlob], filename, { type: actualBlob.type });
 
           setShowProjectSelect(false);
           await executeUpload(file, projectId);
-      } catch (error: any) {
-          setNotification({ type: 'error', message: error.message });
+      } catch (error: unknown) {
+          const err = error instanceof Error ? error : new Error(String(error));
+          setNotification({ type: 'error', message: err.message });
       } finally {
           setIsProcessing(false);
       }

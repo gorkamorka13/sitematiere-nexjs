@@ -4,14 +4,14 @@ import Credentials from "next-auth/providers/credentials";
 import prisma from "@/lib/prisma";
 import { compareSync } from "bcrypt-ts";
 import { z } from "zod";
-import { User } from "@prisma/client";
+import { User, UserRole } from "@prisma/client";
 
 // Étendre les types NextAuth
 declare module "next-auth" {
     interface Session {
         user: {
             id: string;
-            role: string;
+            role: UserRole;
             username: string;
             name: string | null;
             color: string | null;
@@ -106,7 +106,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         async session({ session, token }) {
             if (session.user) {
                 session.user.id = token.id as string;
-                session.user.role = token.role as string;
+                session.user.role = token.role as UserRole;
                 session.user.username = token.username as string;
                 session.user.name = token.name as string;
                 session.user.color = token.color as string | null;
