@@ -159,37 +159,37 @@ export function DashboardFilters({
                 </div>
 
                 {/* Status and Type Filter Group */}
-                <div className="flex flex-col sm:flex-row gap-4 items-end flex-grow">
-                    <div className="bg-gray-50/50 dark:bg-gray-900/40 p-3 rounded-xl border border-gray-100 dark:border-gray-800/50 min-w-[140px]">
+                <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-end flex-grow w-full">
+                    <div className="bg-gray-50/50 dark:bg-gray-900/40 p-3 rounded-xl border border-gray-100 dark:border-gray-800/50 w-full sm:w-auto min-w-[140px]">
                         <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2.5 ml-1">Statut</span>
-                        <div className="flex flex-col gap-1.5">
+                        <div className="flex flex-row sm:flex-col flex-wrap gap-1.5">
                             {statuses.map(status => (
                                 <button
                                     key={status}
                                     onClick={() => onToggleStatus(status)}
-                                    className={`relative flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${selectedStatuses.includes(status)
+                                    className={`relative flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold border transition-all ${selectedStatuses.includes(status)
                                         ? 'bg-indigo-600 border-indigo-500 text-white shadow-sm shadow-indigo-200 dark:shadow-none'
                                         : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700'
                                         }`}
                                 >
-                                    <div className={`w-2 h-2 rounded-full ${selectedStatuses.includes(status) ? 'bg-white' : 'bg-gray-300 dark:bg-gray-600'}`} />
+                                    <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${selectedStatuses.includes(status) ? 'bg-white' : 'bg-gray-300 dark:bg-gray-600'}`} />
                                     <span>{status}</span>
                                     {selectedProject?.status === status && (
-                                        <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-800" title="Statut du projet sélectionné" />
+                                        <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-800" title="Statut du projet sélectionné" />
                                     )}
                                 </button>
                             ))}
                         </div>
                     </div>
 
-                    <div className="bg-gray-50/50 dark:bg-gray-900/40 p-3 rounded-xl border border-gray-100 dark:border-gray-800/50 flex-grow lg:flex-grow-0">
+                    <div className="bg-gray-50/50 dark:bg-gray-900/40 p-3 rounded-xl border border-gray-100 dark:border-gray-800/50 w-full flex-grow lg:flex-grow-0">
                         <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2.5 ml-1">Type</span>
-                        <div className="grid grid-rows-3 grid-flow-col gap-1.5">
+                        <div className="flex flex-row flex-wrap gap-1.5">
                             {types.map(type => (
                                 <button
                                     key={type}
                                     onClick={() => onToggleType(type)}
-                                    className={`relative flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all min-w-[110px] ${selectedTypes.includes(type)
+                                    className={`relative flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold border transition-all min-w-[80px] sm:min-w-[110px] ${selectedTypes.includes(type)
                                         ? 'bg-indigo-600 border-indigo-500 text-white shadow-sm shadow-indigo-200 dark:shadow-none'
                                         : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700'
                                         }`}

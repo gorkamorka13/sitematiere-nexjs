@@ -172,12 +172,12 @@ export function Controls({
             Appliquer les changements
         </Button>
 
-        <div className="grid grid-cols-1 gap-3">
+        <div className="flex flex-col gap-3">
             <Button
                 onClick={onCrop}
                 variant="outline"
                 disabled={isProcessing}
-                className="w-full"
+                className="w-full h-11"
             >
                 <Crop className="w-4 h-4 mr-2" /> Recadrer l&apos;image
             </Button>
@@ -187,17 +187,17 @@ export function Controls({
                     onClick={onDownload}
                     variant="secondary"
                     disabled={isProcessing}
-                    className="bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400"
+                    className="h-11 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 text-[11px] sm:text-xs px-2"
                 >
-                    <Download className="w-4 h-4 mr-2" /> Sur mon PC
+                    <Download className="w-4 h-4 mr-2 hidden xs:block" /> Sur mon PC
                 </Button>
                 <Button
                     onClick={() => window.dispatchUploadEvent?.()}
                     variant="secondary"
                     disabled={isProcessing}
-                    className="bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400"
+                    className="h-11 bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 text-[11px] sm:text-xs px-2"
                 >
-                    <RotateCw className="w-4 h-4 mr-2" /> Sur la Base
+                    <RotateCw className="w-4 h-4 mr-2 hidden xs:block" /> Sur la Base
                 </Button>
             </div>
         </div>

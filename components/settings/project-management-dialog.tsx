@@ -528,11 +528,11 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
           </div>
 
           {/* Tab Navigation */}
-          <div className="flex px-5 gap-6">
+          <div className="flex px-4 sm:px-5 gap-4 sm:gap-6 overflow-x-auto min-w-0 border-b border-gray-100 dark:border-gray-700 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700">
             {isAdmin && (
               <button
                 onClick={() => setActiveTab('create')}
-                className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 ${
+                className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 whitespace-nowrap shrink-0 ${
                   activeTab === 'create'
                   ? 'text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400'
                   : 'text-gray-400 border-transparent hover:text-gray-600 dark:hover:text-gray-200'
@@ -543,7 +543,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
             )}
             <button
               onClick={() => setActiveTab('modify')}
-              className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 ${
+              className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 whitespace-nowrap shrink-0 ${
                 activeTab === 'modify'
                 ? 'text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400'
                 : 'text-gray-400 border-transparent hover:text-gray-600 dark:hover:text-gray-200'
@@ -554,7 +554,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
             {isAdmin && (
               <button
                 onClick={() => setActiveTab('delete')}
-                className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 ${
+                className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 whitespace-nowrap shrink-0 ${
                   activeTab === 'delete'
                   ? 'text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400'
                   : 'text-gray-400 border-transparent hover:text-gray-600 dark:hover:text-gray-200'
@@ -563,6 +563,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                 Supprimer
               </button>
             )}
+            <div className="w-8 shrink-0" aria-hidden="true" />
           </div>
         </div>
 

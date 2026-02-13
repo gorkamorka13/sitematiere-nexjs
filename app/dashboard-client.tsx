@@ -473,7 +473,6 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                 filteredProjects={mapProjects}
                 images={dynamicMedia.images}
                 globalMetadata={{
-                    appVersion: "1.0.0",
                     buildDate: new Date().toISOString()
                 }}
             />

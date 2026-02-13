@@ -14,7 +14,8 @@ import {
     PanelLeftClose,
     ChevronRight,
     Users,
-    Presentation
+    Presentation,
+    X
 } from 'lucide-react';
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import UserBadge from "@/components/settings/user-badge";
@@ -63,24 +64,31 @@ export default function AppLayout({
 
     const isActive = (path: string) => pathname === path;
 
-    // Versions etc - would ideally come from props or a config file
-    const version = "1.0.0"; // Placeholder, DashboardClient uses process.env
-    const credit = "Site Matière";
 
     return (
         <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
             {/* Mobile Header - Sticky */}
             <div className="lg:hidden fixed top-0 left-0 right-0 z-50 h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 flex items-center justify-between shadow-sm">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 relative">
+                        <Image
+                            src="/Matiere_logo_512.png"
+                            alt="Matière Logo"
+                            fill
+                            className="object-contain"
+                        />
+                    </div>
                     <span className="matiere text-lg tracking-tight">Matière</span>
-                    <div className="text-[10px] font-bold text-gray-400 border border-gray-200 dark:border-gray-700 px-1.5 py-0.5 rounded ml-1">V{version}</div>
                 </div>
-                <button
-                    onClick={() => setIsMobileMenuOpen(true)}
-                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 transition-colors"
-                >
-                    <Menu className="w-6 h-6" />
-                </button>
+                <div className="flex items-center gap-2">
+                    <ModeToggle />
+                    <button
+                        onClick={() => setIsMobileMenuOpen(true)}
+                        className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 transition-colors"
+                    >
+                        <Menu className="w-6 h-6" />
+                    </button>
+                </div>
             </div>
 
             {/* Sidebar Mobile Overlay */}
@@ -101,13 +109,15 @@ export default function AppLayout({
                 {/* Branding Header */}
                 <div className="flex items-center justify-between px-4 h-20 border-b border-gray-100 dark:border-gray-700 shrink-0">
                     <div className="flex items-center gap-3 min-w-0">
-                        <Image
-                            src="/Matiere_logo_512.png"
-                            alt="Matière Logo"
-                            width={40}
-                            height={40}
-                            className="object-contain shrink-0"
-                        />
+                        <div className="w-10 h-10 relative shrink-0">
+                            <Image
+                                src="/Matiere_logo_512.png"
+                                alt="Matière Logo"
+                                fill
+                                className="object-contain"
+                                priority
+                            />
+                        </div>
                         {!isSidebarCollapsed && (
                             <span className="matiere text-xl tracking-tight truncate">
                                 Matière
@@ -116,20 +126,20 @@ export default function AppLayout({
                     </div>
                     <button
                         onClick={() => {
-                            if (window.innerWidth < 1024) {
+                            if (isMobileMenuOpen) {
                                 setIsMobileMenuOpen(false);
                             } else {
                                 setIsSidebarCollapsed(!isSidebarCollapsed);
                             }
                         }}
-                        className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 transition-colors shrink-0 ${isSidebarCollapsed ? "hidden" : ""}`}
+                        className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 transition-colors shrink-0 ${isSidebarCollapsed ? "hidden" : "lg:block"}`}
                     >
-                        <PanelLeftClose className="w-5 h-5" />
+                        {isMobileMenuOpen ? <X className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
                     </button>
                     {isSidebarCollapsed && (
                         <button
                             onClick={() => setIsSidebarCollapsed(false)}
-                            className="absolute -right-3 top-7 p-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full shadow-sm text-gray-400 hover:text-indigo-600 transition-all z-10"
+                            className="absolute -right-3 top-7 p-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full shadow-sm text-gray-400 hover:text-indigo-600 transition-all z-10 hidden lg:block"
                         >
                             <ChevronRight className="w-3 h-3" />
                         </button>
@@ -245,14 +255,12 @@ export default function AppLayout({
 
                 {/* Bottom Section: Credits */}
                 <div className={`p-4 border-t border-gray-100 dark:border-gray-700 ${isSidebarCollapsed ? "flex flex-col items-center" : "space-y-4"}`}>
-                    {!isSidebarCollapsed ? (
+                    {!isSidebarCollapsed && (
                         <div className="space-y-2 text-center">
                             <div className="pt-2 text-[10px] font-bold text-gray-500 dark:text-gray-400">
-                                {credit}
+                                Site Matière
                             </div>
                         </div>
-                    ) : (
-                         <div className="text-[10px] font-bold text-indigo-600 rotate-90 my-4">V{version}</div>
                     )}
                 </div>
             </aside>
@@ -261,9 +269,11 @@ export default function AppLayout({
             <main
                 className={`flex-grow transition-all duration-300
                     ${isSidebarCollapsed ? "lg:ml-20" : "lg:ml-64"}
-                    min-w-0 pt-16 lg:pt-0`}
+                    min-w-0 pt-20 lg:pt-0 pb-12 lg:pb-0 px-4 md:px-6 lg:px-8`}
             >
-                {children}
+                <div className="max-w-7xl mx-auto h-full">
+                    {children}
+                </div>
             </main>
         </div>
     );

@@ -69,47 +69,71 @@ export function FileSearch({
   // Check if there are any files with a project but without a country, OR orphaned files (which also have no country)
   const hasFilesNoCountry = files.some(f => !f.project?.country);
 
+  const isFiltered = searchQuery !== "" || fileTypeFilter !== "ALL" || countryFilter !== "Tous" || projectFilter !== "ALL";
+
+  const handleReset = () => {
+    onSearchChange("");
+    onFilterChange("ALL");
+    onCountryChange("Tous");
+    onProjectChange("ALL");
+  };
+
   return (
-    <div className="flex flex-col xl:flex-row gap-4 w-full">
-      <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <input
-          type="text"
-          placeholder="Rechercher des fichiers..."
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full pl-9 pr-4 py-2 text-sm bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
-        />
+    <div className="flex flex-col gap-4 w-full">
+      <div className="flex items-center justify-between">
+         <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Filtres et Recherche</h3>
+         {isFiltered && (
+            <button
+                onClick={handleReset}
+                className="text-xs font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors uppercase tracking-wider"
+            >
+                Réinitialiser
+            </button>
+         )}
       </div>
 
-       {/* File List Dropdown (Jump to) */}
-       <div className="relative min-w-[200px]">
-         <select
-           onChange={(e) => {
-             const file = files.find((f) => f.id === e.target.value);
-             if (file && onFileSelect) onFileSelect(file);
-             e.target.value = "";
-           }}
-           className="w-full px-4 py-2 text-sm bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer text-ellipsis overflow-hidden whitespace-nowrap"
-           defaultValue=""
-         >
-           <option value="" disabled>
-             📁 Aller au fichier... ({sortedFiles.length})
-           </option>
-           {sortedFiles.map((file) => (
-             <option key={file.id} value={file.id}>
-               {file.name}
-             </option>
-           ))}
-         </select>
-       </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {/* Search Input */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Rechercher des fichiers..."
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 text-sm bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 h-10"
+          />
+        </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1 xl:pb-0">
+        {/* File List Dropdown (Jump to) */}
+        <div className="relative">
+          <select
+            onChange={(e) => {
+              const file = files.find((f) => f.id === e.target.value);
+              if (file && onFileSelect) onFileSelect(file);
+              e.target.value = "";
+            }}
+            className="w-full px-4 py-2 text-sm bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer text-ellipsis overflow-hidden whitespace-nowrap h-10"
+            defaultValue=""
+          >
+            <option value="" disabled>
+              📁 Aller au fichier... ({sortedFiles.length})
+            </option>
+            {sortedFiles.map((file) => (
+              <option key={file.id} value={file.id}>
+                {file.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
           {/* Project Filter Dropdown */}
           <select
             value={projectFilter}
             onChange={(e) => onProjectChange(e.target.value)}
-            className="px-4 py-2 text-sm bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 min-w-[150px]"
+            className="w-full px-4 py-2 text-sm bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
           >
             <option value="ALL">Tous les projets ({projects.length})</option>
             {hasOrphanedFiles && <option value="ORPHANED">Sans projet</option>}
@@ -127,7 +151,7 @@ export function FileSearch({
           <select
             value={countryFilter}
             onChange={(e) => onCountryChange(e.target.value)}
-            className="px-4 py-2 text-sm bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+            className="w-full px-4 py-2 text-sm bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
           >
             <option value="Tous">Tous les pays ({countries.length})</option>
             {hasFilesNoCountry && <option value="Autre">Autre (sans pays)</option>}
@@ -142,7 +166,7 @@ export function FileSearch({
           <select
             value={fileTypeFilter}
             onChange={(e) => onFilterChange(e.target.value)}
-            className="px-4 py-2 text-sm bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+            className="w-full px-4 py-2 text-sm bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 sm:col-span-2 lg:col-span-1"
           >
             <option value="ALL">Tous les types</option>
             <option value="IMAGE">Images</option>

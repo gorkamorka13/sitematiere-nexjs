@@ -45,32 +45,39 @@ export function SortableImageCard({
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl transition-all ${isDragging ? 'shadow-2xl scale-105 z-50' : 'hover:border-indigo-300 dark:hover:border-indigo-700'
+      className={`flex flex-col sm:flex-row items-start sm:items-center gap-4 p-3 sm:p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl transition-all ${isDragging ? 'shadow-2xl scale-[1.02] z-50 bg-white dark:bg-gray-800' : 'hover:border-indigo-300 dark:hover:border-indigo-700'
         }`}
     >
-      {/* Drag Handle */}
-      <div
-        {...attributes}
-        {...listeners}
-        className="cursor-grab active:cursor-grabbing p-2 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-lg transition-colors"
-      >
-        <GripVertical className="w-5 h-5 text-gray-400" />
-      </div>
+      <div className="flex items-center gap-3 w-full sm:w-auto">
+        {/* Drag Handle */}
+        <div
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing p-2 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-lg transition-colors shrink-0"
+        >
+          <GripVertical className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+        </div>
 
-      {/* Order Number */}
-      <div className="flex items-center justify-center w-10 h-10 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 font-bold rounded-lg text-sm">
-        {order}
-      </div>
+        {/* Image Preview - Smaller on mobile */}
+        <div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-800 flex-shrink-0">
+          <Image
+            src={normalizeImageUrl(image.url)}
+            alt={image.alt || `Image`}
+            fill
+            sizes="(max-width: 640px) 64px, (max-width: 768px) 80px, 96px"
+            className="object-cover"
+          />
+        </div>
 
-      {/* Image Preview */}
-      <div className="relative w-24 h-24 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-800 flex-shrink-0">
-        <Image
-          src={normalizeImageUrl(image.url)}
-          alt={image.alt || `Image ${order}`}
-          fill
-          sizes="96px"
-          className="object-cover"
-        />
+        {/* Image Info - Mobile only layout part */}
+        <div className="flex-1 min-w-0 sm:hidden">
+          <p className="text-[13px] font-bold text-gray-900 dark:text-white truncate">
+            {image.alt || 'Sans titre'}
+          </p>
+          <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate mt-0.5">
+            {image.url.split('/').pop()}
+          </p>
+        </div>
       </div>
 
       {/* Image Info */}

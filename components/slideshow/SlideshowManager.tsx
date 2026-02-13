@@ -165,20 +165,20 @@
         return (
             <div className="p-6 space-y-6">
                 {/* Header */}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Gestion Diaporama</h1>
+                        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Gestion Diaporama</h1>
                         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                             Créez et gérez les slideshows de vos projets
                         </p>
                     </div>
 
                     {selectedProjectId && (
-                        <div className="flex gap-3">
+                        <div className="flex flex-wrap items-center gap-3">
                             {hasUnpublishedChanges && (
-                                <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
-                                    <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
-                                    <span className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+                                <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
+                                    <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
+                                    <span className="text-[10px] sm:text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
                                         Modifications non publiées
                                     </span>
                                 </div>
@@ -200,17 +200,17 @@
                                     }
                                 }}
                                 disabled={publishing || loading || slideshowImages.length === 0}
-                                className="group relative min-w-[120px] bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase tracking-widest text-xs px-6 data-[confirm=true]:bg-green-600 data-[confirm=true]:text-white data-[confirm=true]:hover:bg-green-700 transition-all duration-300"
+                                className="flex-1 sm:flex-none group relative min-w-[100px] sm:min-w-[120px] bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase tracking-widest text-[10px] sm:text-xs px-4 sm:px-6 data-[confirm=true]:bg-green-600 data-[confirm=true]:text-white data-[confirm=true]:hover:bg-green-700 transition-all duration-300"
                                 data-confirm="false"
                             >
                                 {publishing ? (
                                     <>
-                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-2 animate-spin" />
                                         Publication...
                                     </>
                                 ) : (
                                     <div className="flex items-center justify-center gap-2">
-                                        <Upload className={`w-4 h-4 transition-transform ${publishing ? 'animate-bounce' : ''}`} />
+                                        <Upload className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform ${publishing ? 'animate-bounce' : ''}`} />
                                         <span className="block group-data-[confirm=true]:hidden">
                                             Publier
                                         </span>
@@ -225,9 +225,9 @@
                                 onClick={() => setShowPreview(true)}
                                 disabled={slideshowImages.length === 0}
                                 variant="outline"
-                                className="border-gray-200 dark:border-gray-700 font-bold uppercase tracking-widest text-xs px-6"
+                                className="flex-1 sm:flex-none border-gray-200 dark:border-gray-700 font-bold uppercase tracking-widest text-[10px] sm:text-xs px-4 sm:px-6"
                             >
-                                <Eye className="w-4 h-4 mr-2" />
+                                <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                                 Tester
                             </Button>
                         </div>
@@ -250,10 +250,10 @@
                         )}
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         {/* Search Field */}
                         <div className="relative">
-                            <label htmlFor="search" className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">
+                            <label htmlFor="search" className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
                                 Rechercher
                             </label>
                             <div className="relative">
@@ -263,13 +263,13 @@
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     placeholder="Nom du projet..."
-                                    className="w-full p-3 pl-10 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                    className="w-full h-11 pl-10 pr-10 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm"
                                 />
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                 {searchQuery && (
                                     <button
                                         onClick={() => setSearchQuery('')}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                                     >
                                         <X className="w-4 h-4" />
                                     </button>
@@ -279,14 +279,14 @@
 
                         {/* Country Filter */}
                         <div>
-                            <label htmlFor="country" className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">
+                            <label htmlFor="country" className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
                                 Pays
                             </label>
                             <select
                                 id="country"
                                 value={selectedCountry}
                                 onChange={(e) => onCountryChange(e.target.value)}
-                                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                className="w-full h-11 px-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm appearance-none"
                             >
                                 <option value="">Tous les pays</option>
                                 {countries.map((country) => (
@@ -299,14 +299,14 @@
 
                         {/* Project Name Filter */}
                         <div>
-                            <label htmlFor="projectName" className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">
+                            <label htmlFor="projectName" className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
                                 Nom du projet
                             </label>
                             <select
                                 id="projectName"
                                 value={selectedName}
                                 onChange={(e) => onProjectNameChange(e.target.value)}
-                                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                className="w-full h-11 px-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm appearance-none"
                             >
                                 <option value="">Tous les projets</option>
                                 {availableNames.map((name) => (

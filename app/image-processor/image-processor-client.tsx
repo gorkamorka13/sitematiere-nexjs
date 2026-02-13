@@ -223,20 +223,20 @@ export default function ImageProcessorClient({ user, initialProjects }: ImagePro
         )}
 
         {/* Header */}
-        <header className="text-center space-y-4">
+        <header className="text-center space-y-6">
           <div>
-            <h1 className="text-4xl font-black text-gray-900 dark:text-white mb-2 uppercase tracking-tight">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-2 uppercase tracking-tight">
                 <span className="text-indigo-600 dark:text-indigo-400">Gestion</span> Images
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-md mx-auto">
                 Outil optimisé pour recadrer, redimensionner et compresser vos images.
             </p>
           </div>
 
-          <div className="flex items-center justify-center gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 px-4 sm:px-0">
              <Button
                 onClick={handleOpenLocalFile}
-                className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+                className="w-full sm:w-auto gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
                 size="lg"
              >
                 <Upload className="w-4 h-4" />
@@ -253,11 +253,11 @@ export default function ImageProcessorClient({ user, initialProjects }: ImagePro
              <Button
                 onClick={() => setShowDatabasePicker(true)}
                 variant="outline"
-                className="gap-2"
+                className="w-full sm:w-auto gap-2"
                 size="lg"
              >
                 <Database className="w-4 h-4" />
-                Choisir depuis la base de données
+                Choisir depuis la base
              </Button>
           </div>
 

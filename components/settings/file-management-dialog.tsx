@@ -212,10 +212,10 @@ export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileM
                     </div>
 
                     {/* Tabs Navigation */}
-                    <div className="flex px-5 gap-6">
+                    <div className="flex px-4 sm:px-5 gap-4 sm:gap-6 overflow-x-auto min-w-0 border-b border-gray-100 dark:border-gray-700 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700">
                         <button
                             onClick={() => setActiveTab("dashboard")}
-                            className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 ${
+                            className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 whitespace-nowrap shrink-0 ${
                                 activeTab === "dashboard"
                                     ? "text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400"
                                     : "text-gray-400 border-transparent hover:text-gray-600 dark:hover:text-gray-200"
@@ -225,7 +225,7 @@ export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileM
                         </button>
                         <button
                             onClick={() => setActiveTab("explorer")}
-                            className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 ${
+                            className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 whitespace-nowrap shrink-0 ${
                                 activeTab === "explorer"
                                     ? "text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400"
                                     : "text-gray-400 border-transparent hover:text-gray-600 dark:hover:text-gray-200"
@@ -235,7 +235,7 @@ export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileM
                         </button>
                         <button
                             onClick={() => setActiveTab("upload")}
-                            className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 ${
+                            className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 whitespace-nowrap shrink-0 ${
                                 activeTab === "upload"
                                     ? "text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400"
                                     : "text-gray-400 border-transparent hover:text-gray-600 dark:hover:text-gray-200"
@@ -243,6 +243,7 @@ export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileM
                         >
                             Téléverser
                         </button>
+                        <div className="w-8 shrink-0" aria-hidden="true" />
                     </div>
                 </div>
 
