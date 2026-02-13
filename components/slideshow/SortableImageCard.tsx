@@ -4,6 +4,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Trash2, CheckCircle2, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { normalizeImageUrl } from '@/lib/utils/image-url';
 
 interface SortableImageCardProps {
   id: string;
@@ -43,9 +44,8 @@ export function SortableImageCard({
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl transition-all ${
-        isDragging ? 'shadow-2xl scale-105 z-50' : 'hover:border-indigo-300 dark:hover:border-indigo-700'
-      }`}
+      className={`flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl transition-all ${isDragging ? 'shadow-2xl scale-105 z-50' : 'hover:border-indigo-300 dark:hover:border-indigo-700'
+        }`}
     >
       {/* Drag Handle */}
       <div
@@ -64,7 +64,7 @@ export function SortableImageCard({
       {/* Image Preview */}
       <div className="relative w-24 h-24 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-800 flex-shrink-0">
         <img
-          src={image.url}
+          src={normalizeImageUrl(image.url)}
           alt={image.alt || `Image ${order}`}
           className="w-full h-full object-cover"
         />

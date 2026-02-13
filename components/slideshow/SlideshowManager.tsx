@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, Plus, Trash2, Save, Upload, Eye } from 'lucide-react';
+import { Loader2, Plus, Trash2, Save, Upload, Eye, Search, X } from 'lucide-react';
 import { DatabaseImagePicker } from '@/components/image-processor/DatabaseImagePicker';
 import {
   DndContext,
@@ -31,6 +31,7 @@ import {
   addImageToSlideshow,
 } from '@/app/actions/slideshow-actions';
 import { SlideshowPreviewModal } from './SlideshowPreviewModal';
+import { Toast, ToastType } from '@/components/ui/toast';
 
 interface SlideshowImage {
   id: string;
@@ -47,6 +48,7 @@ interface SlideshowImage {
 interface Project {
   id: string;
   name: string;
+  country: string | null;
 }
 
 interface SlideshowManagerProps {
@@ -64,6 +66,14 @@ export function SlideshowManager({ projects }: SlideshowManagerProps) {
   const [hasUnpublishedChanges, setHasUnpublishedChanges] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
 
+  // Toast notification state
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
+
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState('');
+  const [selectedName, setSelectedName] = useState('');
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -74,6 +84,49 @@ export function SlideshowManager({ projects }: SlideshowManagerProps) {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  // Get unique countries from projects
+  const countries = useMemo(() => {
+    const uniqueCountries = Array.from(new Set(projects.map(p => p.country).filter(Boolean))) as string[];
+    return uniqueCountries.sort();
+  }, [projects]);
+
+  // Filter projects based on search, country, and name
+  const filteredProjects = useMemo(() => {
+    return projects.filter(project => {
+      // Search filter
+      if (searchQuery && !project.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+        return false;
+      }
+
+      // Country filter
+      if (selectedCountry && project.country !== selectedCountry) {
+        return false;
+      }
+
+      // Name filter
+      if (selectedName && project.name !== selectedName) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [projects, searchQuery, selectedCountry, selectedName]);
+
+  // Get available project names based on country filter
+  const availableNames = useMemo(() => {
+    const filtered = selectedCountry
+      ? projects.filter(p => p.country === selectedCountry)
+      : projects;
+    return Array.from(new Set(filtered.map(p => p.name))).sort();
+  }, [projects, selectedCountry]);
+
+  // Reset filters
+  const resetFilters = () => {
+    setSearchQuery('');
+    setSelectedCountry('');
+    setSelectedName('');
+  };
 
   // Load slideshow images when project changes
   useEffect(() => {
@@ -90,6 +143,7 @@ export function SlideshowManager({ projects }: SlideshowManagerProps) {
     setLoading(true);
     try {
       const result = await getSlideshowImages(selectedProjectId, false);
+
       if (result.success && result.images) {
         setSlideshowImages(result.images as SlideshowImage[]);
 
@@ -199,15 +253,15 @@ export function SlideshowManager({ projects }: SlideshowManagerProps) {
     try {
       const result = await publishSlideshow(selectedProjectId);
       if (result.success) {
-        alert('Slideshow publié avec succès !');
+        setToast({ message: 'Slideshow publié avec succès !', type: 'success' });
         setHasUnpublishedChanges(false);
         await loadSlideshowImages();
       } else {
-        alert(result.error || 'Erreur lors de la publication');
+        setToast({ message: result.error || 'Erreur lors de la publication', type: 'error' });
       }
     } catch (error) {
       console.error('Error publishing slideshow:', error);
-      alert('Erreur lors de la publication du slideshow');
+      setToast({ message: 'Erreur lors de la publication du slideshow', type: 'error' });
     } finally {
       setPublishing(false);
     }
@@ -268,23 +322,114 @@ export function SlideshowManager({ projects }: SlideshowManagerProps) {
         )}
       </div>
 
-      {/* Project Selector */}
+      {/* Filters Section */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
-        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-3">
-          Sélectionner un projet
-        </label>
-        <select
-          value={selectedProjectId}
-          onChange={(e) => setSelectedProjectId(e.target.value)}
-          className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-        >
-          <option value="">-- Choisir un projet --</option>
-          {projects.map((project) => (
-            <option key={project.id} value={project.id}>
-              {project.name}
-            </option>
-          ))}
-        </select>
+        <div className="flex items-center justify-between mb-4">
+          <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+            Filtres de recherche
+          </label>
+          {(searchQuery || selectedCountry || selectedName) && (
+            <button
+              onClick={resetFilters}
+              className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 underline px-2 py-1"
+            >
+              Réinitialiser
+            </button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Search Field */}
+          <div className="relative">
+            <label htmlFor="search" className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">
+              Rechercher
+            </label>
+            <div className="relative">
+              <input
+                id="search"
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Nom du projet..."
+                className="w-full p-3 pl-10 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+              />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Country Filter */}
+          <div>
+            <label htmlFor="country" className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">
+              Pays
+            </label>
+            <select
+              id="country"
+              value={selectedCountry}
+              onChange={(e) => {
+                setSelectedCountry(e.target.value);
+                setSelectedName(''); // Reset name when country changes
+              }}
+              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+            >
+              <option value="">Tous les pays</option>
+              {countries.map((country) => (
+                <option key={country} value={country}>
+                  {country}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Project Name Filter */}
+          <div>
+            <label htmlFor="projectName" className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">
+              Nom du projet
+            </label>
+            <select
+              id="projectName"
+              value={selectedName}
+              onChange={(e) => {
+                const projectName = e.target.value;
+                setSelectedName(projectName);
+                // Find and select the project by name from ALL projects, not just filtered
+                const project = projects.find(p => p.name === projectName);
+                if (project) {
+                  setSelectedProjectId(project.id);
+                } else {
+                  setSelectedProjectId('');
+                }
+              }}
+              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+            >
+              <option value="">Tous les projets</option>
+              {availableNames.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Filtered Results Info */}
+        <div className="mt-4 flex items-center justify-between text-sm">
+          <span className="text-gray-500 dark:text-gray-400">
+            {filteredProjects.length} projet{filteredProjects.length !== 1 ? 's' : ''} trouvé{filteredProjects.length !== 1 ? 's' : ''}
+          </span>
+          {selectedProjectId && (
+            <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
+              ✓ Projet sélectionné: {filteredProjects.find(p => p.id === selectedProjectId)?.name}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Slideshow Content */}
@@ -362,7 +507,7 @@ export function SlideshowManager({ projects }: SlideshowManagerProps) {
                       image={slideshowImages.find((img) => img.id === activeId)!.image}
                       order={slideshowImages.findIndex((img) => img.id === activeId) + 1}
                       isPublished={slideshowImages.find((img) => img.id === activeId)!.isPublished}
-                      onRemove={() => {}}
+                      onRemove={() => { }}
                     />
                   </div>
                 ) : null}
@@ -393,6 +538,15 @@ export function SlideshowManager({ projects }: SlideshowManagerProps) {
         images={slideshowImages}
         projectName={selectedProject?.name}
       />
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }

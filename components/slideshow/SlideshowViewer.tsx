@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { X, ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { normalizeImageUrl } from '@/lib/utils/image-url';
 
 interface SlideshowImage {
   id: string;
@@ -19,7 +20,7 @@ interface SlideshowViewerProps {
 
 export function SlideshowViewer({ images, projectName }: SlideshowViewerProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const goToNext = useCallback(() => {
@@ -59,9 +60,31 @@ export function SlideshowViewer({ images, projectName }: SlideshowViewerProps) {
 
   if (images.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-[60vh] text-gray-400">
-        <p className="text-lg font-medium">Aucune image dans ce slideshow</p>
-        <p className="text-sm mt-2">Le slideshow n'a pas encore été publié</p>
+      <div className="flex flex-col items-center justify-center h-[60vh] bg-gray-50 dark:bg-gray-900 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700">
+        <div className="text-center px-6">
+          <svg
+            className="mx-auto h-24 w-24 text-gray-300 dark:text-gray-600 mb-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
+          </svg>
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+            Aucune image
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md">
+            Ce diaporama ne contient aucune image pour le moment.
+          </p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+            Le slideshow n'a pas encore été publié ou ne contient pas d'images.
+          </p>
+        </div>
       </div>
     );
   }
@@ -84,7 +107,7 @@ export function SlideshowViewer({ images, projectName }: SlideshowViewerProps) {
       <div className={`relative ${isFullscreen ? 'h-screen' : 'h-[70vh]'} bg-gray-900 rounded-2xl overflow-hidden group`}>
         {/* Image */}
         <img
-          src={currentImage.image.url}
+          src={normalizeImageUrl(currentImage.image.url)}
           alt={currentImage.image.alt || `Image ${currentIndex + 1}`}
           className="w-full h-full object-contain"
         />
@@ -159,14 +182,13 @@ export function SlideshowViewer({ images, projectName }: SlideshowViewerProps) {
             <button
               key={img.id}
               onClick={() => setCurrentIndex(index)}
-              className={`relative flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden transition-all ${
-                index === currentIndex
-                  ? 'ring-4 ring-indigo-500 scale-110'
-                  : 'opacity-60 hover:opacity-100'
-              }`}
+              className={`relative flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden transition-all ${index === currentIndex
+                ? 'ring-4 ring-indigo-500 scale-110'
+                : 'opacity-60 hover:opacity-100'
+                }`}
             >
               <img
-                src={img.image.url}
+                src={normalizeImageUrl(img.image.url)}
                 alt={img.image.alt || `Thumbnail ${index + 1}`}
                 className="w-full h-full object-cover"
               />

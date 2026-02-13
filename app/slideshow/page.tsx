@@ -23,6 +23,7 @@ export default async function SlideshowPage() {
     select: {
       id: true,
       name: true,
+      country: true,
     },
     orderBy: {
       name: 'asc',

@@ -7,6 +7,7 @@ import { UserRole } from "@prisma/client";
 interface Project {
   id: string;
   name: string;
+  country: string | null;
 }
 
 interface User {

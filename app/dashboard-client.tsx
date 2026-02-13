@@ -15,6 +15,7 @@ import ProjectManagementDialog from "@/components/settings/project-management-di
 import FileManagementDialog from "@/components/settings/file-management-dialog";
 import SettingsDialogs from "@/components/settings/settings-dialogs";
 import UserBadge from "@/components/settings/user-badge";
+import { normalizeImageUrl } from "@/lib/utils/image-url";
 
 type DashboardClientProps = {
     initialProjects: Project[];
@@ -440,11 +441,10 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                                                 type="button"
                                                 onMouseMove={() => setFocusedSuggestionIndex(index)}
                                                 onClick={() => handleSearchSelect(project)}
-                                                className={`w-full text-left px-4 py-3 transition-colors border-b border-gray-50 dark:border-gray-700/50 last:border-0 ${
-                                                    focusedSuggestionIndex === index
+                                                className={`w-full text-left px-4 py-3 transition-colors border-b border-gray-50 dark:border-gray-700/50 last:border-0 ${focusedSuggestionIndex === index
                                                     ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300'
                                                     : 'hover:bg-indigo-50 dark:hover:bg-indigo-900/30'
-                                                }`}
+                                                    }`}
                                             >
                                                 <div className="flex items-center justify-between">
                                                     <span className="text-sm font-semibold">{project.name}</span>
@@ -630,7 +630,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                                         <div className="flex items-center gap-1.5 px-2 py-1 bg-white/50 dark:bg-black/20 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm shrink-0">
                                             <div className="w-7 h-4.5 relative rounded-[2px] overflow-hidden border border-gray-100 dark:border-gray-800 bg-gray-100 dark:bg-gray-800">
                                                 <img
-                                                    src={flagDoc.url.startsWith('http') || flagDoc.url.startsWith('/') ? flagDoc.url : `/${flagDoc.url}`}
+                                                    src={normalizeImageUrl(flagDoc.url)}
                                                     alt=""
                                                     className="w-full h-full object-cover"
                                                     onError={(e) => (e.currentTarget.style.display = 'none')}
@@ -642,7 +642,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                                     {logoDoc && (
                                         <div className="h-7 px-2 py-1 bg-white/50 dark:bg-black/20 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm flex items-center shrink-0">
                                             <img
-                                                src={logoDoc.url.startsWith('http') || logoDoc.url.startsWith('/') ? logoDoc.url : `/${logoDoc.url}`}
+                                                src={normalizeImageUrl(logoDoc.url)}
                                                 alt=""
                                                 className="h-full max-w-[100px] object-contain opacity-90"
                                                 onError={(e) => (e.currentTarget.style.display = 'none')}
@@ -739,11 +739,10 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                                                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400 font-medium">{project.country}</td>
                                                         <td className="hidden sm:table-cell whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">{project.type}</td>
                                                         <td className="hidden md:table-cell whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
-                                                            <span className={`inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ring-1 ring-inset ${
-                                                                project.status === 'DONE' ? 'bg-green-50 text-green-700 ring-green-600/20 dark:bg-green-900/30 dark:text-green-400 dark:ring-green-400/20' :
+                                                            <span className={`inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ring-1 ring-inset ${project.status === 'DONE' ? 'bg-green-50 text-green-700 ring-green-600/20 dark:bg-green-900/30 dark:text-green-400 dark:ring-green-400/20' :
                                                                 project.status === 'CURRENT' ? 'bg-blue-50 text-blue-700 ring-blue-600/20 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-400/20' :
-                                                                'bg-yellow-50 text-yellow-800 ring-yellow-600/20 dark:bg-yellow-900/30 dark:text-yellow-400 dark:ring-yellow-400/20'
-                                                            }`}>
+                                                                    'bg-yellow-50 text-yellow-800 ring-yellow-600/20 dark:bg-yellow-900/30 dark:text-yellow-400 dark:ring-yellow-400/20'
+                                                                }`}>
                                                                 {project.status}
                                                             </span>
                                                         </td>
@@ -848,7 +847,7 @@ function PdfViewer({ documents }: { documents: { url: string; name: string }[] }
 // Photo Gallery Component avec diaporama intégré
 function PhotoGalleryWithControls({ selectedProject, dynamicImages, isLoading }: { selectedProject: Project | null; dynamicImages: { url: string; name: string }[]; isLoading: boolean; }) {
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [isPlaying, setIsPlaying] = useState(false);
+    const [isPlaying, setIsPlaying] = useState(true);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const images = dynamicImages;
 
@@ -915,7 +914,7 @@ function PhotoGalleryWithControls({ selectedProject, dynamicImages, isLoading }:
                 <div className="flex-grow p-4">
                     <div className="relative w-full h-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900 group">
                         <img
-                            src={images[currentIndex].url.startsWith('http') ? images[currentIndex].url : `/${images[currentIndex].url}`}
+                            src={normalizeImageUrl(images[currentIndex].url)}
                             alt={images[currentIndex].name || `Photo ${currentIndex + 1}`}
                             className="object-contain w-full h-full transition-opacity duration-500"
                         />
