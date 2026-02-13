@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 /**
- * Hook to convert Vercel Blob URLs to signed URLs that can be accessed by the browser
+ * Hook to convert Cloudflare R2 URLs to signed URLs that can be accessed by the browser
  */
 export function useSignedBlobUrl(blobUrl: string | undefined): string {
   const [signedUrl, setSignedUrl] = useState<string>('');
@@ -14,13 +14,13 @@ export function useSignedBlobUrl(blobUrl: string | undefined): string {
       return;
     }
 
-    // If it's not a Vercel Blob URL, return as-is
-    if (!blobUrl.includes('blob.vercel-storage.com')) {
+    // If it's not a storage URL, return as-is
+    if (!blobUrl.includes('blob.vercel-storage.com') && !blobUrl.includes('r2.cloudflarestorage.com')) {
       setSignedUrl(blobUrl);
       return;
     }
 
-    // If it's a Vercel Blob URL, get the signed version
+    // If it's not a Cloudflare or legacy URL, return as-is
     fetch(`/api/blob-url?url=${encodeURIComponent(blobUrl)}`)
       .then(res => res.json())
       .then(data => {

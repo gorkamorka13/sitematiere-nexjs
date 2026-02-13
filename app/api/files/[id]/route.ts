@@ -42,12 +42,12 @@ export async function PATCH(
       dataToUpdate.projectId = projectId;
 
       // Note: We might want to move the blob physically if we were using a folder structure in Blob,
-      // but Vercel Blob is flat URL based, and we store path in DB.
+      // but Cloudflare R2 is flat URL based, and we store path in DB.
       // If we want to organize by folder in Blob, we would need to copy/delete.
       // For now, we just update the reference in DB as specified in Phase 0 structure (flat).
       // Actually Phase 0 says "un dossier par projet".
       // If we strictly follow that, we should move blob.
-      // But for Vercel Blob, "folders" are just prefixes.
+      // But for Cloudflare R2, "folders" are just prefixes.
       // Renaming the blob (copy + delete) is expensive and might change the URL.
       // Let's stick to DB update for now unless strictly required to move Blob.
       // The spec says "Mise à jour BDD + Blob (copy + delete)".

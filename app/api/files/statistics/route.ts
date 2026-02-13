@@ -12,7 +12,7 @@ export async function GET() {
   }
 
   try {
-    // 1. Calculer les statistiques à partir de la table File (Vercel Blob)
+    // 1. Calculer les statistiques à partir de la table File (Cloudflare)
     const stats = await prisma.file.aggregate({
       where: { isDeleted: false },
       _sum: { size: true },
@@ -52,7 +52,7 @@ export async function GET() {
       totalVideos,
       totalOthers,
       storageUsed,
-      storageLimit: "1 GB", // Limite Vercel Blob Hobby
+      storageLimit: "1 GB", // Cloudflare R2 Free Tier
       totalProjects: projectCount.length,
       orphanedFiles: 0,
       lastScan: new Date().toISOString(),

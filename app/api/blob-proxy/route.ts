@@ -10,8 +10,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Missing blob URL' }, { status: 400 });
   }
 
-  // Validate that it's a Vercel Blob URL
-  if (!blobUrl.startsWith('https://') || !blobUrl.includes('blob.vercel-storage.com')) {
+  // Validate that it's a Cloudflare R2 or legacy storage URL
+  if (!blobUrl.startsWith('https://') || (!blobUrl.includes('blob.vercel-storage.com') && !blobUrl.includes('r2.cloudflarestorage.com'))) {
     return NextResponse.json({ error: 'Invalid blob URL' }, { status: 400 });
   }
 
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Vercel Blob requires the token as a URL parameter, not as a header
+    // This storage provider requires the token as a URL parameter, not as a header
     const signedUrl = `${blobUrl}${blobUrl.includes('?') ? '&' : '?'}token=${token}`;
 
     // Fetch the blob content with the signed URL

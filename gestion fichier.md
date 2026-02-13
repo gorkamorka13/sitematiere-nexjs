@@ -1,8 +1,8 @@
-# Plan de développement - Gestionnaire de Fichiers Vercel Blob
+# Plan de développement - Gestionnaire de Fichiers Cloudflare R2
 
 ## 📋 Vue d'ensemble
 
-Système CRUD complet de gestion de fichiers avec stockage Vercel Blob, synchronisation automatique avec la base de données, et interface utilisateur intuitive.
+Système CRUD complet de gestion de fichiers avec stockage Cloudflare R2, synchronisation automatique avec la base de données, et interface utilisateur intuitive.
 
 ---
 
@@ -10,7 +10,7 @@ Système CRUD complet de gestion de fichiers avec stockage Vercel Blob, synchron
 
 | Aspect | Configuration |
 |--------|--------------|
-| **Stockage** | Vercel Blob (ou AWS S3 compatible) |
+| **Stockage** | Cloudflare R2 (S3 compatible) |
 | **Structure** | Plate - un dossier par projet (`projetA/`, `projetB/`) |
 | **Types de fichiers** | Tous types acceptés |
 | **Taille max** | 150 Ko par fichier |
@@ -41,7 +41,7 @@ enum FileType {
 model File {
   id          String    @id @default(cuid())
   name        String    // Nom affiché
-  blobUrl     String    @unique // URL Vercel Blob
+  blobUrl     String    @unique // URL Cloudflare
   blobPath    String    // Chemin: projetId/uuid.ext
   fileType    FileType
   mimeType    String
@@ -76,7 +76,7 @@ model File {
 
 ### Phase 0 : Migration des fichiers existants [TERMINEE ✅]
 
-**Objectif** : Migrer les fichiers actuels (`public/images/`) vers Vercel Blob
+**Objectif** : Migrer les fichiers actuels (`public/images/`) vers Cloudflare R2
 
 **Processus détaillé** :
 
@@ -109,7 +109,7 @@ model File {
    - Vérifier affichage images existantes (via les anciens chemins locaux)
    - S'assurer de la stabilité globale avant bascule
 
-**Validation** : ✅ Données migrées, Application fonctionnelle en mode Vercel Blob.
+**Validation** : ✅ Données migrées, Application fonctionnelle en mode Cloudflare.
 
 ---
 
@@ -133,7 +133,7 @@ model File {
 ### Phase 2 : Backend API & Bascule Lecture [TERMINEE ✅]
 
 **Tâches prioritaires** :
-- [x] **Bascule de la Galerie** : Lecture depuis la table `File` (Vercel Blob) au lieu de `public/images`.
+- [x] **Bascule de la Galerie** : Lecture depuis la table `File` (Cloudflare R2) au lieu de `public/images`.
 - [x] **API d'Upload** : Créer `/api/files/upload` pour gérer les nouveaux fichiers vers Blob.
 - [x] **API de Listage** : Créer `/api/files/list` avec pagination.
 - [x] **API de Suppression** : Créer `/api/files/delete` (Soft delete implemented).
@@ -616,8 +616,8 @@ lib/
 
 ```bash
 # .env
-BLOB_READ_WRITE_TOKEN=vercel_blob_rw_token_xxx
-NEXT_PUBLIC_BLOB_BASE_URL=https://blob.vercel-storage.com
+BLOB_READ_WRITE_TOKEN=r2_token_xxx
+NEXT_PUBLIC_BLOB_BASE_URL=https://<account_id>.r2.cloudflarestorage.com
 NEXT_PUBLIC_MAX_FILE_SIZE=1572864  # 1.5 Mo en bytes
 ```
 

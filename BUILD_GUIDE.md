@@ -86,7 +86,7 @@ Pour un déploiement réussi, configurez les paramètres suivants dans votre tab
 
 1. **Framework Preset** : `Next.js`
 2. **Build Command** : `npm run build:cloudflare`
-3. **Build Output Directory** : `.vercel/output/static`
+3. **Build Output Directory** : `.vercel/output/static` (Default for next-on-pages)
 4. **Compatibility Flags**: (Dans Settings > Functions > Compatibility Flags)
    - Ajoutez `nodejs_compat` pour les environnements **Production** et **Preview**.
 

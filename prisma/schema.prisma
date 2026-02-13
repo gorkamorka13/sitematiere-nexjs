@@ -88,7 +88,7 @@ enum ProjectStatus {
 // Modèle pour les images
 model Image {
   id              String           @id @default(cuid())
-  url             String           // URL Vercel Blob ou S3
+  url             String           // URL Cloudflare or S3
   alt             String?
   order           Int              @default(0)
   projectId       String
@@ -166,7 +166,7 @@ enum FileType {
 model File {
   id          String    @id @default(cuid())
   name        String    // Nom affiché
-  blobUrl     String    @unique // URL Vercel Blob
+  blobUrl     String    @unique // URL Cloudflare/Vercel
   blobPath    String    // Chemin: projetId/uuid.ext
   fileType    FileType
   mimeType    String

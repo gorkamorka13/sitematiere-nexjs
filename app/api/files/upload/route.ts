@@ -99,7 +99,7 @@ export async function POST(request: Request) {
           }
         }
 
-        // Upload to Vercel Blob
+        // Upload to Cloudflare R2
         const { url, pathname } = await uploadFile(file, folderName);
 
         const thumbnailUrl = null;

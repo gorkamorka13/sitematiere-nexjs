@@ -161,7 +161,7 @@ export default function AppLayout({
                         {!isSidebarCollapsed && <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-3 mb-2 block">Menu Principal</span>}
                         <Link
                             href="/"
-                            className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${isActive('/') ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400" : "hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400"} ${isSidebarCollapsed ? "justify-center" : ""}`}
+                            className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer ${isActive('/') ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400" : "hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400"} ${isSidebarCollapsed ? "justify-center" : ""}`}
                         >
                             <LayoutDashboard className="w-5 h-5 text-indigo-500" />
                             {!isSidebarCollapsed && <span className="text-sm font-semibold">Dashboard</span>}
@@ -174,7 +174,7 @@ export default function AppLayout({
                             {!isSidebarCollapsed && <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-3 mb-2 block">Projets</span>}
                             <button
                                 onClick={() => onManageProjects?.('modify')}
-                                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400 transition-all group"
+                                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400 transition-all group cursor-pointer"
                             >
                                 <FolderOpen className={`w-5 h-5 ${isSidebarCollapsed ? "mx-auto" : ""}`} />
                                 {!isSidebarCollapsed && <span className="text-sm font-medium group-hover:text-gray-900 dark:group-hover:text-white">Modification Projets</span>}
@@ -188,35 +188,35 @@ export default function AppLayout({
                             {!isSidebarCollapsed && <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-3 mb-2 block">Administration</span>}
                             <button
                                 onClick={() => onManageUsers?.()}
-                                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400 transition-all group"
+                                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400 transition-all group cursor-pointer"
                             >
                                 <Users className={`w-5 h-5 ${isSidebarCollapsed ? "mx-auto" : ""}`} />
                                 {!isSidebarCollapsed && <span className="text-sm font-medium group-hover:text-gray-900 dark:group-hover:text-white">Gestion Utilisateurs</span>}
                             </button>
                             <button
                                 onClick={() => onManageProjects?.('create')}
-                                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400 transition-all group"
+                                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400 transition-all group cursor-pointer"
                             >
                                 <Folders className={`w-5 h-5 ${isSidebarCollapsed ? "mx-auto" : ""}`} />
                                 {!isSidebarCollapsed && <span className="text-sm font-medium group-hover:text-gray-900 dark:group-hover:text-white">Gestion Projet</span>}
                             </button>
                             <button
                                 onClick={() => onManageFiles?.()}
-                                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400 transition-all group"
+                                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400 transition-all group cursor-pointer"
                             >
                                 <FileStack className={`w-5 h-5 ${isSidebarCollapsed ? "mx-auto" : ""}`} />
                                 {!isSidebarCollapsed && <span className="text-sm font-medium group-hover:text-gray-900 dark:group-hover:text-white">Gestion Fichiers</span>}
                             </button>
                             <Link
                                 href="/image-processor"
-                                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${isActive('/image-processor') ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400" : "hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400"} ${isSidebarCollapsed ? "justify-center" : ""}`}
+                                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer ${isActive('/image-processor') ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400" : "hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400"} ${isSidebarCollapsed ? "justify-center" : ""}`}
                             >
                                 <ImageIcon className={`w-5 h-5 ${isSidebarCollapsed ? "" : ""}`} />
                                 {!isSidebarCollapsed && <span className="text-sm font-medium">Gestion Images</span>}
                             </Link>
                             <Link
                                 href="/slideshow"
-                                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${isActive('/slideshow') ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400" : "hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400"} ${isSidebarCollapsed ? "justify-center" : ""}`}
+                                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer ${isActive('/slideshow') ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400" : "hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400"} ${isSidebarCollapsed ? "justify-center" : ""}`}
                             >
                                 <Presentation className={`w-5 h-5 ${isSidebarCollapsed ? "" : ""}`} />
                                 {!isSidebarCollapsed && <span className="text-sm font-medium">Gestion Diaporama</span>}

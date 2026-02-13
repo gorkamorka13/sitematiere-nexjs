@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
- * API route to generate signed URLs for Vercel Blob assets
+ * API route to generate signed URLs for Cloudflare R2 assets
  * This is necessary because blobs uploaded with access:'public' still return 403
  * due to store configuration. We need to append a token to make them accessible.
  */
@@ -14,13 +14,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Missing blob URL' }, { status: 400 });
   }
 
-  // Validate that it's a Vercel Blob URL
-  if (!blobUrl.startsWith('https://') || !blobUrl.includes('blob.vercel-storage.com')) {
+  // Validate that it's a Cloudflare R2 or legacy storage URL
+  if (!blobUrl.startsWith('https://') || (!blobUrl.includes('blob.vercel-storage.com') && !blobUrl.includes('r2.cloudflarestorage.com'))) {
     return NextResponse.json({ error: 'Invalid blob URL' }, { status: 400 });
   }
 
   try {
-    // For Vercel Blob, we need to append the token as a query parameter
+    // For storage, we need to append the token as a query parameter
     // The format is: original_url?token=BLOB_READ_WRITE_TOKEN
     const token = process.env.BLOB_READ_WRITE_TOKEN;
 

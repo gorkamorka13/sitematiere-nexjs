@@ -253,7 +253,7 @@ export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileM
                                 {/* Status Card 1: Storage */}
                                 <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-700">
                                     <div className="flex items-center justify-between mb-4">
-                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Stockage (Vercel Blob)</span>
+                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Stockage (Cloudflare R2)</span>
                                         <AlertCircle className="w-4 h-4 text-indigo-500" />
                                     </div>
                                     <div className="flex items-baseline gap-2 mb-2">
