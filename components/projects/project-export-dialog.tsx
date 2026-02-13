@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import {
   FileText,
   Download,
@@ -24,7 +24,7 @@ const ProjectsMap = dynamic(() => import("@/components/ui/projects-map"), { ssr:
 const ProjectMap = dynamic(() => import("@/components/ui/project-map"), { ssr: false });
 
 // Minimal local UI components to avoid missing dependency errors
-const Dialog = ({ open, children, onClose }: { open: boolean; children: React.ReactNode; onClose: () => void }) => {
+const Dialog = ({ open, children }: { open: boolean; children: React.ReactNode; onClose: () => void }) => {
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-2">
@@ -55,7 +55,6 @@ export function ProjectExportDialog({
   allProjects = [],
   filteredProjects,
   images = [],
-  globalMetadata,
 }: ProjectExportDialogProps) {
   // Use filtered projects if provided, otherwise fall back to all projects
   const projectsForMap = filteredProjects && filteredProjects.length > 0 ? filteredProjects : allProjects;
@@ -185,7 +184,7 @@ export function ProjectExportDialog({
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 20;
       const contentWidth = pageWidth - 2 * margin;
-      const indigo600 = [79, 70, 229]; // #4f46e5
+      // const indigo600 = [79, 70, 229]; // #4f46e5
       const gray900 = [17, 24, 39];
       const gray500 = [107, 114, 128];
 

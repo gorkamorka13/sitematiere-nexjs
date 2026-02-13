@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { FileSearch } from "./file-search";
 import { FileToolbar } from "./file-toolbar";
 import { FileGrid } from "./file-grid";
@@ -12,6 +12,8 @@ import { FileDeleteDialog } from "./file-delete-dialog";
 // import { useToast } from "@/components/ui/use-toast";
 // If no toast, we can just console.log or use a simple alert for now.
 import { FileType } from "@prisma/client";
+
+import { useDebounce } from "@/hooks/use-debounce";
 
 export interface FileData {
     id: string;
@@ -36,6 +38,7 @@ export function FileExplorer() {
     const [loading, setLoading] = useState(true);
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
     const [searchQuery, setSearchQuery] = useState("");
+    const debouncedSearchQuery = useDebounce(searchQuery, 300);
     const [fileTypeFilter, setFileTypeFilter] = useState("ALL");
     const [countryFilter, setCountryFilter] = useState("Tous");
     const [projectFilter, setProjectFilter] = useState("ALL"); // New Project Filter State
@@ -46,7 +49,7 @@ export function FileExplorer() {
     // Auto-select country when project is selected
     useEffect(() => {
         if (projectFilter !== "ALL" && projectFilter !== "ORPHANED") {
-            const projectFile = allFiles.find(f => f.project?.id === projectFilter);
+            const projectFile = allFiles.find((f: FileData) => f.project?.id === projectFilter);
             if (projectFile?.project?.country) {
                 setCountryFilter(projectFile.project.country);
             }
@@ -54,51 +57,27 @@ export function FileExplorer() {
     }, [projectFilter, allFiles]);
 
 
-    // Derived state for display (computed after state declarations)
-    const filteredFiles = allFiles.filter(f => {
-        // Filter by search query
-        if (searchQuery && !f.name.toLowerCase().includes(searchQuery.toLowerCase())) {
-            return false;
-        }
+    // Derived state for display
+    // The sorting is still done client side for immediate feedback on the current "page"
+    // Since limit is 1200, it's effectively all files for most cases anyway.
+    const files = useMemo(() => {
+        return [...allFiles].sort((a, b) => {
+            if (!sortConfig) return 0;
+            const { key, direction } = sortConfig;
 
-        // Filter by project
-        if (projectFilter !== "ALL") {
-            if (projectFilter === "ORPHANED") {
-                if (f.project) return false;
-            } else {
-                if (f.project?.id !== projectFilter) return false;
+            let valA = a[key];
+            let valB = b[key];
+
+            if (key === 'createdAt') {
+                valA = new Date(valA).getTime();
+                valB = new Date(valB).getTime();
             }
-        }
 
-        // Filter by country
-        if (countryFilter !== "Tous") {
-            if (countryFilter === "Autre") {
-                // Show orphaned files or files without country
-                return !f.project?.country;
-            }
-            // Show files from selected country
-            return f.project?.country === countryFilter;
-        }
-
-        return true;
-    });
-
-    const files = [...filteredFiles].sort((a, b) => {
-        if (!sortConfig) return 0;
-        const { key, direction } = sortConfig;
-
-        let valA = a[key];
-        let valB = b[key];
-
-        if (key === 'createdAt') {
-            valA = new Date(valA).getTime();
-            valB = new Date(valB).getTime();
-        }
-
-        if (valA < valB) return direction === 'asc' ? -1 : 1;
-        if (valA > valB) return direction === 'asc' ? 1 : -1;
-        return 0;
-    });
+            if (valA < valB) return direction === 'asc' ? -1 : 1;
+            if (valA > valB) return direction === 'asc' ? 1 : -1;
+            return 0;
+        });
+    }, [allFiles, sortConfig]);
 
     const toggleSort = (key: 'name' | 'fileType' | 'size' | 'createdAt') => {
         setSortConfig(current => {
@@ -109,32 +88,29 @@ export function FileExplorer() {
         });
     };
 
-    // Mock Toast for now if component doesn't exist, or try to import it.
-    // I'll skip the import for now and use console.
-
     const fetchFiles = useCallback(async () => {
         setLoading(true);
         try {
             // Build query params
             const params = new URLSearchParams();
-            // We do NOT send search query to API for now, we filter client side as discussed
-            // if (searchQuery) params.append("search", searchQuery);
-            // Update: We want the dropdown to have ALL files of the type, so we fetch all of type.
 
             if (fileTypeFilter !== "ALL") params.append("fileType", fileTypeFilter);
+            if (projectFilter !== "ALL") params.append("projectId", projectFilter);
+            if (countryFilter !== "Tous") params.append("country", countryFilter);
+            if (debouncedSearchQuery) params.append("search", debouncedSearchQuery);
 
             const res = await fetch(`/api/files/list?${params.toString()}`);
             if (!res.ok) throw new Error("Failed to fetch files");
 
             const data = await res.json();
-            setAllFiles(data.files || []); // Store all fetched files
+            setAllFiles(data.files || []);
 
         } catch (error) {
             console.error("Error fetching files:", error);
         } finally {
             setLoading(false);
         }
-    }, [fileTypeFilter]);
+    }, [fileTypeFilter, projectFilter, countryFilter, debouncedSearchQuery]);
 
     useEffect(() => {
         fetchFiles();
@@ -165,7 +141,7 @@ export function FileExplorer() {
 
     const handleContextMenu = useCallback((e: React.MouseEvent, id: string) => {
         e.preventDefault();
-        const file = files.find(f => f.id === id);
+        const file = files.find((f: FileData) => f.id === id);
         if (file) {
             setContextMenu({ x: e.clientX, y: e.clientY, file });
         }

@@ -6,7 +6,6 @@ import { FileStatistics } from "@/lib/types";
 import { FileUploadZone } from "../files/file-upload-zone";
 import { FileUploadProgress, FileUploadState } from "../files/file-upload-progress";
 import { FileExplorer } from "../files/file-explorer";
-import { useRouter } from "next/navigation";
 // import { formatBytes } from "@/lib/utils";
 
 interface FileManagementDialogProps {
@@ -23,7 +22,7 @@ export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileM
 
     // Statistiques
     const [stats, setStats] = useState<FileStatistics | null>(null);
-    const [isLoadingStats, setIsLoadingStats] = useState(true);
+    // const [isLoadingStats, setIsLoadingStats] = useState(true);
 
     // Upload State
     const [uploads, setUploads] = useState<FileUploadState[]>([]);
@@ -36,7 +35,7 @@ export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileM
     }, [isOpen, isAdmin]);
 
     const fetchStatistics = async () => {
-        setIsLoadingStats(true);
+        // setIsLoadingStats(true);
         try {
             const response = await fetch("/api/files/statistics");
             if (response.ok) {
@@ -46,7 +45,7 @@ export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileM
         } catch (error) {
             console.error("Erreur lors du chargement des statistiques:", error);
         } finally {
-            setIsLoadingStats(false);
+            // setIsLoadingStats(false);
         }
     };
 
@@ -122,11 +121,11 @@ export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileM
             xhr.onload = async () => {
                 if (xhr.status >= 200 && xhr.status < 300) {
                     try {
-                        const result = JSON.parse(xhr.responseText);
+                        JSON.parse(xhr.responseText);
                         updateUploadStatus(file, { status: "success", progress: 100 });
                         // Refresh stats
                         fetchStatistics();
-                    } catch (e) {
+                    } catch {
                          updateUploadStatus(file, { status: "error", error: "Invalid response" });
                     }
                 } else {
@@ -134,7 +133,7 @@ export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileM
                     try {
                         const res = JSON.parse(xhr.responseText);
                         errorMessage = res.error || errorMessage;
-                    } catch (e) {}
+                    } catch {}
                     updateUploadStatus(file, { status: "error", error: errorMessage });
                 }
             };
@@ -147,7 +146,7 @@ export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileM
 
             xhr.send(formData);
 
-        } catch (error) {
+        } catch {
             updateUploadStatus(file, { status: "error", error: "Upload failed" });
         }
     };

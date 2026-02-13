@@ -68,10 +68,7 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
-  _request: Request,
-  { params: _params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE() {
   // We already have a bulk delete route, but proper REST suggests singular delete here too.
   // Skipping for now as we focus on Rename.
   return NextResponse.json({ error: "Method not implemented" }, { status: 405 });

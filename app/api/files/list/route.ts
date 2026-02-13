@@ -20,11 +20,7 @@ export async function GET(request: Request) {
   // Increased default limit to 1200 to show all files in dropdowns
   const limit = parseInt(searchParams.get("limit") || "1200");
   const search = searchParams.get("search");
-
-  if (!projectId) {
-    // If no projectId provided, we list ALL files (Admin mode) or handle orphan logic?
-    // For now, let's just NOT fail.
-  }
+  const country = searchParams.get("country");
 
   try {
     const where: Prisma.FileWhereInput = {
@@ -32,7 +28,24 @@ export async function GET(request: Request) {
     };
 
     if (projectId) {
-      where.projectId = projectId;
+      if (projectId === "ORPHANED") {
+        where.projectId = { equals: null };
+      } else {
+        where.projectId = projectId;
+      }
+    }
+
+    if (country && country !== "Tous") {
+      if (country === "Autre") {
+        where.OR = [
+          { project: { is: null } },
+          { projectId: { equals: null } }
+        ];
+      } else {
+        where.project = {
+          country: country
+        };
+      }
     }
 
     if (fileType) {

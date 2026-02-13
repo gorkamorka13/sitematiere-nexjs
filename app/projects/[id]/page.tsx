@@ -171,7 +171,6 @@ export default async function ProjectDetailPage(props: Props) {
                                     project.images.map((img) => (
                                         <div key={img.id} className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 group">
                                             {/* Using simple img tag for external urls or local paths without optimization configuration */}
-                                            {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <Image
                                                 src={normalizeImageUrl(img.url)}
                                                 alt={img.alt || project.name}
