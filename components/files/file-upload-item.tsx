@@ -1,6 +1,5 @@
 "use client";
 
-import { useTransition } from "react";
 import { X, FileIcon, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 // import { formatBytes } from "@/lib/utils"; // Assuming this utility exists or I'll need to create it locally
 // import { FileType } from "@prisma/client";
