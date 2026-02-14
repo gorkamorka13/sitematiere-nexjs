@@ -326,7 +326,8 @@ export default function SettingsDialogs({ isAdmin, isOpen, onClose }: SettingsDi
                         <select
                           value={formData.role}
                           onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
-                          className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm appearance-none cursor-pointer"
+                          disabled={editingUser?.username === "admin"}
+                          className={`w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm appearance-none cursor-pointer ${editingUser?.username === "admin" ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
                           <option value="ADMIN">Administrateur</option>
                           <option value="USER">Utilisateur</option>
@@ -459,13 +460,15 @@ export default function SettingsDialogs({ isAdmin, isOpen, onClose }: SettingsDi
                                 >
                                   <Edit2 className="w-4 h-4" />
                                 </button>
-                                <button
-                                  onClick={() => handleDeleteUser(user.id)}
-                                  className="p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                                  title="Supprimer"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
+                                {user.username !== "admin" && (
+                                  <button
+                                    onClick={() => handleDeleteUser(user.id)}
+                                    className="p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                                    title="Supprimer"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                )}
                               </div>
                             </td>
                           </tr>

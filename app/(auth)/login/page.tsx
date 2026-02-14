@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Eye, EyeOff, ArrowRight, User, Lock } from "lucide-react";
 
+import packageInfo from "@/package.json";
+const version = packageInfo.version;
+
 export default function LoginPage() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
@@ -59,9 +62,7 @@ export default function LoginPage() {
                             <span className="matiere text-3xl">Matière</span>
                         </h1>
                         <h2 className="text-xl font-bold text-white mb-2">Connexion</h2>
-                        <p className="text-gray-400 text-sm text-center max-w-xs">
-                            Votre assistant de présentation et de gestion de projets
-                        </p>
+
                     </div>
 
                     {/* Form */}
@@ -140,9 +141,9 @@ export default function LoginPage() {
                     </form>
 
                     {/* Footer */}
-                    <div className="mt-8 text-center space-y-2">
-                        <p className="text-[10px] text-gray-600 uppercase tracking-[0.2em] font-medium">
-                            © {new Date().getFullYear()} Michel Esparsa • Sécurisé par NextAuth
+                    <div className="mt-8 text-center">
+                        <p className="text-[10px] text-gray-600 uppercase tracking-widest font-bold opacity-50">
+                            v{version}
                         </p>
                     </div>
                 </div>

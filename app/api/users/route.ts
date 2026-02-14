@@ -242,6 +242,14 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    // Empêcher la suppression du compte admin principal
+    if (existingUser.username === "admin") {
+      return NextResponse.json(
+        { error: "Le compte administrateur principal ne peut pas être supprimé" },
+        { status: 400 }
+      );
+    }
+
     // Empêcher la suppression de son propre compte
     const session = await auth();
     if ((session?.user as { id?: string })?.id === id) {
