@@ -12,6 +12,7 @@ export const ProjectUpdateSchema = z.object({
   construction: z.number().min(0).max(100).optional(),
   flagName: z.string().optional(),
   clientLogoName: z.string().optional(),
+  pinName: z.string().optional(),
 });
 
 export type ProjectUpdateInput = z.infer<typeof ProjectUpdateSchema>;
@@ -32,6 +33,7 @@ export const ProjectCreateSchema = z.object({
   construction: z.number().min(0).max(100).default(0),
   flagName: z.string().optional(),
   clientLogoName: z.string().optional(),
+  pinName: z.string().optional(),
 });
 
 export type ProjectCreateInput = z.infer<typeof ProjectCreateSchema>;

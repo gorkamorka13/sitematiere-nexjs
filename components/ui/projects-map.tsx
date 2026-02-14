@@ -4,11 +4,13 @@ import { MapContainer, TileLayer, Marker, Tooltip, useMap } from "react-leaflet"
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useEffect } from "react";
-import { Project } from "@prisma/client";
+import { Project, Document } from "@prisma/client";
 import { getIcon } from "@/lib/map-icons";
 
+type ProjectWithDocs = Project & { documents?: Document[] };
+
 type MultiMapProps = {
-    projects: Project[];
+    projects: ProjectWithDocs[];
     onSelectProject?: (project: Project) => void;
     fitNonce?: number;
     globalCenterNonce?: number;
@@ -80,7 +82,7 @@ export default function ProjectsMap({ projects, onSelectProject, fitNonce, globa
                 <Marker
                     key={project.id}
                     position={[project.latitude, project.longitude]}
-                    icon={getIcon(project.status)}
+                    icon={getIcon(project.status, project.documents?.find(d => d.type === 'PIN')?.url)}
                     eventHandlers={{
                         click: () => onSelectProject?.(project),
                         popupopen: () => onSelectProject?.(project),

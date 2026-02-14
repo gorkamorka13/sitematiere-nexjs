@@ -149,6 +149,7 @@ enum DocumentType {
   PLAN
   FLAG
   CLIENT_LOGO
+  PIN
   OTHER
 }
 

@@ -19,13 +19,13 @@ interface FileGridProps {
 }
 
 /**
- * Check if a file is from Client or Flag directory
+ * Check if a file is from Client, Flag or Pins directory
  * These directories need reduced display dimensions
  */
 function isReducedSizeDirectory(blobPath: string): boolean {
     const lowerPath = blobPath.toLowerCase();
-    return lowerPath.includes('/client/') || lowerPath.includes('/flag/') ||
-        lowerPath.startsWith('client/') || lowerPath.startsWith('flag/');
+    return lowerPath.includes('/client/') || lowerPath.includes('/flag/') || lowerPath.includes('/pins/') ||
+        lowerPath.startsWith('client/') || lowerPath.startsWith('flag/') || lowerPath.startsWith('pins/');
 }
 
 export function FileGrid({ files, selectedIds, onSelect, onRename, onPreview, onContextMenu }: FileGridProps) {
@@ -50,7 +50,7 @@ export function FileGrid({ files, selectedIds, onSelect, onRename, onPreview, on
                     <div
                         key={file.id}
                         className={`
-                            group relative rounded-xl border bg-card cursor-pointer transition-all
+                            group relative rounded-xl border bg-card cursor-pointer transition-all overflow-hidden
                             hover:shadow-md hover:border-primary/50
                             ${isSelected ? "ring-2 ring-primary border-primary bg-primary/5" : "border-border"}
                             ${isReducedSize ? "h-24 sm:h-28 md:h-32" : "aspect-square"}

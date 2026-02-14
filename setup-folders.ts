@@ -28,10 +28,12 @@ async function main() {
 
   const clientProject = await prisma.project.upsert({
     where: { id: 'project-clients' },
-    update: {},
+    update: {
+      name: 'Client',
+    },
     create: {
       id: 'project-clients',
-      name: 'client',
+      name: 'Client',
       country: 'Système',
       type: 'AUTRE',
       status: 'DONE',

@@ -138,7 +138,7 @@ export function FileSearch({
             <option value="ALL">Tous les projets ({projects.length})</option>
             {hasOrphanedFiles && <option value="ORPHANED">Sans projet</option>}
             {projects.map(([id, name]) => {
-              const isSpecial = id === 'project-flags' || id === 'project-clients' || name === 'Flag' || name === 'client';
+              const isSpecial = id === 'project-flags' || id === 'project-clients' || id === 'project-pins' || name === 'Flag' || name === 'Client' || name === 'Pins';
               return (
                 <option key={id} value={id}>
                   {isSpecial ? `🔴 ${name}` : name}
@@ -157,7 +157,7 @@ export function FileSearch({
             {hasFilesNoCountry && <option value="Autre">Autre (sans pays)</option>}
             {countries.map((country) => (
               <option key={country} value={country}>
-                {country}
+                {country === 'Système' ? `🔴 ${country}` : country}
               </option>
             ))}
           </select>

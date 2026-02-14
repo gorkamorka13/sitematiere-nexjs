@@ -98,6 +98,36 @@ export async function updateProject(formData: ProjectUpdateInput) {
       }
     }
 
+    // Mise à jour ou création du document "PIN"
+    if (validatedData.pinName !== undefined) {
+      const existingPin = await prisma.document.findFirst({
+        where: { projectId: validatedData.id, type: "PIN" }
+      });
+
+      if (validatedData.pinName !== "") {
+        if (existingPin) {
+          await prisma.document.update({
+            where: { id: existingPin.id },
+            data: { url: validatedData.pinName }
+          });
+        } else {
+          await prisma.document.create({
+            data: {
+              projectId: validatedData.id,
+              type: "PIN",
+              url: validatedData.pinName,
+              name: "Pin Carte",
+            }
+          });
+        }
+      } else if (existingPin) {
+        // Supprimer l'association si le champ est vidé
+        await prisma.document.delete({
+          where: { id: existingPin.id }
+        });
+      }
+    }
+
     revalidatePath("/");
     return { success: true };
   } catch (error) {
@@ -158,6 +188,33 @@ export async function createProject(formData: ProjectCreateInput) {
         }
       });
     }
+
+    // Créer le document "PIN" - utiliser le pin personnalisé si fourni, sinon assigner selon le statut
+    let pinUrl = validatedData.pinName;
+    if (!pinUrl || pinUrl === "") {
+      // Assigner un pin par défaut selon le statut
+      switch (validatedData.status) {
+        case 'DONE':
+          pinUrl = '/pins/realise.png';
+          break;
+        case 'CURRENT':
+          pinUrl = '/pins/en_cours.png';
+          break;
+        case 'PROSPECT':
+        default:
+          pinUrl = '/pins/prospection.png';
+          break;
+      }
+    }
+
+    await prisma.document.create({
+      data: {
+        projectId: project.id,
+        type: "PIN",
+        url: pinUrl,
+        name: "Pin Carte",
+      }
+    });
 
     revalidatePath("/");
 

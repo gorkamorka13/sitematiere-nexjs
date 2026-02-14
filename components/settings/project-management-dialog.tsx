@@ -66,6 +66,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
     construction: 0,
     flagName: "",
     clientLogoName: "",
+    pinName: "",
   });
 
   const [createFormData, setCreateFormData] = useState({
@@ -84,6 +85,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
     construction: 0,
     flagName: "",
     clientLogoName: "",
+    pinName: "",
   });
 
   const [confirmName, setConfirmName] = useState("");
@@ -106,6 +108,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [isFlagPickerOpen, setIsFlagPickerOpen] = useState(false);
   const [isLogoPickerOpen, setIsLogoPickerOpen] = useState(false);
+  const [isPinPickerOpen, setIsPinPickerOpen] = useState(false);
 
   // Handle map marker position change
   const handleMapPositionChange = (lat: number, lng: number, isFinal: boolean = true) => {
@@ -291,6 +294,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
       if (project) {
         const flagDoc = project.documents?.find((d) => d.type === "FLAG");
         const logoDoc = project.documents?.find((d) => d.type === "CLIENT_LOGO" || d.name.toLowerCase().includes('logo'));
+        const pinDoc = project.documents?.find((d) => d.type === "PIN");
 
         setFormData({
           latitude: project.latitude ?? 0,
@@ -303,22 +307,24 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
           construction: project.construction || 0,
           flagName: flagDoc?.url || "",
           clientLogoName: logoDoc?.url || "",
+          pinName: pinDoc?.url || "",
         });
         setStatus(null);
       }
     } else {
-        setFormData({
-          latitude: 0,
-          longitude: 0,
-          description: "",
-          prospection: 0,
-          studies: 0,
-          fabrication: 0,
-          transport: 0,
-          construction: 0,
-          flagName: "",
-          clientLogoName: "",
-        });
+      setFormData({
+        latitude: 0,
+        longitude: 0,
+        description: "",
+        prospection: 0,
+        studies: 0,
+        fabrication: 0,
+        transport: 0,
+        construction: 0,
+        flagName: "",
+        clientLogoName: "",
+        pinName: "",
+      });
     }
   }, [selectedProjectId, projects]);
 
@@ -414,6 +420,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
           construction: 0,
           flagName: "",
           clientLogoName: "",
+          pinName: "",
         });
         setUploads([]);
 
@@ -481,6 +488,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
         construction: formData.construction,
         flagName: formData.flagName,
         clientLogoName: formData.clientLogoName,
+        pinName: formData.pinName,
       });
 
       if (result.success) {
@@ -510,14 +518,14 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
           >
             <div className="flex items-center gap-3">
               <div className="p-2 bg-indigo-50 dark:bg-indigo-900/40 rounded-lg">
-                  {activeTab === 'create' ? <Plus className="w-5 h-5 text-indigo-600 dark:text-indigo-400" /> :
-                   activeTab === 'modify' ? <Edit className="w-5 h-5 text-indigo-600 dark:text-indigo-400" /> :
-                   <Trash2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />}
+                {activeTab === 'create' ? <Plus className="w-5 h-5 text-indigo-600 dark:text-indigo-400" /> :
+                  activeTab === 'modify' ? <Edit className="w-5 h-5 text-indigo-600 dark:text-indigo-400" /> :
+                    <Trash2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />}
               </div>
               <h2 className="text-lg lg:text-xl font-bold text-gray-900 dark:text-white uppercase tracking-tight">
                 {activeTab === 'create' ? 'Création de projet' :
-                 activeTab === 'modify' ? 'Modification de projets' :
-                 'Suppression de projet'}
+                  activeTab === 'modify' ? 'Modification de projets' :
+                    'Suppression de projet'}
               </h2>
             </div>
             <button
@@ -533,33 +541,30 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
             {isAdmin && (
               <button
                 onClick={() => setActiveTab('create')}
-                className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 whitespace-nowrap shrink-0 ${
-                  activeTab === 'create'
+                className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 whitespace-nowrap shrink-0 ${activeTab === 'create'
                   ? 'text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400'
                   : 'text-gray-400 border-transparent hover:text-gray-600 dark:hover:text-gray-200'
-                }`}
+                  }`}
               >
                 Créer
               </button>
             )}
             <button
               onClick={() => setActiveTab('modify')}
-              className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 whitespace-nowrap shrink-0 ${
-                activeTab === 'modify'
+              className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 whitespace-nowrap shrink-0 ${activeTab === 'modify'
                 ? 'text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400'
                 : 'text-gray-400 border-transparent hover:text-gray-600 dark:hover:text-gray-200'
-              }`}
+                }`}
             >
               Modifier
             </button>
             {isAdmin && (
               <button
                 onClick={() => setActiveTab('delete')}
-                className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 whitespace-nowrap shrink-0 ${
-                  activeTab === 'delete'
+                className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 whitespace-nowrap shrink-0 ${activeTab === 'delete'
                   ? 'text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400'
                   : 'text-gray-400 border-transparent hover:text-gray-600 dark:hover:text-gray-200'
-                }`}
+                  }`}
               >
                 Supprimer
               </button>
@@ -572,405 +577,450 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
         <div className="overflow-y-auto max-h-[calc(90vh-160px)] flex-1">
           {activeTab === 'modify' && (
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Filtre pays, Sélection du projet et Recherche Rapide */}
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* Filtre par pays */}
-            <div className="flex-1 md:flex-[0.25]">
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Filtrer par pays</label>
-              <select
-                value={countryFilter}
-                onChange={(e) => {
-                  setCountryFilter(e.target.value);
-                  setSelectedProjectId(""); // Réinitialiser la sélection quand on change de pays
-                }}
-                className="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all dark:text-white"
-              >
-                <option value="Tous">Tous les pays</option>
-                {countries.map(country => (
-                  <option key={country} value={country}>{country}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex-1 md:flex-[0.35]">
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Choisir un projet</label>
-              <select
-                value={selectedProjectId}
-                onChange={(e) => {
-                  setSelectedProjectId(e.target.value);
-                }}
-                className="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all dark:text-white"
-                required
-              >
-                <option value="">
-                  {sortedProjects.length === 0 ? "Aucun projet" : "-- Sélectionner --"}
-                </option>
-                {sortedProjects.map(p => (
-                  <option key={p.id} value={p.id}>{p.name} ({p.country})</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex-1 md:flex-[0.4] relative">
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Recherche rapide</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setShowSuggestions(true);
-                    setFocusedSuggestionIndex(-1);
-                  }}
-                  onFocus={() => setShowSuggestions(true)}
-                  onKeyDown={handleKeyDown}
-                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                  placeholder="Tapez le nom d'un ouvrage..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all dark:text-white"
-                />
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-
-                {/* Autocomplete Suggestions */}
-                {showSuggestions && searchSuggestions.length > 0 && (
-                  <div className="absolute z-[110] w-full mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-48 overflow-auto animate-in fade-in slide-in-from-top-2 duration-200">
-                    {searchSuggestions.map((project: Project, index: number) => (
-                      <button
-                        key={project.id}
-                        type="button"
-                        onMouseMove={() => setFocusedSuggestionIndex(index)}
-                        onClick={() => handleSearchSelect(project)}
-                        className={`w-full text-left px-4 py-2 text-sm transition-colors border-b border-gray-50 dark:border-gray-700/50 last:border-0 ${
-                          focusedSuggestionIndex === index
-                          ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300'
-                          : 'hover:bg-indigo-50 dark:hover:bg-indigo-900/30'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-semibold">{project.name}</span>
-                          <span className="text-xs opacity-60 italic">{project.country}</span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Interactive Map Section */}
-          {selectedProjectId && (
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-indigo-500" /> Position sur la Carte
-              </label>
-              <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-600 shadow-sm">
-                <EditableMapWrapper
-                  latitude={formData.latitude}
-                  longitude={formData.longitude}
-                  onPositionChange={handleMapPositionChange}
-                />
-              </div>
-              <p className="mt-2 text-xs text-gray-500 dark:text-gray-400 italic">
-                💡 Déplacez le marqueur sur la carte pour ajuster les coordonnées
-              </p>
-            </div>
-          )}
-
-          {/* Labels des coordonnées */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Label Latitude */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                <span className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-gray-400" /> Latitude
-                </span>
-              </label>
-            </div>
-
-            {/* Label Longitude */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                <span className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-gray-400" /> Longitude
-                </span>
-              </label>
-            </div>
-          </div>
-
-          {/* Ligne des inputs avec boutons Undo/Redo */}
-          <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-center">
-            {/* Input Latitude */}
-            <div>
-              <input
-                type="text"
-                value={coordinateFormat === 'decimal' ? (formData.latitude ?? 0) : decimalToDMS(formData.latitude ?? 0, true)}
-                onChange={(e) => handleCoordinateChange(e.target.value, 'latitude')}
-                disabled={!selectedProjectId}
-                className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 transition-all dark:text-white font-mono text-sm"
-                placeholder={coordinateFormat === 'decimal' ? '8.4657' : '8° 27\' 56" N'}
-                required
-              />
-            </div>
-
-            {/* Input Longitude */}
-            <div>
-              <input
-                type="text"
-                value={coordinateFormat === 'decimal' ? (formData.longitude ?? 0) : decimalToDMS(formData.longitude ?? 0, false)}
-                onChange={(e) => handleCoordinateChange(e.target.value, 'longitude')}
-                disabled={!selectedProjectId}
-                className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 transition-all dark:text-white font-mono text-sm"
-                placeholder={coordinateFormat === 'decimal' ? '-13.2317' : '13° 13\' 54" W'}
-                required
-              />
-            </div>
-
-            {/* Boutons Undo/Redo à droite */}
-            <div className="flex items-center justify-center">
-              <div className="flex items-center gap-1 border border-gray-200 dark:border-gray-600 rounded-lg p-1 bg-white dark:bg-gray-800 shadow-sm">
-                {/* Format Toggle Button - Unique per row */}
-                <button
-                  type="button"
-                  onClick={() => setCoordinateFormat(prev => prev === 'decimal' ? 'dms' : 'decimal')}
-                  className="p-2 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-all flex items-center gap-1.5"
-                  title={coordinateFormat === 'decimal' ? "Passer en DMS" : "Passer en Décimal"}
-                >
-                  {coordinateFormat === 'decimal' ? <MapPin className="w-4 h-4" /> : <Globe className="w-4 h-4" />}
-                  <span className="text-[10px] font-bold uppercase">{coordinateFormat === 'decimal' ? 'DMS' : 'DEC'}</span>
-                </button>
-
-                <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
-
-                <button
-                  type="button"
-                  onClick={handleUndo}
-                  disabled={historyIndex <= 0 || !selectedProjectId}
-                  className="p-2 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1"
-                  title="Annuler (Ctrl+Z)"
-                >
-                  <Undo2 className="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={handleRedo}
-                  disabled={historyIndex >= positionHistory.length - 1 || !selectedProjectId}
-                  className="p-2 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1"
-                  title="Rétablir (Ctrl+Y)"
-                >
-                  <Redo2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Ligne des exemples */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 -mt-4">
-            <div>
-              <p className="text-xs text-gray-400 dark:text-gray-500">
-                {coordinateFormat === 'decimal' ? 'Ex: 8.4657' : 'Ex: 8° 27\' 56" N'}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-400 dark:text-gray-500">
-                {coordinateFormat === 'decimal' ? 'Ex: -13.2317' : 'Ex: 13° 13\' 54" W'}
-              </p>
-            </div>
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
-              <AlignLeft className="w-4 h-4 text-gray-400" /> Description
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              disabled={!selectedProjectId}
-              rows={6}
-              className="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 transition-all dark:text-white resize-none"
-              placeholder="Saisissez la description du projet..."
-            />
-          </div>
-
-          {/* Avancement du Projet */}
-          <div className="space-y-4">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-purple-500" /> Avancement du Projet
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              {[
-                { label: "Prospection", key: "prospection" },
-                { label: "Études", key: "studies" },
-                { label: "Fabrication", key: "fabrication" },
-                { label: "Transport", key: "transport" },
-                { label: "Montage", key: "construction" },
-              ].map((step) => (
-                <div key={step.key}>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">{step.label}</label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={formData[step.key as keyof typeof formData] === 0 ? "" : formData[step.key as keyof typeof formData]}
+              {/* Filtre pays, Sélection du projet et Recherche Rapide */}
+              <div className="flex flex-col md:flex-row gap-4">
+                {/* Filtre par pays */}
+                <div className="flex-1 md:flex-[0.25]">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Filtrer par pays</label>
+                  <select
+                    value={countryFilter}
                     onChange={(e) => {
-                      const value = e.target.value;
-                      if (value === "" || value === "0") {
-                        setFormData({ ...formData, [step.key]: 0 });
-                      } else {
-                        // Supprimer les zéros en début de chaîne
-                        const cleanValue = value.replace(/^0+/, "") || "0";
-                        const numValue = parseInt(cleanValue, 10);
-                        if (!isNaN(numValue)) {
-                          setFormData({ ...formData, [step.key]: Math.min(100, Math.max(0, numValue)) });
-                        }
-                      }
+                      setCountryFilter(e.target.value);
+                      setSelectedProjectId(""); // Réinitialiser la sélection quand on change de pays
                     }}
+                    className="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all dark:text-white"
+                  >
+                    <option value="Tous">Tous les pays</option>
+                    {countries.map(country => (
+                      <option key={country} value={country}>{country}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex-1 md:flex-[0.35]">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Choisir un projet</label>
+                  <select
+                    value={selectedProjectId}
+                    onChange={(e) => {
+                      setSelectedProjectId(e.target.value);
+                    }}
+                    className="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all dark:text-white"
+                    required
+                  >
+                    <option value="">
+                      {sortedProjects.length === 0 ? "Aucun projet" : "-- Sélectionner --"}
+                    </option>
+                    {sortedProjects.map(p => (
+                      <option key={p.id} value={p.id}>{p.name} ({p.country})</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex-1 md:flex-[0.4] relative">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Recherche rapide</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setShowSuggestions(true);
+                        setFocusedSuggestionIndex(-1);
+                      }}
+                      onFocus={() => setShowSuggestions(true)}
+                      onKeyDown={handleKeyDown}
+                      onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                      placeholder="Tapez le nom d'un ouvrage..."
+                      className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all dark:text-white"
+                    />
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+
+                    {/* Autocomplete Suggestions */}
+                    {showSuggestions && searchSuggestions.length > 0 && (
+                      <div className="absolute z-[110] w-full mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-48 overflow-auto animate-in fade-in slide-in-from-top-2 duration-200">
+                        {searchSuggestions.map((project: Project, index: number) => (
+                          <button
+                            key={project.id}
+                            type="button"
+                            onMouseMove={() => setFocusedSuggestionIndex(index)}
+                            onClick={() => handleSearchSelect(project)}
+                            className={`w-full text-left px-4 py-2 text-sm transition-colors border-b border-gray-50 dark:border-gray-700/50 last:border-0 ${focusedSuggestionIndex === index
+                              ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300'
+                              : 'hover:bg-indigo-50 dark:hover:bg-indigo-900/30'
+                              }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="font-semibold">{project.name}</span>
+                              <span className="text-xs opacity-60 italic">{project.country}</span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Interactive Map Section */}
+              {selectedProjectId && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-indigo-500" /> Position sur la Carte
+                  </label>
+                  <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-600 shadow-sm">
+                    <EditableMapWrapper
+                      latitude={formData.latitude}
+                      longitude={formData.longitude}
+                      onPositionChange={handleMapPositionChange}
+                    />
+                  </div>
+                  <p className="mt-2 text-xs text-gray-500 dark:text-gray-400 italic">
+                    💡 Déplacez le marqueur sur la carte pour ajuster les coordonnées
+                  </p>
+                </div>
+              )}
+
+              {/* Labels des coordonnées */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Label Latitude */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <span className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-gray-400" /> Latitude
+                    </span>
+                  </label>
+                </div>
+
+                {/* Label Longitude */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <span className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-gray-400" /> Longitude
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Ligne des inputs avec boutons Undo/Redo */}
+              <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-center">
+                {/* Input Latitude */}
+                <div>
+                  <input
+                    type="text"
+                    value={coordinateFormat === 'decimal' ? (formData.latitude ?? 0) : decimalToDMS(formData.latitude ?? 0, true)}
+                    onChange={(e) => handleCoordinateChange(e.target.value, 'latitude')}
                     disabled={!selectedProjectId}
-                    className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white text-sm"
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 transition-all dark:text-white font-mono text-sm"
+                    placeholder={coordinateFormat === 'decimal' ? '8.4657' : '8° 27\' 56" N'}
+                    required
                   />
                 </div>
-              ))}
-            </div>
-          </div>
 
-          <div className="space-y-4">
-            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-              <FolderOpen className="w-4 h-4" /> Identité Visuelle
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Drapeau */}
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  Drapeau du Pays
-                </label>
-                <div className="flex items-center gap-3">
-                    <div className="relative group w-24 h-16 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 flex items-center justify-center shrink-0 shadow-sm">
-                    {formData.flagName ? (
-                      <NextImage
-                        src={formData.flagName.startsWith('http') || formData.flagName.startsWith('/') ? formData.flagName : `/${formData.flagName}`}
-                        alt="Drapeau"
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <ImageIcon className="w-6 h-6 text-gray-300" />
-                    )}
+                {/* Input Longitude */}
+                <div>
+                  <input
+                    type="text"
+                    value={coordinateFormat === 'decimal' ? (formData.longitude ?? 0) : decimalToDMS(formData.longitude ?? 0, false)}
+                    onChange={(e) => handleCoordinateChange(e.target.value, 'longitude')}
+                    disabled={!selectedProjectId}
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 transition-all dark:text-white font-mono text-sm"
+                    placeholder={coordinateFormat === 'decimal' ? '-13.2317' : '13° 13\' 54" W'}
+                    required
+                  />
+                </div>
+
+                {/* Boutons Undo/Redo à droite */}
+                <div className="flex items-center justify-center">
+                  <div className="flex items-center gap-1 border border-gray-200 dark:border-gray-600 rounded-lg p-1 bg-white dark:bg-gray-800 shadow-sm">
+                    {/* Format Toggle Button - Unique per row */}
                     <button
                       type="button"
-                      onClick={() => setIsFlagPickerOpen(true)}
-                      className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold uppercase tracking-widest"
+                      onClick={() => setCoordinateFormat(prev => prev === 'decimal' ? 'dms' : 'decimal')}
+                      className="p-2 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-all flex items-center gap-1.5"
+                      title={coordinateFormat === 'decimal' ? "Passer en DMS" : "Passer en Décimal"}
                     >
-                      Choisir
+                      {coordinateFormat === 'decimal' ? <MapPin className="w-4 h-4" /> : <Globe className="w-4 h-4" />}
+                      <span className="text-[10px] font-bold uppercase">{coordinateFormat === 'decimal' ? 'DMS' : 'DEC'}</span>
                     </button>
-                  </div>
-                  <div className="flex-1">
+
+                    <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
+
                     <button
                       type="button"
-                      onClick={() => setIsFlagPickerOpen(true)}
-                      className="w-full px-4 py-2 text-left bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl hover:border-indigo-400 transition-all text-xs text-gray-500 dark:text-gray-400 truncate"
+                      onClick={handleUndo}
+                      disabled={historyIndex <= 0 || !selectedProjectId}
+                      className="p-2 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1"
+                      title="Annuler (Ctrl+Z)"
                     >
-                      {formData.flagName ? formData.flagName.split('/').pop() : "Sélectionner une image..."}
+                      <Undo2 className="w-4 h-4" />
                     </button>
-                    {formData.flagName && (
-                      <button
-                        type="button"
-                        onClick={() => setFormData({ ...formData, flagName: "" })}
-                        className="text-[10px] text-red-500 font-bold uppercase mt-1 ml-1 hover:underline"
-                      >
-                        Supprimer
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={handleRedo}
+                      disabled={historyIndex >= positionHistory.length - 1 || !selectedProjectId}
+                      className="p-2 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1"
+                      title="Rétablir (Ctrl+Y)"
+                    >
+                      <Redo2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
               </div>
 
-              {/* Logo Client */}
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  Logo Client
+              {/* Ligne des exemples */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 -mt-4">
+                <div>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">
+                    {coordinateFormat === 'decimal' ? 'Ex: 8.4657' : 'Ex: 8° 27\' 56" N'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">
+                    {coordinateFormat === 'decimal' ? 'Ex: -13.2317' : 'Ex: 13° 13\' 54" W'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                  <AlignLeft className="w-4 h-4 text-gray-400" /> Description
                 </label>
-                <div className="flex items-center gap-3">
-                  <div className="relative group w-24 h-16 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 flex items-center justify-center shrink-0 shadow-sm">
-                    {formData.clientLogoName ? (
-                      <NextImage
-                        src={formData.clientLogoName.startsWith('http') || formData.clientLogoName.startsWith('/') ? formData.clientLogoName : `/${formData.clientLogoName}`}
-                        alt="Logo"
-                        fill
-                        className="object-contain p-2"
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  disabled={!selectedProjectId}
+                  rows={6}
+                  className="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 transition-all dark:text-white resize-none"
+                  placeholder="Saisissez la description du projet..."
+                />
+              </div>
+
+              {/* Avancement du Projet */}
+              <div className="space-y-4">
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-purple-500" /> Avancement du Projet
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                  {[
+                    { label: "Prospection", key: "prospection" },
+                    { label: "Études", key: "studies" },
+                    { label: "Fabrication", key: "fabrication" },
+                    { label: "Transport", key: "transport" },
+                    { label: "Montage", key: "construction" },
+                  ].map((step) => (
+                    <div key={step.key}>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">{step.label}</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={formData[step.key as keyof typeof formData] === 0 ? "" : formData[step.key as keyof typeof formData]}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === "" || value === "0") {
+                            setFormData({ ...formData, [step.key]: 0 });
+                          } else {
+                            // Supprimer les zéros en début de chaîne
+                            const cleanValue = value.replace(/^0+/, "") || "0";
+                            const numValue = parseInt(cleanValue, 10);
+                            if (!isNaN(numValue)) {
+                              setFormData({ ...formData, [step.key]: Math.min(100, Math.max(0, numValue)) });
+                            }
+                          }
+                        }}
+                        disabled={!selectedProjectId}
+                        className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white text-sm"
                       />
-                    ) : (
-                      <ImageIcon className="w-6 h-6 text-gray-300" />
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => setIsLogoPickerOpen(true)}
-                      className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold uppercase tracking-widest"
-                    >
-                      Choisir
-                    </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                  <FolderOpen className="w-4 h-4" /> Identité Visuelle
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Drapeau */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      Drapeau du Pays
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <div className="relative group w-24 h-16 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 flex items-center justify-center shrink-0 shadow-sm">
+                        {formData.flagName ? (
+                          <NextImage
+                            src={formData.flagName.startsWith('http') || formData.flagName.startsWith('/') ? formData.flagName : `/${formData.flagName}`}
+                            alt="Drapeau"
+                            fill
+                            className="object-cover"
+                          />
+                        ) : (
+                          <ImageIcon className="w-6 h-6 text-gray-300" />
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setIsFlagPickerOpen(true)}
+                          className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold uppercase tracking-widest"
+                        >
+                          Choisir
+                        </button>
+                      </div>
+                      <div className="flex-1">
+                        <button
+                          type="button"
+                          onClick={() => setIsFlagPickerOpen(true)}
+                          className="w-full px-4 py-2 text-left bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl hover:border-indigo-400 transition-all text-xs text-gray-500 dark:text-gray-400 truncate"
+                        >
+                          {formData.flagName ? formData.flagName.split('/').pop() : "Sélectionner une image..."}
+                        </button>
+                        {formData.flagName && (
+                          <button
+                            type="button"
+                            onClick={() => setFormData({ ...formData, flagName: "" })}
+                            className="text-[10px] text-red-500 font-bold uppercase mt-1 ml-1 hover:underline"
+                          >
+                            Supprimer
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <button
-                      type="button"
-                      onClick={() => setIsLogoPickerOpen(true)}
-                      className="w-full px-4 py-2 text-left bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl hover:border-indigo-400 transition-all text-xs text-gray-500 dark:text-gray-400 truncate"
-                    >
-                      {formData.clientLogoName ? formData.clientLogoName.split('/').pop() : "Sélectionner une image..."}
-                    </button>
-                    {formData.clientLogoName && (
-                      <button
-                        type="button"
-                        onClick={() => setFormData({ ...formData, clientLogoName: "" })}
-                        className="text-[10px] text-red-500 font-bold uppercase mt-1 ml-1 hover:underline"
-                      >
-                        Supprimer
-                      </button>
-                    )}
+
+                  {/* Logo Client */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      Logo Client
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <div className="relative group w-24 h-16 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 flex items-center justify-center shrink-0 shadow-sm">
+                        {formData.clientLogoName ? (
+                          <NextImage
+                            src={formData.clientLogoName.startsWith('http') || formData.clientLogoName.startsWith('/') ? formData.clientLogoName : `/${formData.clientLogoName}`}
+                            alt="Logo"
+                            fill
+                            className="object-contain p-2"
+                          />
+                        ) : (
+                          <ImageIcon className="w-6 h-6 text-gray-300" />
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setIsLogoPickerOpen(true)}
+                          className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold uppercase tracking-widest"
+                        >
+                          Choisir
+                        </button>
+                      </div>
+                      <div className="flex-1">
+                        <button
+                          type="button"
+                          onClick={() => setIsLogoPickerOpen(true)}
+                          className="w-full px-4 py-2 text-left bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl hover:border-indigo-400 transition-all text-xs text-gray-500 dark:text-gray-400 truncate"
+                        >
+                          {formData.clientLogoName ? formData.clientLogoName.split('/').pop() : "Sélectionner une image..."}
+                        </button>
+                        {formData.clientLogoName && (
+                          <button
+                            type="button"
+                            onClick={() => setFormData({ ...formData, clientLogoName: "" })}
+                            className="text-[10px] text-red-500 font-bold uppercase mt-1 ml-1 hover:underline"
+                          >
+                            Supprimer
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Pin Carte */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      Pin Carte (Carte Globale)
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <div className="relative group w-24 h-16 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 flex items-center justify-center shrink-0 shadow-sm">
+                        {formData.pinName ? (
+                          <NextImage
+                            src={formData.pinName.startsWith('http') || formData.pinName.startsWith('/') ? formData.pinName : `/${formData.pinName}`}
+                            alt="Pin"
+                            width={32}
+                            height={32}
+                            className="object-contain p-2"
+                          />
+                        ) : (
+                          <MapPin className="w-6 h-6 text-gray-300" />
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setIsPinPickerOpen(true)}
+                          className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold uppercase tracking-widest"
+                        >
+                          Choisir
+                        </button>
+                      </div>
+                      <div className="flex-1">
+                        <button
+                          type="button"
+                          onClick={() => setIsPinPickerOpen(true)}
+                          className="w-full px-4 py-2 text-left bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl hover:border-indigo-400 transition-all text-xs text-gray-500 dark:text-gray-400 truncate"
+                        >
+                          {formData.pinName ? formData.pinName.split('/').pop() : "Sélectionner une image..."}
+                        </button>
+                        {formData.pinName && (
+                          <button
+                            type="button"
+                            onClick={() => setFormData({ ...formData, pinName: "" })}
+                            className="text-[10px] text-red-500 font-bold uppercase mt-1 ml-1 hover:underline"
+                          >
+                            Supprimer
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
 
 
 
-          {/* Status Messages */}
-          {status && (
-            <div className={`p-4 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2 ${
-              status.type === 'success' ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-100 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-100 dark:border-red-800'
-            }`}>
-              {status.type === 'success' ? <CheckCircle2 className="w-5 h-5 flex-shrink-0" /> : <AlertCircle className="w-5 h-5 flex-shrink-0" />}
-              <span className="text-sm font-medium">{status.message}</span>
-            </div>
-          )}
-
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-all"
-            >
-              Annuler
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting || !selectedProjectId}
-              className="flex items-center gap-2 px-8 py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl shadow-lg shadow-indigo-200 dark:shadow-none transition-all active:scale-95"
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Mise à jour...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  Enregistrer les modifications
-                </>
+              {/* Status Messages */}
+              {status && (
+                <div className={`p-4 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2 ${status.type === 'success' ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-100 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-100 dark:border-red-800'
+                  }`}>
+                  {status.type === 'success' ? <CheckCircle2 className="w-5 h-5 flex-shrink-0" /> : <AlertCircle className="w-5 h-5 flex-shrink-0" />}
+                  <span className="text-sm font-medium">{status.message}</span>
+                </div>
               )}
-            </button>
-          </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-6 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-all"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !selectedProjectId}
+                  className="flex items-center gap-2 px-8 py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl shadow-lg shadow-indigo-200 dark:shadow-none transition-all active:scale-95"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Mise à jour...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      Enregistrer les modifications
+                    </>
+                  )}
+                </button>
+              </div>
             </form>
           )}
 
@@ -1030,7 +1080,10 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                     required
                   >
                     {Object.values(ProjectStatus).map(s => (
-                      <option key={s} value={s}>{s}</option>
+                      <option key={s} value={s}>
+                        {s === 'CURRENT' ? '🔴 ' : s === 'DONE' ? '🟢 ' : '🔵 '}
+                        {s}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -1327,9 +1380,8 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
 
               {/* Status Messages */}
               {status && (
-                <div className={`p-4 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2 ${
-                  status.type === 'success' ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-100 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-100 dark:border-red-800'
-                }`}>
+                <div className={`p-4 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2 ${status.type === 'success' ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-100 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-100 dark:border-red-800'
+                  }`}>
                   {status.type === 'success' ? <CheckCircle2 className="w-5 h-5 flex-shrink-0" /> : <AlertCircle className="w-5 h-5 flex-shrink-0" />}
                   <span className="text-sm font-medium">{status.message}</span>
                 </div>
@@ -1534,6 +1586,20 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                 setFormData({ ...formData, clientLogoName: url });
               }
               setIsLogoPickerOpen(false);
+            }}
+          />
+
+          <DatabaseImagePicker
+            isOpen={isPinPickerOpen}
+            onClose={() => setIsPinPickerOpen(false)}
+            initialProjectFilter="project-pins"
+            onSelect={(url) => {
+              if (activeTab === 'create') {
+                setCreateFormData({ ...createFormData, pinName: url });
+              } else {
+                setFormData({ ...formData, pinName: url });
+              }
+              setIsPinPickerOpen(false);
             }}
           />
 
