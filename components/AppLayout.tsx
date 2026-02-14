@@ -196,10 +196,11 @@ export default function AppLayout({
                         {!isSidebarCollapsed && <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-3 mb-2 block">Menu Principal</span>}
                         <Link
                             href="/"
-                            className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer ${isActive('/') ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400" : "hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400"} ${isSidebarCollapsed ? "justify-center" : ""}`}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer ${isActive('/') ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold" : "hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400"} ${isSidebarCollapsed ? "justify-center" : ""}`}
                         >
-                            <LayoutDashboard className="w-5 h-5 text-indigo-500" />
-                            {!isSidebarCollapsed && <span className="text-sm font-semibold">Dashboard</span>}
+                            <LayoutDashboard className={`w-5 h-5 transition-colors ${isActive('/') ? "text-indigo-600 dark:text-indigo-400" : "text-gray-400 group-hover:text-indigo-500"}`} />
+                            {!isSidebarCollapsed && <span className="text-sm">Dashboard</span>}
                         </Link>
                     </div>
 
@@ -208,10 +209,13 @@ export default function AppLayout({
                         <div className="space-y-1 mb-6">
                             {!isSidebarCollapsed && <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-3 mb-2 block">Projets</span>}
                             <button
-                                onClick={() => onManageProjects?.('modify')}
+                                onClick={() => {
+                                    onManageProjects?.('modify');
+                                    setIsMobileMenuOpen(false);
+                                }}
                                 className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400 transition-all group cursor-pointer"
                             >
-                                <FolderOpen className={`w-5 h-5 ${isSidebarCollapsed ? "mx-auto" : ""}`} />
+                                <FolderOpen className={`w-5 h-5 ${isSidebarCollapsed ? "mx-auto" : ""} text-gray-400 group-hover:text-indigo-500`} />
                                 {!isSidebarCollapsed && <span className="text-sm font-medium group-hover:text-gray-900 dark:group-hover:text-white">Modification Projets</span>}
                             </button>
                         </div>
@@ -222,39 +226,50 @@ export default function AppLayout({
                         <div className="space-y-1">
                             {!isSidebarCollapsed && <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-3 mb-2 block">Administration</span>}
                             <button
-                                onClick={() => onManageUsers?.()}
+                                onClick={() => {
+                                    onManageUsers?.();
+                                    setIsMobileMenuOpen(false);
+                                }}
                                 className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400 transition-all group cursor-pointer"
                             >
-                                <Users className={`w-5 h-5 ${isSidebarCollapsed ? "mx-auto" : ""}`} />
+                                <Users className={`w-5 h-5 ${isSidebarCollapsed ? "mx-auto" : ""} text-gray-400 group-hover:text-indigo-500`} />
                                 {!isSidebarCollapsed && <span className="text-sm font-medium group-hover:text-gray-900 dark:group-hover:text-white">Gestion Utilisateurs</span>}
                             </button>
                             <button
-                                onClick={() => onManageProjects?.('create')}
+                                onClick={() => {
+                                    onManageProjects?.('create');
+                                    setIsMobileMenuOpen(false);
+                                }}
                                 className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400 transition-all group cursor-pointer"
                             >
-                                <Folders className={`w-5 h-5 ${isSidebarCollapsed ? "mx-auto" : ""}`} />
+                                <Folders className={`w-5 h-5 ${isSidebarCollapsed ? "mx-auto" : ""} text-gray-400 group-hover:text-indigo-500`} />
                                 {!isSidebarCollapsed && <span className="text-sm font-medium group-hover:text-gray-900 dark:group-hover:text-white">Gestion Projet</span>}
                             </button>
                             <button
-                                onClick={() => onManageFiles?.()}
+                                onClick={() => {
+                                    onManageFiles?.();
+                                    setIsMobileMenuOpen(false);
+                                }}
                                 className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400 transition-all group cursor-pointer"
                             >
-                                <FileStack className={`w-5 h-5 ${isSidebarCollapsed ? "mx-auto" : ""}`} />
+                                <FileStack className={`w-5 h-5 ${isSidebarCollapsed ? "mx-auto" : ""} text-gray-400 group-hover:text-indigo-500`} />
                                 {!isSidebarCollapsed && <span className="text-sm font-medium group-hover:text-gray-900 dark:group-hover:text-white">Gestion Fichiers</span>}
                             </button>
                             <Link
                                 href="/image-processor"
-                                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer ${isActive('/image-processor') ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400" : "hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400"} ${isSidebarCollapsed ? "justify-center" : ""}`}
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer ${isActive('/image-processor') ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold" : "hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400"} ${isSidebarCollapsed ? "justify-center" : ""}`}
                             >
-                                <ImageIcon className={`w-5 h-5 ${isSidebarCollapsed ? "" : ""}`} />
-                                {!isSidebarCollapsed && <span className="text-sm font-medium">Gestion Images</span>}
+                                <ImageIcon className={`w-5 h-5 transition-colors ${isActive('/image-processor') ? "text-indigo-600 dark:text-indigo-400" : "text-gray-400 group-hover:text-indigo-500"}`} />
+                                {!isSidebarCollapsed && <span className="text-sm">Gestion Images</span>}
                             </Link>
                             <Link
                                 href="/slideshow"
-                                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer ${isActive('/slideshow') ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400" : "hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400"} ${isSidebarCollapsed ? "justify-center" : ""}`}
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer ${isActive('/slideshow') ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold" : "hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400"} ${isSidebarCollapsed ? "justify-center" : ""}`}
                             >
-                                <Presentation className={`w-5 h-5 ${isSidebarCollapsed ? "" : ""}`} />
-                                {!isSidebarCollapsed && <span className="text-sm font-medium">Gestion Diaporama</span>}
+                                <Presentation className={`w-5 h-5 transition-colors ${isActive('/slideshow') ? "text-indigo-600 dark:text-indigo-400" : "text-gray-400 group-hover:text-indigo-500"}`} />
+                                {!isSidebarCollapsed && <span className="text-sm">Gestion Diaporama</span>}
                             </Link>
                         </div>
                     )}
