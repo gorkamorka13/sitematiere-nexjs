@@ -7,7 +7,7 @@ import { Project, ProjectStatus, ProjectType, UserRole, Document as ProjectDocum
 import ProjectsMapWrapper from "@/components/ui/projects-map-wrapper";
 import ProjectMapWrapper from "@/components/ui/project-map-wrapper";
 
-import { FolderOpen } from "lucide-react";
+import { FolderOpen, ChevronDown, ChevronUp } from "lucide-react";
 import { ProjectExportDialog } from "@/components/projects/project-export-dialog";
 import AppLayout from "@/components/AppLayout";
 import ProjectManagementDialog from "@/components/settings/project-management-dialog";
@@ -46,7 +46,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
 
     // State for filters
     const [selectedCountry, setSelectedCountry] = useState<string>(defaultProject?.country || initialProjects[0]?.country || "");
-    const [selectedName, setSelectedName] = useState<string>(defaultProject?.name || initialProjects[0]?.name || "");
+    const [selectedName, setSelectedName] = useState<string>("");
     const [selectedTypes, setSelectedTypes] = useState<ProjectType[]>([]);
     const [selectedStatuses, setSelectedStatuses] = useState<ProjectStatus[]>([]);
 
@@ -88,21 +88,25 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
     // Dependent Filter Logic
     const filteredProjects = useMemo(() => {
         return initialProjects.filter(project => {
-            // Filter by Country
+            // Filtrage par Pays
             if (selectedCountry && project.country !== selectedCountry) return false;
 
-            // Filter by Name (if selected, though name usually implies a single result, useful for search)
-            if (selectedName && !project.name.toLowerCase().includes(selectedName.toLowerCase())) return false;
+            // Note: On ne filtre plus par selectedName ici pour que le tableau
+            // affiche toujours la liste complète des résultats filtrés par catégorie.
+            // selectedName sert uniquement à la sélection/mise en évidence.
 
-            // Filter by Type
+            // Filtrage par Recherche globale (cohérent avec le champ NOM du tableau)
+            if (searchQuery.trim() && !project.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+
+            // Filtrage par Type
             if (selectedTypes.length > 0 && !selectedTypes.includes(project.type)) return false;
 
-            // Filter by Status
+            // Filtrage par Statut
             if (selectedStatuses.length > 0 && !selectedStatuses.includes(project.status)) return false;
 
             return true;
         });
-    }, [initialProjects, selectedCountry, selectedName, selectedTypes, selectedStatuses]);
+    }, [initialProjects, selectedCountry, searchQuery, selectedTypes, selectedStatuses]);
 
     // Extraire le drapeau et le logo du client pour le projet sélectionné
     const { flagDoc, logoDoc } = useMemo(() => {
@@ -177,6 +181,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
     const handleProjectSelect = useCallback((project: Project) => {
         setSelectedProject(project);
         setSelectedCountry(project.country || "");
+        // On synchronise le nom pour mettre à jour le menu déroulant
         setSelectedName(project.name);
         setMapNonce(Date.now());
     }, []);
@@ -265,22 +270,15 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
 
     const handleCountryChange = (newCountry: string) => {
         setSelectedCountry(newCountry);
-        triggerFit();
-        const projectsInCountry = initialProjects
-            .filter(p => p.country === newCountry)
-            .sort((a, b) => a.name.localeCompare(b.name));
+        setSelectedName(""); // Reset name selection when country changes
+        setSelectedProject(null); // Reset selected project for detailed view
+        setSearchQuery("");
 
-        if (projectsInCountry.length > 0) {
-            const firstProject = projectsInCountry[0];
-            setSelectedName(firstProject.name);
-            setSelectedProject(firstProject);
-            if (firstProject.status) setSelectedStatuses([firstProject.status]);
-            if (firstProject.type) setSelectedTypes([firstProject.type]);
-        } else {
-            setSelectedName("");
-            setSearchQuery("");
-            setSelectedProject(null);
-        }
+        // Reset type and status filters to show all projects of the new country
+        setSelectedTypes(Object.values(ProjectType));
+        setSelectedStatuses(Object.values(ProjectStatus));
+
+        triggerFit();
     };
 
     const handleNameChange = (projectName: string) => {
@@ -290,8 +288,11 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
             const isSameCountry = project.country === selectedCountry;
             setSelectedProject(project);
             setSelectedCountry(project.country || "");
+
+            // Focus on this specific project's status and type
             if (project.status) setSelectedStatuses([project.status]);
             if (project.type) setSelectedTypes([project.type]);
+
             setMapNonce(Date.now());
 
             if (isSameCountry) {
@@ -302,8 +303,13 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
         } else {
             setSearchQuery("");
             setSelectedProject(null);
+            // If "All projects" is selected, reset status/type filters
+            setSelectedStatuses(Object.values(ProjectStatus));
+            setSelectedTypes(Object.values(ProjectType));
         }
     };
+
+    const [isDocumentsCollapsed, setIsDocumentsCollapsed] = useState(true);
 
     return (
         <AppLayout
@@ -416,16 +422,24 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                 {/* Documents */}
                 {dynamicMedia.pdfs.length > 0 && (
                     <div className="grid grid-cols-1 gap-6 mb-6">
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-                            <div className="border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50 px-4 py-3 flex items-center justify-between">
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-all duration-300">
+                            <button
+                                onClick={() => setIsDocumentsCollapsed(!isDocumentsCollapsed)}
+                                className="w-full border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50 px-4 py-3 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors"
+                            >
                                 <div className="flex items-center gap-2">
                                     <FolderOpen className="w-4 h-4 text-blue-500" />
                                     <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Documents & Plans</h3>
                                 </div>
-                            </div>
-                            <div className="p-0">
-                                <PdfViewer documents={dynamicMedia.pdfs} />
-                            </div>
+                                <div className="flex items-center text-gray-400">
+                                    {isDocumentsCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+                                </div>
+                            </button>
+                            {!isDocumentsCollapsed && (
+                                <div className="p-0 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <PdfViewer documents={dynamicMedia.pdfs} />
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
@@ -446,6 +460,12 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                         setProjectToExport(project as ProjectWithDocuments);
                         setIsExportDialogOpen(true);
                     }}
+                    searchQuery={searchQuery}
+                    setSearchQuery={setSearchQuery}
+                    selectedCountry={selectedCountry}
+                    onCountryChange={handleCountryChange}
+                    selectedTypes={selectedTypes}
+                    selectedStatuses={selectedStatuses}
                 />
 
                 <div className="mt-4 text-sm text-gray-500 dark:text-gray-400 text-right">

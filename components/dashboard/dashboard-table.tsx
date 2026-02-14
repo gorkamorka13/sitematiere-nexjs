@@ -1,4 +1,4 @@
-import { Project } from "@prisma/client";
+import { Project, ProjectStatus, ProjectType } from "@prisma/client";
 import { Download, Search, ArrowUpDown, ArrowUpIcon, ArrowDownIcon } from "lucide-react";
 import { getStatusLabel } from "@/lib/utils";
 import { useState, useMemo } from "react";
@@ -8,6 +8,14 @@ interface DashboardTableProps {
     selectedProject: Project | null;
     handleProjectSelect: (project: Project) => void;
     onExportClick: (e: React.MouseEvent, project: Project) => void;
+
+    // Ajout des props de synchronisation
+    searchQuery: string;
+    setSearchQuery: (query: string) => void;
+    selectedCountry: string;
+    onCountryChange: (country: string) => void;
+    selectedTypes: ProjectType[];
+    selectedStatuses: ProjectStatus[];
 }
 
 type SortConfig = {
@@ -19,15 +27,13 @@ export function DashboardTable({
     filteredProjects,
     selectedProject,
     handleProjectSelect,
-    onExportClick
+    onExportClick,
+    searchQuery,
+    setSearchQuery,
+    selectedCountry,
+    onCountryChange
 }: DashboardTableProps) {
     const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'name', direction: 'asc' });
-    const [columnFilters, setColumnFilters] = useState({
-        name: '',
-        country: '',
-        type: '',
-        status: ''
-    });
 
     const handleSort = (key: keyof Project | 'statusLabel') => {
         let direction: 'asc' | 'desc' = 'asc';
@@ -38,17 +44,11 @@ export function DashboardTable({
     };
 
     const processedProjects = useMemo(() => {
-        // 1. Filter
-        let result = filteredProjects.filter(project => {
-            const matchesName = project.name.toLowerCase().includes(columnFilters.name.toLowerCase());
-            const matchesCountry = (project.country || '').toLowerCase().includes(columnFilters.country.toLowerCase());
-            const matchesType = project.type.toLowerCase().includes(columnFilters.type.toLowerCase());
-            const matchesStatus = getStatusLabel(project.status).toLowerCase().includes(columnFilters.status.toLowerCase());
+        // La liste arrive déjà filtrée par le parent (Pays, Type, Statut, Recherche Globale)
+        // On ne fait ici que le tri
+        const result = [...filteredProjects];
 
-            return matchesName && matchesCountry && matchesType && matchesStatus;
-        });
-
-        // 2. Sort
+        // Sort
         if (sortConfig) {
             result.sort((a, b) => {
                 let aValue: any;
@@ -76,7 +76,7 @@ export function DashboardTable({
         }
 
         return result;
-    }, [filteredProjects, sortConfig, columnFilters]);
+    }, [filteredProjects, sortConfig]);
 
     const SortIcon = ({ columnKey }: { columnKey: keyof Project | 'statusLabel' }) => {
         if (!sortConfig || sortConfig.key !== columnKey) return <ArrowUpDown className="ml-1 w-3 h-3 opacity-30 group-hover:opacity-100 transition-opacity" />;
@@ -106,12 +106,13 @@ export function DashboardTable({
                                             <div className="mt-1 relative">
                                                 <input
                                                     type="text"
-                                                    value={columnFilters.name}
-                                                    onChange={(e) => setColumnFilters(f => ({ ...f, name: e.target.value }))}
+                                                    value={searchQuery}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    onChange={(e) => setSearchQuery(e.target.value)}
                                                     placeholder="Filtrer..."
                                                     className="block w-full rounded-md border-0 py-1 pl-7 pr-2 text-gray-900 dark:text-white bg-white dark:bg-gray-800 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-xs transition-shadow shadow-sm"
                                                 />
-                                                <Search className="absolute left-2 top-1.5 w-3 h-3 text-gray-400" />
+                                                <Search className="absolute left-2 top-1.5 w-3 h-3 text-gray-400 pointer-events-none" />
                                             </div>
                                         </th>
 
@@ -127,17 +128,18 @@ export function DashboardTable({
                                             <div className="mt-1 relative">
                                                 <input
                                                     type="text"
-                                                    value={columnFilters.country}
-                                                    onChange={(e) => setColumnFilters(f => ({ ...f, country: e.target.value }))}
+                                                    value={selectedCountry}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    onChange={(e) => onCountryChange(e.target.value)}
                                                     placeholder="Filtrer..."
                                                     className="block w-full rounded-md border-0 py-1 pl-7 pr-2 text-gray-900 dark:text-white bg-white dark:bg-gray-800 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-xs transition-shadow shadow-sm"
                                                 />
-                                                <Search className="absolute left-2 top-1.5 w-3 h-3 text-gray-400" />
+                                                <Search className="absolute left-2 top-1.5 w-3 h-3 text-gray-400 pointer-events-none" />
                                             </div>
                                         </th>
 
                                         {/* Type Column */}
-                                        <th scope="col" className="hidden sm:table-cell px-3 py-2 text-left min-w-[100px]">
+                                        <th scope="col" className="hidden sm:table-cell px-3 py-3.5 text-left">
                                             <button
                                                 onClick={() => handleSort('type')}
                                                 className="group inline-flex items-center text-xs font-bold text-gray-400 uppercase tracking-widest hover:text-indigo-500 transition-colors"
@@ -145,20 +147,10 @@ export function DashboardTable({
                                                 Type
                                                 <SortIcon columnKey="type" />
                                             </button>
-                                            <div className="mt-1 relative">
-                                                <input
-                                                    type="text"
-                                                    value={columnFilters.type}
-                                                    onChange={(e) => setColumnFilters(f => ({ ...f, type: e.target.value }))}
-                                                    placeholder="Filtrer..."
-                                                    className="block w-full rounded-md border-0 py-1 pl-7 pr-2 text-gray-900 dark:text-white bg-white dark:bg-gray-800 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-xs transition-shadow shadow-sm"
-                                                />
-                                                <Search className="absolute left-2 top-1.5 w-3 h-3 text-gray-400" />
-                                            </div>
                                         </th>
 
                                         {/* Status Column */}
-                                        <th scope="col" className="hidden md:table-cell px-3 py-2 text-left min-w-[120px]">
+                                        <th scope="col" className="hidden md:table-cell px-3 py-3.5 text-left">
                                             <button
                                                 onClick={() => handleSort('statusLabel')}
                                                 className="group inline-flex items-center text-xs font-bold text-gray-400 uppercase tracking-widest hover:text-indigo-500 transition-colors"
@@ -166,16 +158,6 @@ export function DashboardTable({
                                                 Statut
                                                 <SortIcon columnKey="statusLabel" />
                                             </button>
-                                            <div className="mt-1 relative">
-                                                <input
-                                                    type="text"
-                                                    value={columnFilters.status}
-                                                    onChange={(e) => setColumnFilters(f => ({ ...f, status: e.target.value }))}
-                                                    placeholder="Filtrer..."
-                                                    className="block w-full rounded-md border-0 py-1 pl-7 pr-2 text-gray-900 dark:text-white bg-white dark:bg-gray-800 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-xs transition-shadow shadow-sm"
-                                                />
-                                                <Search className="absolute left-2 top-1.5 w-3 h-3 text-gray-400" />
-                                            </div>
                                         </th>
 
                                         <th scope="col" className="relative py-2 pl-3 pr-4 sm:pr-6 align-top">
