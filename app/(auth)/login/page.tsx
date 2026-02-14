@@ -9,6 +9,8 @@ import { Eye, EyeOff, ArrowRight, User, Lock } from "lucide-react";
 import packageInfo from "@/package.json";
 const version = packageInfo.version;
 
+// export const runtime = 'edge'; // Commenté pour le dev local
+
 export default function LoginPage() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");

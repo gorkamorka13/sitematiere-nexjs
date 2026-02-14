@@ -5,6 +5,7 @@ import ImageProcessorClient from "./image-processor-client";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+// export const runtime = 'edge'; // Commenté pour le dev local
 
 export default async function ImageProcessorPage() {
   const session = await auth();

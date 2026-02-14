@@ -5,6 +5,7 @@ import SlideshowManagerClient from "@/app/slideshow/slideshow-manager-client";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+// export const runtime = 'edge'; // Commenté pour le dev local
 
 export default async function SlideshowPage() {
   const session = await auth();

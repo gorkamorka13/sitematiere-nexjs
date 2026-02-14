@@ -5,6 +5,7 @@ import SlideshowViewerClient from "@/app/slideshow/view/[projectId]/slideshow-vi
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+// export const runtime = 'edge'; // Commenté pour le dev local
 
 interface PageProps {
   params: Promise<{ projectId: string }>;

@@ -14,6 +14,7 @@ const files = [
     'app/projects/[id]/page.tsx',
     'app/api/auth/[...nextauth]/route.ts',
     'app/api/files/[id]/route.ts',
+    'app/api/files/bulk-move/route.ts',
     'app/api/files/delete/route.ts',
     'app/api/files/list/route.ts',
     'app/api/files/serve/[...key]/route.ts',
@@ -29,6 +30,10 @@ const files = [
     'app/api/debug/auth/route.ts',
     'app/api/projects/route.ts',
     'app/api/proxy/route.ts',
+    'app/(auth)/login/page.tsx',
+    'app/image-processor/page.tsx',
+    'app/slideshow/page.tsx',
+    'app/slideshow/view/[projectId]/page.tsx',
     'app/export-db/page.tsx'
 ];
 

@@ -19,3 +19,7 @@ Prévenir les échecs de build sur Vercel/Cloudflare en imposant une rigueur str
 2. **Accessibilité** : Garantir que tous les éléments interactifs ont des IDs uniques et des labels appropriés pour les lecteurs d'écran.
 3. **Responsivité Mobile First** : Toujours vérifier le comportement sur mobile (petits écrans) avant de valider un composant. Les tableaux doivent être défilables ou adaptés.
 4. **Micro-interactions** : Favoriser les transitions fluides (`transition-all`, `duration-300`) pour les états de survol (hover) et de chargement.
+
+## Compatibilité Cloudflare (Edge Runtime)
+1. **Runtime Edge Obligatoire** : Pour tout déploiement sur Cloudflare Pages, toutes les routes API et pages dynamiques (utilisant `headers()`, `cookies()`, etc.) DOIVENT exporter explicitement `export const runtime = 'edge';`.
+2. **Script de Bascule** : Toujours vérifier que les nouvelles routes sont ajoutées au script `scripts/toggle-runtime.js` pour gérer automatiquement la bascule entre le développement local (Node.js) et la production (Edge).
