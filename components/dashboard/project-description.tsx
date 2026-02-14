@@ -38,12 +38,13 @@ export function ProjectDescription({ selectedProject, flagDoc, logoDoc }: Projec
                         </div>
                     )}
                     {logoDoc && (
-                        <div className="h-7 px-2 py-1 bg-white/50 dark:bg-black/20 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm flex items-center shrink-0 relative w-[100px]">
+                        <div className="h-7 px-2 py-1 bg-white/50 dark:bg-black/20 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm flex items-center shrink-0 relative">
                             <Image
                                 src={normalizeImageUrl(logoDoc.url)}
                                 alt=""
-                                fill
-                                className="object-contain opacity-90"
+                                height={20}
+                                width={60}
+                                className="object-contain opacity-90 w-auto h-5"
                             />
                         </div>
                     )}

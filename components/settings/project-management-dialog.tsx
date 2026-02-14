@@ -10,6 +10,7 @@ import { decimalToDMS, dmsToDecimal, isValidLatitude, isValidLongitude } from "@
 import { FileUploadZone } from "../files/file-upload-zone";
 import { FileUploadProgress, FileUploadState } from "../files/file-upload-progress";
 import { DatabaseImagePicker } from "../image-processor/DatabaseImagePicker";
+import { Toast } from "@/components/ui/toast";
 
 interface ProjectManagementDialogProps {
   projects: Project[];
@@ -89,6 +90,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
   const [coordinateFormat, setCoordinateFormat] = useState<'decimal' | 'dms'>('decimal');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+  const [toast, setToast] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
   // Phase 3: Upload State
   const [uploads, setUploads] = useState<FileUploadState[]>([]);
@@ -392,10 +394,9 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
       if (result.success && result.projectId) {
         // Start uploads if any
         if (uploads.length > 0) {
-          setStatus({ type: 'success', message: "Projet créé. Transfert des fichiers en cours..." });
           await processUploads(result.projectId);
         }
-        setStatus({ type: 'success', message: "Projet et fichiers créés avec succès !" });
+        setToast({ type: 'success', message: "Projet créé avec succès !" });
         // Reset form
         setCreateFormData({
           name: "",
@@ -421,10 +422,10 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
           setSelectedProjectId(result.projectId || "");
         }, 2000);
       } else {
-        setStatus({ type: 'error', message: result.error || "Une erreur est survenue." });
+        setToast({ type: 'error', message: result.error || "Une erreur est survenue lors de la création." });
       }
     } catch {
-      setStatus({ type: 'error', message: "Erreur de communication avec le serveur." });
+      setToast({ type: 'error', message: "Erreur de communication avec le serveur." });
     } finally {
       setIsSubmitting(false);
     }
@@ -440,17 +441,17 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
       const result = await deleteProject(selectedProjectId, confirmName);
 
       if (result.success) {
-        setStatus({ type: 'success', message: "Projet supprimé définitivement." });
+        setToast({ type: 'success', message: "Projet supprimé définitivement." });
         setSelectedProjectId("");
         setConfirmName("");
         setTimeout(() => {
           setActiveTab('modify');
         }, 1500);
       } else {
-        setStatus({ type: 'error', message: result.error || "Une erreur est survenue." });
+        setToast({ type: 'error', message: result.error || "Une erreur est survenue lors de la suppression." });
       }
     } catch {
-      setStatus({ type: 'error', message: "Erreur de communication avec le serveur." });
+      setToast({ type: 'error', message: "Erreur de communication avec le serveur." });
     } finally {
       setIsSubmitting(false);
     }
@@ -483,13 +484,13 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
       });
 
       if (result.success) {
-        setStatus({ type: 'success', message: "Projet mis à jour avec succès !" });
+        setToast({ type: 'success', message: "Projet mis à jour avec succès !" });
         // Optionnel: on pourrait rafraîchir la liste des projets ici si nécessaire
       } else {
-        setStatus({ type: 'error', message: result.error || "Une erreur est survenue." });
+        setToast({ type: 'error', message: result.error || "Une erreur est survenue lors de la mise à jour." });
       }
     } catch {
-      setStatus({ type: 'error', message: "Erreur de communication avec le serveur." });
+      setToast({ type: 'error', message: "Erreur de communication avec le serveur." });
     } finally {
       setIsSubmitting(false);
     }
@@ -810,8 +811,20 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                     type="number"
                     min="0"
                     max="100"
-                    value={formData[step.key as keyof typeof formData]}
-                    onChange={(e) => setFormData({ ...formData, [step.key]: parseInt(e.target.value) || 0 })}
+                    value={formData[step.key as keyof typeof formData] === 0 ? "" : formData[step.key as keyof typeof formData]}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === "" || value === "0") {
+                        setFormData({ ...formData, [step.key]: 0 });
+                      } else {
+                        // Supprimer les zéros en début de chaîne
+                        const cleanValue = value.replace(/^0+/, "") || "0";
+                        const numValue = parseInt(cleanValue, 10);
+                        if (!isNaN(numValue)) {
+                          setFormData({ ...formData, [step.key]: Math.min(100, Math.max(0, numValue)) });
+                        }
+                      }
+                    }}
                     disabled={!selectedProjectId}
                     className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white text-sm"
                   />
@@ -1173,8 +1186,20 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                         type="number"
                         min="0"
                         max="100"
-                        value={createFormData[step.key as keyof typeof createFormData] as number}
-                        onChange={(e) => setCreateFormData({ ...createFormData, [step.key]: parseInt(e.target.value) || 0 })}
+                        value={createFormData[step.key as keyof typeof createFormData] === 0 ? "" : createFormData[step.key as keyof typeof createFormData]}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === "" || value === "0") {
+                            setCreateFormData({ ...createFormData, [step.key]: 0 });
+                          } else {
+                            // Supprimer les zéros en début de chaîne
+                            const cleanValue = value.replace(/^0+/, "") || "0";
+                            const numValue = parseInt(cleanValue, 10);
+                            if (!isNaN(numValue)) {
+                              setCreateFormData({ ...createFormData, [step.key]: Math.min(100, Math.max(0, numValue)) });
+                            }
+                          }
+                        }}
                         className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white text-sm"
                       />
                     </div>
@@ -1514,6 +1539,16 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
 
         </div>
       </div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+          duration={5000}
+        />
+      )}
     </div>
   );
 }
