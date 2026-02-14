@@ -199,9 +199,12 @@ export function FileExplorer() {
             setRefreshTrigger(prev => prev + 1);
             setMoveFileIds(null);
             setSelectedIds(new Set());
-        } catch (error: any) {
+        } catch (error) {
             console.error("Move error:", error);
-            setToast({ message: error.message || "Erreur lors du déplacement", type: "error" });
+            setToast({
+                message: error instanceof Error ? error.message : "Erreur lors du déplacement",
+                type: "error"
+            });
         }
     };
 
