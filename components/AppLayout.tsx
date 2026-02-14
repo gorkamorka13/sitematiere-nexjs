@@ -22,7 +22,8 @@ import UserBadge from "@/components/settings/user-badge";
 import { ModeToggle } from "@/components/ui/mode-toggle";
 import { UserRole } from "@prisma/client";
 import { useSwipe } from '@/hooks/use-swipe';
-import { version } from '../package.json';
+import packageInfo from '../package.json';
+const version = packageInfo.version;
 
 interface User {
     name?: string | null;
