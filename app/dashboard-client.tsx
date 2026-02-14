@@ -78,7 +78,12 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
 
     // Extract unique values for dropdowns
     const countries = useMemo(() => {
-        const uniqueCountries = new Set(initialProjects.map(p => p.country).filter(Boolean));
+        const uniqueCountries = new Set(
+            initialProjects
+                .map(p => p.country)
+                .filter(Boolean)
+                .filter(c => c !== "Système")
+        );
         return Array.from(uniqueCountries).sort();
     }, [initialProjects]);
 
@@ -88,6 +93,9 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
     // Dependent Filter Logic
     const filteredProjects = useMemo(() => {
         return initialProjects.filter(project => {
+            // Exclure les projets système
+            if (project.country === "Système") return false;
+
             // Filtrage par Pays
             if (selectedCountry && project.country !== selectedCountry) return false;
 
@@ -155,7 +163,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
 
     // Dependent Names List (based on country selection)
     const availableNames = useMemo(() => {
-        let projects = initialProjects;
+        let projects = initialProjects.filter(p => p.country !== "Système");
         if (selectedCountry) {
             projects = projects.filter(p => p.country === selectedCountry);
         }
@@ -169,6 +177,9 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
     // Map Projects for Global Map (Reflects country, type, status filters but NOT name filter)
     const mapProjects = useMemo(() => {
         return initialProjects.filter(project => {
+            // Exclure système
+            if (project.country === "Système") return false;
+
             if (selectedCountry && project.country !== selectedCountry) return false;
             // Note: We intentionally do NOT filter by selectedName here
             if (selectedTypes.length > 0 && !selectedTypes.includes(project.type)) return false;
