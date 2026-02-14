@@ -415,7 +415,7 @@ export function SlideshowManager({ projects }: SlideshowManagerProps) {
                                 strategy={verticalListSortingStrategy}
                             >
                                 <div className="space-y-3">
-                                    {slideshowImages.map((slideshowImage, index) => (
+                                    {slideshowImages.map((slideshowImage) => (
                                         <SortableImageCard
                                             key={slideshowImage.id}
                                             id={slideshowImage.id}

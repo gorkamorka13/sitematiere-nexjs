@@ -168,7 +168,7 @@ export async function PUT(request: NextRequest) {
     const dataToUpdate: {
       username?: string;
       name?: string | null;
-      role?: any; // Role type comes from Prisma
+      role?: UserRole; // Role type comes from @prisma/client
       color?: string | null;
       passwordHash?: string;
     } = {};
