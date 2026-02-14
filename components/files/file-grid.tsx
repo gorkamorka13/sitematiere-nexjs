@@ -115,7 +115,7 @@ export function FileGrid({ files, selectedIds, onSelect, onRename, onPreview, on
                         {/* Selection Checkbox */}
                         <div
                             className={`
-                                absolute z-10 transition-opacity
+                                absolute z-10 transition-opacity cursor-pointer
                                 ${isReducedSize ? "top-1 left-1" : "top-2 left-2"}
                                 ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"}
                             `}
@@ -123,13 +123,16 @@ export function FileGrid({ files, selectedIds, onSelect, onRename, onPreview, on
                                 e.stopPropagation();
                                 onSelect(file.id, false, true); // Force toggle
                             }}
+                            role="checkbox"
+                            aria-checked={isSelected}
+                            aria-label={`${isSelected ? 'Désélectionner' : 'Sélectionner'} le fichier ${file.name}`}
                         >
                             <div className={`
                                 rounded-full border flex items-center justify-center
                                 ${isSelected ? "bg-primary border-primary text-primary-foreground" : "bg-white/80 border-gray-300 hover:border-primary"}
                                 ${isReducedSize ? "w-4 h-4" : "w-5 h-5"}
                             `}>
-                                {isSelected && <CheckCircle2 className={`${isReducedSize ? "w-2.5 h-2.5" : "w-3.5 h-3.5"}`} />}
+                                {isSelected && <CheckCircle2 className={`${isReducedSize ? "w-2.5 h-2.5" : "w-3.5 h-3.5"}`} aria-hidden="true" />}
                             </div>
                         </div>
 
@@ -145,8 +148,9 @@ export function FileGrid({ files, selectedIds, onSelect, onRename, onPreview, on
                                 }}
                                 className={`bg-white/80 rounded-full hover:bg-white text-gray-700 shadow-sm ${isReducedSize ? "p-0.5" : "p-1"}`}
                                 title="Renommer"
+                                aria-label={`Renommer le fichier ${file.name}`}
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" width={isReducedSize ? 10 : 14} height={isReducedSize ? 10 : 14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width={isReducedSize ? 10 : 14} height={isReducedSize ? 10 : 14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
                             </button>
                         </div>
 

@@ -73,9 +73,9 @@ export default async function ProjectDetailPage(props: Props) {
                                 {project.country}
                             </div>
                             <div className="mt-2 flex items-center text-sm text-gray-500">
-                                <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${project.status === 'DONE' ? 'bg-green-50 text-green-700 ring-green-600/20' :
-                                    project.status === 'CURRENT' ? 'bg-blue-50 text-blue-700 ring-blue-600/20' :
-                                        'bg-yellow-50 text-yellow-800 ring-yellow-600/20'
+                                <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${project.status === 'DONE' ? 'bg-green-50 text-green-700 ring-green-600/20 dark:bg-green-900/30 dark:text-green-400 dark:ring-green-400/20' :
+                                    project.status === 'CURRENT' ? 'bg-blue-50 text-blue-700 ring-blue-600/20 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-400/20' :
+                                        'bg-yellow-50 text-yellow-800 ring-yellow-600/20 dark:bg-yellow-900/30 dark:text-yellow-200 dark:ring-yellow-400/30'
                                     }`}>
                                     {project.status}
                                 </span>

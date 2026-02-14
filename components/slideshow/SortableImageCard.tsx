@@ -99,8 +99,8 @@ export function SortableImageCard({
           </div>
         ) : (
           <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-            <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-            <span className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+            <Clock className="w-4 h-4 text-amber-600 dark:text-amber-300" />
+            <span className="text-xs font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wider">
               Brouillon
             </span>
           </div>

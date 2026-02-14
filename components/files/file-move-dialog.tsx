@@ -6,6 +6,7 @@ import { Folder, Loader2 } from "lucide-react";
 interface Project {
     id: string;
     name: string;
+    country?: string | null;
 }
 
 interface FileMoveDialogProps {
@@ -81,7 +82,7 @@ export function FileMoveDialog({ fileIds, currentProjectId, onClose, onMove }: F
                             >
                                 <Folder className="w-4 h-4" />
                                 <span className="truncate">
-                                    {(project.id === 'project-flags' || project.id === 'project-clients' || project.name === 'Flag' || project.name === 'client') ? `🔴 ${project.name}` : project.name}
+                                    {(project.id === 'project-flags' || project.id === 'project-clients' || project.id === 'project-pins' || project.country === 'Système') ? `🔴 ${project.name}` : project.name}
                                 </span>
                                 {project.id === currentProjectId && <span className="ml-auto text-xs opacity-70">(Actuel)</span>}
                             </button>

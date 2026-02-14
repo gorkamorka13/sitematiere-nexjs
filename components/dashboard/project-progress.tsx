@@ -14,7 +14,7 @@ const getProgressColors = (val: number) => {
         shadow: 'shadow-green-200'
     };
     if (val > 50) return {
-        text: 'text-yellow-600 dark:text-yellow-400',
+        text: 'text-yellow-600 dark:text-yellow-300',
         bg: 'bg-yellow-500',
         bgLight: 'bg-yellow-100 dark:bg-yellow-900/30',
         border: 'border-yellow-500/50',

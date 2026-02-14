@@ -185,7 +185,7 @@ export function DashboardTable({
                                                 <td className="hidden md:table-cell whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
                                                     <span className={`inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ring-1 ring-inset ${project.status === 'DONE' ? 'bg-green-50 text-green-700 ring-green-600/20 dark:bg-green-900/30 dark:text-green-400 dark:ring-green-400/20' :
                                                         project.status === 'CURRENT' ? 'bg-blue-50 text-blue-700 ring-blue-600/20 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-400/20' :
-                                                            'bg-yellow-50 text-yellow-800 ring-yellow-600/20 dark:bg-yellow-900/30 dark:text-yellow-400 dark:ring-yellow-400/20'
+                                                            'bg-yellow-50 text-yellow-800 ring-yellow-600/20 dark:bg-yellow-900/30 dark:text-yellow-200 dark:ring-yellow-400/30'
                                                         }`}>
                                                         {getStatusLabel(project.status)}
                                                     </span>
@@ -195,8 +195,9 @@ export function DashboardTable({
                                                         onClick={(e) => onExportClick(e, project)}
                                                         className="flex items-center gap-1.5 ml-auto text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/40 px-3 py-1.5 rounded-lg transition-colors group"
                                                         title="Générer Rapport PDF"
+                                                        aria-label={`Générer le rapport PDF du projet ${project.name}`}
                                                     >
-                                                        <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                                        <Download className="w-4 h-4 group-hover:scale-110 transition-transform" aria-hidden="true" />
                                                         <span className="font-bold">PDF</span>
                                                     </button>
                                                 </td>

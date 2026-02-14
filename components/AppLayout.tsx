@@ -105,8 +105,10 @@ export default function AppLayout({
                     <button
                         onClick={() => setIsMobileMenuOpen(true)}
                         className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 transition-colors"
+                        aria-label="Ouvrir le menu de navigation"
+                        title="Menu"
                     >
-                        <Menu className="w-6 h-6" />
+                        <Menu className="w-6 h-6" aria-hidden="true" />
                     </button>
                 </div>
             </div>
@@ -158,15 +160,19 @@ export default function AppLayout({
                             }
                         }}
                         className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 transition-colors shrink-0 ${isSidebarCollapsed ? "hidden" : "lg:block"}`}
+                        aria-label={isMobileMenuOpen ? "Fermer le menu" : "Réduire la barre latérale"}
+                        title={isMobileMenuOpen ? "Fermer" : "Réduire"}
                     >
-                        {isMobileMenuOpen ? <X className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
+                        {isMobileMenuOpen ? <X className="w-5 h-5" aria-hidden="true" /> : <PanelLeftClose className="w-5 h-5" aria-hidden="true" />}
                     </button>
                     {isSidebarCollapsed && (
                         <button
                             onClick={() => setIsSidebarCollapsed(false)}
                             className="absolute -right-3 top-7 p-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full shadow-sm text-gray-400 hover:text-indigo-600 transition-all z-10 hidden lg:block"
+                            aria-label="Développer la barre latérale"
+                            title="Développer"
                         >
-                            <ChevronRight className="w-3 h-3" />
+                            <ChevronRight className="w-3 h-3" aria-hidden="true" />
                         </button>
                     )}
                 </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { logger } from '@/lib/logger';
 
 // Extend Window interface for custom dispatch function
 declare global {
@@ -91,7 +92,7 @@ export default function ImageProcessorClient({ user, initialProjects }: ImagePro
       setConflictData(null);
 
       try {
-          console.log("[UPLOAD] Starting upload for file:", file.name, "to project:", projectId);
+          logger.debug("[UPLOAD] Starting upload for file:", file.name, "to project:", projectId);
 
           const formData = new FormData();
           formData.append('file', file);
@@ -100,39 +101,39 @@ export default function ImageProcessorClient({ user, initialProjects }: ImagePro
               formData.append('overwrite', 'true');
           }
 
-          console.log("[UPLOAD] Sending request to /api/files/upload");
+          logger.debug("[UPLOAD] Sending request to /api/files/upload");
 
           const uploadRes = await fetch('/api/files/upload', {
               method: 'POST',
               body: formData
           });
 
-          console.log("[UPLOAD] Response status:", uploadRes.status);
+          logger.debug("[UPLOAD] Response status:", uploadRes.status);
 
           const result = await uploadRes.json();
-          console.log("[UPLOAD] Response result:", result);
+          logger.debug("[UPLOAD] Response result:", result);
 
           if (uploadRes.status === 409 && result.conflict) {
-              console.log("[UPLOAD] Conflict detected");
+              logger.debug("[UPLOAD] Conflict detected");
               setConflictData({ fileName: result.fileName, projectId, file });
               return;
           }
 
           if (uploadRes.ok && result.success && result.files.length > 0) {
-              console.log("[UPLOAD] Success! File uploaded:", result.files);
+              logger.debug("[UPLOAD] Success! File uploaded:", result.files);
               setNotification({ type: 'success', message: 'Image enregistrée avec succès !' });
           } else if (result.errors && result.errors.length > 0) {
-              console.error("[UPLOAD] Failed with errors:", JSON.stringify(result.errors, null, 2));
+              logger.error("[UPLOAD] Failed with errors:", JSON.stringify(result.errors, null, 2));
               const errorMsg = result.errors[0]?.error || result.error || 'Erreur inconnue';
-              console.error("[UPLOAD] First error message:", errorMsg);
+              logger.error("[UPLOAD] First error message:", errorMsg);
               alert(`Erreur lors de l'upload:\n${errorMsg}`);
               setNotification({ type: 'error', message: `Échec : ${errorMsg}` });
           } else {
-              console.error("[UPLOAD] Failed:", result.error);
+              logger.error("[UPLOAD] Failed:", result.error);
               setNotification({ type: 'error', message: `Échec : ${result.error || 'Erreur inconnue'}` });
           }
       } catch (error: unknown) {
-          console.error("[UPLOAD] Error:", error);
+          logger.error("[UPLOAD] Error:", error);
           const err = error instanceof Error ? error : new Error(String(error));
           setNotification({ type: 'error', message: `Erreur réseau : ${err.message}` });
       } finally {

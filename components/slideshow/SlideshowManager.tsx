@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import { logger } from '@/lib/logger';
 import { Button } from '@/components/ui/button';
 import { Loader2, Plus, Upload, Eye, Search, X } from 'lucide-react';
 import { DatabaseImagePicker } from '@/components/image-processor/DatabaseImagePicker';
@@ -178,7 +179,7 @@ export function SlideshowManager({ projects }: SlideshowManagerProps) {
                         {hasUnpublishedChanges && (
                             <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
                                 <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
-                                <span className="text-[10px] sm:text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+                                <span className="text-[10px] sm:text-xs font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wider">
                                     Modifications non publiées
                                 </span>
                             </div>
@@ -188,11 +189,11 @@ export function SlideshowManager({ projects }: SlideshowManagerProps) {
                             onClick={(e) => {
                                 const button = e.currentTarget;
                                 if (button.getAttribute('data-confirm') === 'true') {
-                                    console.log('[SlideshowManager] Second click - confirmed publishing');
+                                    logger.debug('[SlideshowManager] Second click - confirmed publishing');
                                     button.setAttribute('data-confirm', 'false');
                                     publish();
                                 } else {
-                                    console.log('[SlideshowManager] First click - asking for publish confirmation');
+                                    logger.debug('[SlideshowManager] First click - asking for publish confirmation');
                                     button.setAttribute('data-confirm', 'true');
                                     setTimeout(() => {
                                         if (button) button.setAttribute('data-confirm', 'false');

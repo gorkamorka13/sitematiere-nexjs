@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 interface Project {
     id: string;
     name: string;
+    country?: string | null;
 }
 
 interface ProjectSelectDialogProps {
