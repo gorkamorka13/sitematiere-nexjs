@@ -43,7 +43,7 @@ export function ProjectProgress({ selectedProject }: ProjectProgressProps) {
                 <Ruler className="w-4 h-4 text-purple-500" />
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Avancement du Projet</h3>
             </div>
-            <div className="p-4 lg:p-6 flex flex-col md:flex-row gap-6 lg:gap-8">
+            <div className="p-4 lg:px-4 lg:py-6 flex flex-col md:flex-row gap-6 lg:gap-8">
                 <div className="flex flex-col items-center justify-center p-4 bg-gray-50/50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-800 min-w-[140px]">
                     <div className="relative flex items-center justify-center w-24 h-24 mb-3">
                         <svg className="w-full h-full transform -rotate-90">

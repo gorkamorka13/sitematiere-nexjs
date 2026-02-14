@@ -287,9 +287,18 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
         setSelectedName(projectName);
         const project = initialProjects.find(p => p.name === projectName);
         if (project) {
+            const isSameCountry = project.country === selectedCountry;
             setSelectedProject(project);
+            setSelectedCountry(project.country || "");
             if (project.status) setSelectedStatuses([project.status]);
             if (project.type) setSelectedTypes([project.type]);
+            setMapNonce(Date.now());
+
+            if (isSameCountry) {
+                triggerGlobalCenter(project.latitude, project.longitude);
+            } else {
+                triggerFit();
+            }
         } else {
             setSearchQuery("");
             setSelectedProject(null);
@@ -306,7 +315,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
             }}
             onManageFiles={() => setIsFileManagementOpen(true)}
         >
-            <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
+            <div className="mx-auto max-w-[1800px] px-2 sm:px-4 py-6 lg:py-10">
                 <div className="mb-8">
                     <h1 className="text-3xl font-black tracking-tight text-gray-900 dark:text-white uppercase">Dashboard</h1>
                     <p className="mt-1 max-w-2xl text-sm leading-6 text-gray-500 dark:text-gray-400">
@@ -348,8 +357,8 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                 />
 
                 {/* Dual Map Section */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12 lg:mb-16">
-                    <div className="bg-white dark:bg-gray-800 p-3 lg:p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 h-[400px] lg:h-[600px] flex flex-col z-0 relative overflow-hidden transition-colors">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+                    <div className="bg-white dark:bg-gray-800 p-3 lg:px-3 lg:py-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 h-[400px] lg:h-[600px] flex flex-col z-0 relative overflow-hidden transition-colors">
                         <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">Carte Globale</h3>
                         <div className="flex-grow relative w-full z-0 overflow-hidden rounded-xl border border-gray-100 dark:border-gray-700">
                             <ProjectsMapWrapper
@@ -362,7 +371,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-gray-800 p-3 lg:p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 h-[400px] lg:h-[600px] flex flex-col z-0 relative overflow-hidden transition-colors">
+                    <div className="bg-white dark:bg-gray-800 p-3 lg:px-3 lg:py-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 h-[400px] lg:h-[600px] flex flex-col z-0 relative overflow-hidden transition-colors">
                         <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1 truncate">Projet : {selectedProject?.name || "Aucun"}</h3>
                         <div className="flex-grow relative bg-gray-50 dark:bg-gray-900 rounded-xl w-full z-0 overflow-hidden border border-gray-100 dark:border-gray-700">
                             {selectedProject ? (
@@ -385,8 +394,8 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                 </div>
 
                 {/* Avancement + Description | Photos */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                    <div className="flex flex-col gap-6 h-full">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+                    <div className="flex flex-col gap-6 h-full min-w-0">
                         <ProjectProgress selectedProject={selectedProject} />
 
                         <ProjectDescription
@@ -473,6 +482,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                 filteredProjects={mapProjects}
                 images={dynamicMedia.images}
                 globalMetadata={{
+                    appVersion: "1.0.0",
                     buildDate: new Date().toISOString()
                 }}
             />

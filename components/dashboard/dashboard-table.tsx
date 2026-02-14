@@ -1,5 +1,6 @@
 import { Project } from "@prisma/client";
 import { Download } from "lucide-react";
+import { getStatusLabel } from "@/lib/utils";
 
 interface DashboardTableProps {
     filteredProjects: Project[];
@@ -51,7 +52,7 @@ export function DashboardTable({
                                                         project.status === 'CURRENT' ? 'bg-blue-50 text-blue-700 ring-blue-600/20 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-400/20' :
                                                             'bg-yellow-50 text-yellow-800 ring-yellow-600/20 dark:bg-yellow-900/30 dark:text-yellow-400 dark:ring-yellow-400/20'
                                                         }`}>
-                                                        {project.status}
+                                                        {getStatusLabel(project.status)}
                                                     </span>
                                                 </td>
                                                 <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">

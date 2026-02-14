@@ -21,8 +21,8 @@ function CenterView({ point, nonce }: { point: [number, number] | null; nonce?: 
 
     useEffect(() => {
         if (!point) return;
-        // Panner vers le point en conservant le zoom actuel
-        map.setView(point, map.getZoom(), { animate: true });
+        // Panner vers le point et forcer un zoom de 15 pour voir les détails
+        map.setView(point, 15, { animate: true });
     }, [point, nonce, map]);
 
     return null;
@@ -47,8 +47,8 @@ function MapUpdater({ projects, fitNonce }: { projects: Project[]; fitNonce?: nu
             map.fitBounds(bounds, {
                 animate: true,
                 duration: 1,
-                padding: [50, 50],
-                maxZoom: 10
+                padding: [80, 80],
+                maxZoom: 12
             });
         }
     }, [projects, fitNonce, map]);

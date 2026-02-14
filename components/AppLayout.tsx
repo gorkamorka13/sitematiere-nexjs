@@ -21,6 +21,8 @@ import { SignOutButton } from "@/components/auth/sign-out-button";
 import UserBadge from "@/components/settings/user-badge";
 import { ModeToggle } from "@/components/ui/mode-toggle";
 import { UserRole } from "@prisma/client";
+import { useSwipe } from '@/hooks/use-swipe';
+import { version } from '../package.json';
 
 interface User {
     name?: string | null;
@@ -62,11 +64,28 @@ export default function AppLayout({
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const pathname = usePathname();
 
+    const swipeHandlers = useSwipe({
+        onSwipeLeft: () => {
+            if (isMobileMenuOpen) setIsMobileMenuOpen(false);
+        },
+        onSwipeRight: () => {
+            // Uniquement si on commence le swipe près du bord gauche (< 50px)
+            if (!isMobileMenuOpen && swipeHandlers.touchStartX !== null && swipeHandlers.touchStartX < 50) {
+                setIsMobileMenuOpen(true);
+            }
+        },
+    });
+
     const isActive = (path: string) => pathname === path;
 
 
     return (
-        <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+        <div
+            className="flex min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300"
+            onTouchStart={swipeHandlers.onTouchStart}
+            onTouchMove={swipeHandlers.onTouchMove}
+            onTouchEnd={swipeHandlers.onTouchEnd}
+        >
             {/* Mobile Header - Sticky */}
             <div className="lg:hidden fixed top-0 left-0 right-0 z-50 h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 flex items-center justify-between shadow-sm">
                 <div className="flex items-center gap-3">
@@ -119,9 +138,14 @@ export default function AppLayout({
                             />
                         </div>
                         {!isSidebarCollapsed && (
-                            <span className="matiere text-xl tracking-tight truncate">
-                                Matière
-                            </span>
+                            <>
+                                <span className="matiere text-xl tracking-tight truncate">
+                                    Matière
+                                </span>
+                                <div className="ml-2 scale-90 origin-left">
+                                    <ModeToggle />
+                                </div>
+                            </>
                         )}
                     </div>
                     <button
@@ -162,6 +186,10 @@ export default function AppLayout({
                                 <span className="text-sm font-bold text-gray-900 dark:text-white truncate">{user.name || user.username}</span>
                             </div>
                         )}
+                    </div>
+                    {/* Logout moved here to leave room for credits at the bottom */}
+                    <div className="w-full">
+                        <SignOutButton variant={isSidebarCollapsed ? "icon" : "sidebar"} />
                     </div>
                 </div>
 
@@ -235,30 +263,16 @@ export default function AppLayout({
                     )}
                 </nav>
 
-                {/* Sidebar Actions Footer */}
-                <div className={`px-4 py-4 border-t border-gray-100 dark:border-gray-700 ${isSidebarCollapsed ? "flex flex-col items-center gap-4" : "space-y-3"}`}>
-                    {isSidebarCollapsed ? (
-                        <>
-                            <ModeToggle />
-                            <SignOutButton variant="icon" />
-                        </>
-                    ) : (
-                        <div className="space-y-3">
-                            <div className="bg-gray-50/50 dark:bg-gray-900/50 rounded-xl border border-gray-100/50 dark:border-gray-800/50 p-1.5 flex items-center justify-between">
-                                <span className="text-[10px] uppercase font-bold text-gray-400 ml-2 tracking-wider">Thème</span>
-                                <ModeToggle />
-                            </div>
-                            <SignOutButton variant="sidebar" />
-                        </div>
-                    )}
-                </div>
 
                 {/* Bottom Section: Credits */}
-                <div className={`p-4 border-t border-gray-100 dark:border-gray-700 ${isSidebarCollapsed ? "flex flex-col items-center" : "space-y-4"}`}>
+                <div className={`p-3 border-t border-gray-100 dark:border-gray-700 ${isSidebarCollapsed ? "flex flex-col items-center" : ""}`}>
                     {!isSidebarCollapsed && (
-                        <div className="space-y-2 text-center">
-                            <div className="pt-2 text-[10px] font-bold text-gray-500 dark:text-gray-400">
+                        <div className="flex flex-col items-center gap-0.5">
+                            <div className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
                                 Site Matière
+                            </div>
+                            <div className="text-[9px] font-medium text-gray-300 dark:text-gray-600">
+                                © 2024-2025 • v{version}
                             </div>
                         </div>
                     )}
@@ -269,9 +283,9 @@ export default function AppLayout({
             <main
                 className={`flex-grow transition-all duration-300
                     ${isSidebarCollapsed ? "lg:ml-20" : "lg:ml-64"}
-                    min-w-0 pt-20 lg:pt-0 pb-12 lg:pb-0 px-4 md:px-6 lg:px-8`}
+                    min-w-0 pt-20 lg:pt-0 pb-12 lg:pb-0 px-2 sm:px-4`}
             >
-                <div className="max-w-7xl mx-auto h-full">
+                <div className="w-full h-full">
                     {children}
                 </div>
             </main>

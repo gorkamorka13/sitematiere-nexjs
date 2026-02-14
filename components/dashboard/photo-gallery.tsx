@@ -78,7 +78,7 @@ export function PhotoGallery({ selectedProject, dynamicImages, isLoading }: Phot
             </div>
 
             <div className="relative flex-grow flex flex-col min-h-[350px]">
-                <div className="flex-grow p-4">
+                <div className="flex-grow px-3 py-4">
                     <div className="relative w-full h-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900 group">
                         <Image
                             src={normalizeImageUrl(images[currentIndex].url)}
@@ -97,7 +97,7 @@ export function PhotoGallery({ selectedProject, dynamicImages, isLoading }: Phot
                         <div className="h-full bg-indigo-500 transition-all duration-300" style={{ width: `${((currentIndex + 1) / images.length) * 100}%` }} />
                     </div>
                 </div>
-                <div className="p-4 pt-3 flex flex-col gap-3">
+                <div className="px-3 pb-4 pt-3 flex flex-col gap-3">
                     <div className="flex items-center justify-center gap-2">
                         <button onClick={goToStart} disabled={currentIndex === 0} className="p-2 text-gray-500 hover:text-indigo-600 disabled:opacity-30"><SkipBack className="w-4 h-4 fill-current" /></button>
                         <button onClick={prevSlide} className="p-2 text-gray-500 hover:text-indigo-600"><ChevronLeft className="w-5 h-5" /></button>

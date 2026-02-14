@@ -16,3 +16,12 @@ export function formatBytes(bytes: number, decimals = 2) {
 
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 }
+
+export function getStatusLabel(status: string): string {
+  const labels: Record<string, string> = {
+    DONE: "Réalisé",
+    CURRENT: "En cours",
+    PROSPECT: "Prospection"
+  };
+  return labels[status] || status;
+}

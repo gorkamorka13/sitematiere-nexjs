@@ -49,7 +49,7 @@ export function ProjectDescription({ selectedProject, flagDoc, logoDoc }: Projec
                     )}
                 </div>
             </div>
-            <div className="p-4 text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line overflow-y-auto custom-scrollbar">
+            <div className="px-3 py-4 text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line overflow-y-auto custom-scrollbar">
                 {formatDescription(selectedProject?.description) || "Sélectionnez un projet pour voir sa description."}
             </div>
         </div>
