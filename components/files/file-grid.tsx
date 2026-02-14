@@ -12,7 +12,7 @@ import { FileData } from "./file-explorer";
 interface FileGridProps {
     files: FileData[];
     selectedIds: Set<string>;
-    onSelect: (id: string, multi: boolean) => void;
+    onSelect: (id: string, multi: boolean, toggle?: boolean) => void;
     onRename?: (file: FileData) => void;
     onPreview?: (file: FileData) => void;
     onContextMenu?: (e: React.MouseEvent, id: string) => void;
@@ -24,8 +24,8 @@ interface FileGridProps {
  */
 function isReducedSizeDirectory(blobPath: string): boolean {
     const lowerPath = blobPath.toLowerCase();
-    return lowerPath.includes('/client/') || lowerPath.includes('/flag/') || 
-           lowerPath.startsWith('client/') || lowerPath.startsWith('flag/');
+    return lowerPath.includes('/client/') || lowerPath.includes('/flag/') ||
+        lowerPath.startsWith('client/') || lowerPath.startsWith('flag/');
 }
 
 export function FileGrid({ files, selectedIds, onSelect, onRename, onPreview, onContextMenu }: FileGridProps) {
@@ -56,8 +56,8 @@ export function FileGrid({ files, selectedIds, onSelect, onRename, onPreview, on
                             ${isReducedSize ? "h-24 sm:h-28 md:h-32" : "aspect-square"}
                         `}
                         onClick={(e) => {
-                             e.stopPropagation();
-                             onSelect(file.id, e.ctrlKey || e.metaKey);
+                            e.stopPropagation();
+                            onSelect(file.id, e.ctrlKey || e.metaKey);
                         }}
                         onDoubleClick={(e) => {
                             e.stopPropagation();
@@ -81,7 +81,7 @@ export function FileGrid({ files, selectedIds, onSelect, onRename, onPreview, on
                                     sizes={isReducedSize ? "80px" : "(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"}
                                 />
                             ) : isImage && file.blobUrl ? (
-                                 <Image
+                                <Image
                                     src={file.blobUrl}
                                     alt={file.name}
                                     fill={!isReducedSize}
@@ -113,11 +113,17 @@ export function FileGrid({ files, selectedIds, onSelect, onRename, onPreview, on
                         </div>
 
                         {/* Selection Checkbox */}
-                        <div className={`
-                            absolute z-10 transition-opacity
-                            ${isReducedSize ? "top-1 left-1" : "top-2 left-2"}
-                            ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"}
-                        `}>
+                        <div
+                            className={`
+                                absolute z-10 transition-opacity
+                                ${isReducedSize ? "top-1 left-1" : "top-2 left-2"}
+                                ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"}
+                            `}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onSelect(file.id, false, true); // Force toggle
+                            }}
+                        >
                             <div className={`
                                 rounded-full border flex items-center justify-center
                                 ${isSelected ? "bg-primary border-primary text-primary-foreground" : "bg-white/80 border-gray-300 hover:border-primary"}
@@ -128,20 +134,20 @@ export function FileGrid({ files, selectedIds, onSelect, onRename, onPreview, on
                         </div>
 
                         {/* Edit Button */}
-                         <div className={`
+                        <div className={`
                             absolute z-10 transition-opacity opacity-0 group-hover:opacity-100
                             ${isReducedSize ? "top-1 right-1" : "top-2 right-2"}
                         `}>
-                             <button
+                            <button
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onRename?.(file);
                                 }}
                                 className={`bg-white/80 rounded-full hover:bg-white text-gray-700 shadow-sm ${isReducedSize ? "p-0.5" : "p-1"}`}
                                 title="Renommer"
-                             >
+                            >
                                 <svg xmlns="http://www.w3.org/2000/svg" width={isReducedSize ? 10 : 14} height={isReducedSize ? 10 : 14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
-                             </button>
+                            </button>
                         </div>
 
                         {/* Footer Info */}

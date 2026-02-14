@@ -28,6 +28,10 @@ export async function GET(
       // Edge Runtime compatible: response.Body is already a Web ReadableStream
       const stream = response.Body as ReadableStream;
 
+      const { searchParams } = new URL(request.url);
+      const isDownload = searchParams.get("download") === "true";
+      const fileName = searchParams.get("filename") || fileKey.split("/").pop();
+
       const headers = new Headers();
       if (response.ContentType) {
         headers.set("Content-Type", response.ContentType);
@@ -35,8 +39,15 @@ export async function GET(
       if (response.ContentLength) {
         headers.set("Content-Length", response.ContentLength.toString());
       }
-      // Set caching headers suitable for static assets
-      headers.set("Cache-Control", "public, max-age=31536000, immutable");
+
+      if (isDownload) {
+        // Force download with filename
+        headers.set("Content-Disposition", `attachment; filename="${encodeURIComponent(fileName || "file")}"`);
+        headers.set("Cache-Control", "no-cache");
+      } else {
+        // Set caching headers suitable for static assets
+        headers.set("Cache-Control", "public, max-age=31536000, immutable");
+      }
 
       return new NextResponse(stream, { headers });
 

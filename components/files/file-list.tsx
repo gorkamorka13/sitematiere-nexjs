@@ -12,7 +12,7 @@ import { FileData } from "./file-explorer";
 interface FileListProps {
     files: FileData[];
     selectedIds: Set<string>;
-    onSelect: (id: string, multi: boolean) => void;
+    onSelect: (id: string, multi: boolean, toggle?: boolean) => void;
     onRename?: (file: FileData) => void;
     onPreview?: (file: FileData) => void;
     onContextMenu?: (e: React.MouseEvent, id: string) => void;
@@ -22,7 +22,7 @@ interface FileListProps {
 
 export function FileList({ files, selectedIds, onSelect, onRename, onPreview, onContextMenu, sortConfig, onSort }: FileListProps) {
     if (files.length === 0) {
-         return (
+        return (
             <div className="flex flex-col items-center justify-center p-12 text-muted-foreground">
                 <p>Aucun fichier trouvé</p>
             </div>
@@ -71,10 +71,10 @@ export function FileList({ files, selectedIds, onSelect, onRename, onPreview, on
                 </thead>
                 <tbody>
                     {files.map((file) => {
-                         const isSelected = selectedIds.has(file.id);
-                         const date = new Date(file.createdAt).toLocaleDateString();
+                        const isSelected = selectedIds.has(file.id);
+                        const date = new Date(file.createdAt).toLocaleDateString();
 
-                         return (
+                        return (
                             <tr
                                 key={file.id}
                                 onClick={(e) => {
@@ -94,8 +94,14 @@ export function FileList({ files, selectedIds, onSelect, onRename, onPreview, on
                                     onContextMenu?.(e, file.id);
                                 }}
                             >
-                                <td className="py-2 pl-2">
-                                     <div className={`
+                                <td
+                                    className="py-2 pl-2"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onSelect(file.id, false, true); // Force toggle
+                                    }}
+                                >
+                                    <div className={`
                                         w-4 h-4 rounded border flex items-center justify-center
                                         ${isSelected ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/30"}
                                     `}>
@@ -144,7 +150,7 @@ export function FileList({ files, selectedIds, onSelect, onRename, onPreview, on
                                     </button>
                                 </td>
                             </tr>
-                         );
+                        );
                     })}
                 </tbody>
             </table>

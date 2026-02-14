@@ -9,9 +9,8 @@ import { FilePreviewModal } from "./file-preview-modal";
 import { FileContextMenu } from "./file-context-menu";
 import { FileMoveDialog } from "./file-move-dialog";
 import { FileDeleteDialog } from "./file-delete-dialog";
-// import { useToast } from "@/components/ui/use-toast";
-// If no toast, we can just console.log or use a simple alert for now.
 import { FileType } from "@prisma/client";
+import { Toast, ToastType } from "@/components/ui/toast";
 
 import { useDebounce } from "@/hooks/use-debounce";
 
@@ -46,6 +45,7 @@ export function FileExplorer() {
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [refreshTrigger, setRefreshTrigger] = useState(0);
     const [sortConfig, setSortConfig] = useState<{ key: 'name' | 'fileType' | 'size' | 'createdAt'; direction: 'asc' | 'desc' } | null>({ key: 'name', direction: 'asc' });
+    const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
     // Auto-select country when project is selected
     useEffect(() => {
@@ -117,18 +117,6 @@ export function FileExplorer() {
         fetchFiles();
     }, [fetchFiles, refreshTrigger]);
 
-    const handleSelect = (id: string, multi: boolean) => {
-        const newSelection = new Set(multi ? selectedIds : []);
-        if (newSelection.has(id)) {
-            newSelection.delete(id);
-        } else {
-            newSelection.add(id);
-        }
-        setSelectedIds(newSelection);
-    };
-
-
-
     const [renamingFile, setRenamingFile] = useState<FileData | null>(null);
     const [newName, setNewName] = useState("");
     const [previewFile, setPreviewFile] = useState<FileData | null>(null);
@@ -140,13 +128,27 @@ export function FileExplorer() {
     const [moveFileIds, setMoveFileIds] = useState<string[] | null>(null);
     const [deleteFileIds, setDeleteFileIds] = useState<string[] | null>(null);
 
+    const handleSelect = useCallback((id: string, multi: boolean, forceToggle: boolean = false) => {
+        const newSelection = new Set((multi || forceToggle) ? selectedIds : []);
+        if (newSelection.has(id)) {
+            newSelection.delete(id);
+        } else {
+            newSelection.add(id);
+        }
+        setSelectedIds(newSelection);
+    }, [selectedIds]);
+
     const handleContextMenu = useCallback((e: React.MouseEvent, id: string) => {
         e.preventDefault();
         const file = files.find((f: FileData) => f.id === id);
         if (file) {
+            // If the file is not selected, select only it (unless Ctrl is held)
+            if (!selectedIds.has(id)) {
+                handleSelect(id, e.ctrlKey || e.metaKey);
+            }
             setContextMenu({ x: e.clientX, y: e.clientY, file });
         }
-    }, [files]);
+    }, [files, selectedIds, handleSelect]);
 
     const startRename = (file: FileData) => {
         setRenamingFile(file);
@@ -168,10 +170,11 @@ export function FileExplorer() {
 
             if (!res.ok) throw new Error("Rename failed");
 
+            setToast({ message: "Fichier renommé avec succès", type: "success" });
             setRefreshTrigger(prev => prev + 1);
         } catch (error) {
             console.error("Rename error:", error);
-            alert("Erreur lors du renommage");
+            setToast({ message: "Erreur lors du renommage", type: "error" });
         } finally {
             setRenamingFile(null);
         }
@@ -181,19 +184,24 @@ export function FileExplorer() {
         if (!moveFileIds) return;
 
         try {
-            await Promise.all(moveFileIds.map(id =>
-                fetch(`/api/files/${id}`, {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ projectId: targetProjectId }),
-                })
-            ));
+            const res = await fetch("/api/files/bulk-move", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ fileIds: moveFileIds, projectId: targetProjectId }),
+            });
 
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error || "Move failed");
+            }
+
+            setToast({ message: `${moveFileIds.length} fichier(s) déplacé(s) avec succès`, type: "success" });
             setRefreshTrigger(prev => prev + 1);
             setMoveFileIds(null);
-        } catch (error) {
+            setSelectedIds(new Set());
+        } catch (error: any) {
             console.error("Move error:", error);
-            alert("Erreur lors du déplacement");
+            setToast({ message: error.message || "Erreur lors du déplacement", type: "error" });
         }
     };
 
@@ -209,12 +217,13 @@ export function FileExplorer() {
 
             if (!res.ok) throw new Error("Delete failed");
 
+            setToast({ message: `${deleteFileIds.length} fichier(s) supprimé(s) avec succès`, type: "success" });
             setSelectedIds(new Set());
             setRefreshTrigger(prev => prev + 1);
             setDeleteFileIds(null);
         } catch (error) {
             console.error("Delete error:", error);
-            alert("Erreur lors de la suppression");
+            setToast({ message: "Erreur lors de la suppression", type: "error" });
         }
     };
 
@@ -250,6 +259,7 @@ export function FileExplorer() {
                     selectedCount={selectedIds.size}
                     viewMode={viewMode}
                     onViewChange={setViewMode}
+                    onMove={() => setMoveFileIds(Array.from(selectedIds))}
                     onDelete={onToolbarDelete}
                     onRefresh={() => setRefreshTrigger(prev => prev + 1)}
                     isRefreshing={loading}
@@ -286,13 +296,13 @@ export function FileExplorer() {
                 )}
 
                 {!loading && files.length === 0 && (
-                     <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground pointer-events-none">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground pointer-events-none">
                         <p>Aucun fichier</p>
                     </div>
                 )}
 
-                 {/* Rename Modal (Simple inline absolute centered for now) */}
-                 {renamingFile && (
+                {/* Rename Modal (Simple inline absolute centered for now) */}
+                {renamingFile && (
                     <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
                         <div className="bg-background p-6 rounded-lg shadow-xl w-full max-w-sm border">
                             <h3 className="text-lg font-semibold mb-4">Renommer le fichier</h3>
@@ -335,8 +345,20 @@ export function FileExplorer() {
                     onClose={() => setContextMenu(null)}
                     onPreview={() => setPreviewFile(contextMenu.file)}
                     onRename={() => startRename(contextMenu.file)}
-                    onMove={() => setMoveFileIds([contextMenu.file.id])}
-                    onDelete={() => setDeleteFileIds([contextMenu.file.id])}
+                    onMove={() => {
+                        if (selectedIds.has(contextMenu.file.id)) {
+                            setMoveFileIds(Array.from(selectedIds));
+                        } else {
+                            setMoveFileIds([contextMenu.file.id]);
+                        }
+                    }}
+                    onDelete={() => {
+                        if (selectedIds.has(contextMenu.file.id)) {
+                            setDeleteFileIds(Array.from(selectedIds));
+                        } else {
+                            setDeleteFileIds([contextMenu.file.id]);
+                        }
+                    }}
                 />
             )}
 
@@ -366,6 +388,15 @@ export function FileExplorer() {
                     fileCount={deleteFileIds.length}
                     onClose={() => setDeleteFileIds(null)}
                     onConfirm={handleDelete}
+                />
+            )}
+
+            {/* Toast Notification */}
+            {toast && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => setToast(null)}
                 />
             )}
         </div>

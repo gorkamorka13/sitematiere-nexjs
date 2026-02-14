@@ -79,7 +79,7 @@ export function FileContextMenu({
             </div>
 
             {showRestore ? (
-                 <button
+                <button
                     onClick={() => { onRestore?.(); onClose(); }}
                     className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground dark:hover:bg-gray-700"
                 >
@@ -110,7 +110,7 @@ export function FileContextMenu({
                         Déplacer
                     </button>
                     <a
-                        href={file.blobUrl}
+                        href={`/api/files/serve/${file.blobPath}?download=true&filename=${encodeURIComponent(file.name)}`}
                         download={file.name}
                         onClick={onClose}
                         className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground dark:hover:bg-gray-700 text-decoration-none text-inherit"

@@ -90,7 +90,7 @@ export function FilePreviewModal({ file, files, onClose, onNavigate }: FilePrevi
                 </div>
                 <div className="flex items-center gap-4">
                     <a
-                        href={file.blobUrl}
+                        href={`/api/files/serve/${file.blobPath}?download=true&filename=${encodeURIComponent(file.name)}`}
                         download={file.name}
                         className="p-2 hover:bg-white/10 rounded-full transition-colors"
                         title="Télécharger"
