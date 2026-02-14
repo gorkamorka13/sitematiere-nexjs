@@ -13,8 +13,8 @@ export default function UserBadge({ username, name, color, role, size = "md" }: 
   const displayText = name && name.length >= 2
     ? name.substring(0, 2).toUpperCase()
     : username && username.length >= 2
-    ? username.substring(0, 2).toUpperCase()
-    : role.substring(0, 2).toUpperCase();
+      ? username.substring(0, 2).toUpperCase()
+      : role.substring(0, 2).toUpperCase();
 
   // Couleur par défaut si non définie
   const badgeColor = color || "#6366f1";
@@ -42,17 +42,23 @@ export default function UserBadge({ username, name, color, role, size = "md" }: 
   // Tailles
   const sizeClasses = {
     sm: "w-6 h-6 text-[10px]",
-    md: "w-8 h-8 text-xs",
-    lg: "w-10 h-10 text-sm",
+    md: "w-9 h-9 text-[11px]",
+    lg: "w-14 h-14 text-lg",
   };
 
   return (
     <div
-      className={`${sizeClasses[size]} rounded-full flex items-center justify-center font-bold ${textColorClass} shadow-sm`}
-      style={{ backgroundColor: badgeColor }}
+      className={`${sizeClasses[size]} rounded-full flex items-center justify-center font-bold ${textColorClass} shadow-md border-2 border-white/20 dark:border-black/20 ring-1 ring-black/5 relative overflow-hidden group transition-all duration-300 hover:shadow-lg`}
+      style={{
+        backgroundColor: badgeColor,
+        background: `linear-gradient(135deg, ${badgeColor}, ${badgeColor}dd)`
+      }}
       title={name || username || role}
     >
-      {displayText}
+      <div className="absolute inset-0 bg-white/10 group-hover:bg-transparent transition-colors" />
+      <span className="relative z-10 tracking-tighter">
+        {displayText}
+      </span>
     </div>
   );
 }

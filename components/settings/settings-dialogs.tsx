@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Users, X, UserCircle, Shield, Eye, EyeOff, Save, Trash2, Edit2, Plus, Palette } from "lucide-react";
+import { Users, X, UserCircle, Shield, Eye, EyeOff, Save, Trash2, Edit2, Plus, Palette, ChevronLeft } from "lucide-react";
 import { UserRole } from "@prisma/client";
 import UserBadge from "./user-badge";
 
@@ -38,7 +38,6 @@ const predefinedColors = [
   "#a855f7", // violet clair
   "#d946ef", // fuchsia
   "#ec4899", // rose
-  "#f43f5e", // rose vif
 ];
 
 export default function SettingsDialogs({ isAdmin, isOpen, onClose }: SettingsDialogsProps) {
@@ -196,173 +195,205 @@ export default function SettingsDialogs({ isAdmin, isOpen, onClose }: SettingsDi
       {/* Dialog Gestion des utilisateurs */}
       {isOpen && isAdmin && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300 px-2 lg:px-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col border border-gray-100 dark:border-gray-700 overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col border border-gray-100 dark:border-gray-700 overflow-hidden">
             <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                Gestion des utilisateurs
-              </h2>
+              <div className="flex items-center gap-4">
+                {(isCreateMode || editingUser) && (
+                  <button
+                    onClick={() => {
+                      setIsCreateMode(false);
+                      setEditingUser(null);
+                    }}
+                    className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                    title="Retour à la liste"
+                  >
+                    <ChevronLeft className="w-5 h-5 text-gray-500" />
+                  </button>
+                )}
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  {isCreateMode ? "Créer un utilisateur" : editingUser ? `Modifier ${editingUser.username}` : "Gestion des utilisateurs"}
+                </h2>
+              </div>
               <div className="flex items-center gap-2">
+                {!isCreateMode && !editingUser && (
+                  <button
+                    onClick={() => {
+                      setIsCreateMode(true);
+                      setEditingUser(null);
+                      setFormData({ username: "", name: "", password: "", role: "USER", color: "#6366f1" });
+                      setShowPassword(false);
+                    }}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors shadow-sm"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Ajouter un membre
+                  </button>
+                )}
                 <button
                   onClick={() => {
-                    setIsCreateMode(true);
+                    setIsCreateMode(false);
                     setEditingUser(null);
-                    setFormData({ username: "", name: "", password: "", role: "USER", color: "#6366f1" });
-                    setShowPassword(false);
+                    onClose();
                   }}
-                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700"
-                >
-                  <Plus className="w-4 h-4" />
-                  Ajouter
-                </button>
-                <button
-                  onClick={onClose}
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
             </div>
 
-            <div className="flex-1 overflow-auto p-4">
+            <div className="flex-1 p-4 md:p-6">
               {isCreateMode || editingUser ? (
                 <form
+                  id="user-mgmt-form"
                   onSubmit={editingUser ? handleUpdateUser : handleCreateUser}
-                  className="space-y-4 max-w-md mx-auto"
+                  className="max-w-4xl mx-auto pb-4"
                 >
-                  <div className="flex items-center gap-4 mb-6">
-                    <UserBadge
-                      username={formData.username}
-                      name={formData.name}
-                      color={formData.color}
-                      role={formData.role}
-                      size="lg"
-                    />
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                        {editingUser ? "Modifier l'utilisateur" : "Nouvel utilisateur"}
-                      </h3>
-                      <p className="text-sm text-gray-500">Aperçu de la pastille</p>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Nom de connexion *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.username}
-                      onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
-                      required
-                      placeholder="ex: admin"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Nom complet
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
-                      placeholder="Nom affiché"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Mot de passe {editingUser && "(laisser vide pour ne pas changer)"}
-                    </label>
-                    <div className="relative">
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        value={formData.password}
-                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
-                        required={!editingUser}
-                        placeholder="••••••"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                        title={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
-                      >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Rôle
-                    </label>
-                    <select
-                      value={formData.role}
-                      onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
-                    >
-                      <option value="ADMIN">Administrateur</option>
-                      <option value="USER">Utilisateur</option>
-                      <option value="VISITOR">Visiteur</option>
-                    </select>
-                  </div>
-
-                  {/* Color Picker */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
-                      <Palette className="w-4 h-4 text-indigo-500" />
-                      Couleur de la pastille
-                    </label>
-                    <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
-                      {predefinedColors.map((color) => (
-                        <button
-                          key={color}
-                          type="button"
-                          onClick={() => setFormData({ ...formData, color })}
-                          className={`w-8 h-8 rounded-lg transition-transform hover:scale-110 ${
-                            formData.color === color ? "ring-2 ring-offset-2 ring-gray-400 dark:ring-offset-gray-800" : ""
-                          }`}
-                          style={{ backgroundColor: color }}
-                          title={color}
+                  <div className="grid grid-cols-1 md:grid-cols-[1fr_200px] gap-8 lg:gap-12">
+                    {/* Colonne Gauche : Informations */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-4 mb-6 bg-indigo-50/50 dark:bg-indigo-900/10 p-4 rounded-2xl border border-indigo-100/50 dark:border-indigo-900/30">
+                        <UserBadge
+                          username={formData.username}
+                          name={formData.name}
+                          color={formData.color}
+                          role={formData.role}
+                          size="lg"
                         />
-                      ))}
+                        <div>
+                          <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                            {editingUser ? "Modifier l'utilisateur" : "Nouveau membre"}
+                          </h3>
+                          <p className="text-xs text-gray-500">Aperçu de l&apos;Avatar</p>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">
+                          Nom de connexion *
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.username}
+                          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                          className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
+                          required
+                          placeholder="ex: admin"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">
+                          Nom complet
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
+                          placeholder="Nom affiché"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">
+                          Mot de passe {editingUser && "(laisser vide pour conserver)"}
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            value={formData.password}
+                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                            className="w-full px-4 py-2.5 pr-12 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
+                            required={!editingUser}
+                            placeholder="••••••"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute inset-y-0 right-0 flex items-center px-4 text-gray-400 hover:text-indigo-500 transition-colors"
+                          >
+                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">
+                          Fonction / Rôle
+                        </label>
+                        <select
+                          value={formData.role}
+                          onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
+                          className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm appearance-none cursor-pointer"
+                        >
+                          <option value="ADMIN">Administrateur</option>
+                          <option value="USER">Utilisateur</option>
+                          <option value="VISITOR">Visiteur</option>
+                        </select>
+                      </div>
                     </div>
-                    <div className="mt-2 flex items-center gap-2">
-                      <span className="text-sm text-gray-500">Personnalisé:</span>
-                      <input
-                        type="color"
-                        value={formData.color}
-                        onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                        className="w-8 h-8 rounded cursor-pointer"
-                      />
-                      <span className="text-sm text-gray-600 dark:text-gray-400">{formData.color}</span>
+
+                    {/* Colonne Droite : Couleur Avatar */}
+                    <div className="bg-gray-50/50 dark:bg-gray-900/30 p-4 rounded-3xl border border-gray-100 dark:border-gray-700/50 h-fit w-[160px] mx-auto md:ml-auto md:mr-0">
+                      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1 flex items-center gap-2">
+                        <Palette className="w-3.5 h-3.5 text-indigo-500" />
+                        Teinte de l&apos;Avatar
+                      </label>
+                      <div className="grid grid-cols-3 gap-2 w-fit">
+                        {predefinedColors.map((color) => (
+                          <button
+                            key={color}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, color })}
+                            className={`w-7 h-7 rounded-lg transition-all hover:scale-110 active:scale-95 shadow-sm ${formData.color === color ? "ring-2 ring-white dark:ring-gray-800 shadow-md scale-110 z-10" : ""
+                              }`}
+                            style={{ backgroundColor: color }}
+                            title={color}
+                          />
+                        ))}
+                      </div>
+
+                      <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">
+                          Couleur personnalisée
+                        </label>
+                        <div className="flex items-center gap-3 bg-white dark:bg-gray-800 p-1.5 rounded-xl border border-gray-100 dark:border-gray-700 shadow-inner w-fit pr-4">
+                          <input
+                            type="color"
+                            value={formData.color}
+                            onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                            className="w-8 h-8 rounded-lg cursor-pointer border-0 p-0 overflow-hidden"
+                          />
+                          <div className="flex flex-col">
+                            <span className="text-xs font-mono font-bold text-gray-900 dark:text-white uppercase tracking-wider leading-none mb-0.5">{formData.color}</span>
+                            <span className="text-[9px] text-gray-500 uppercase font-semibold leading-none">Code Hex</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex justify-end gap-2 pt-4">
+                  {/* Boutons intégrés à la boîte */}
+                  <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
                     <button
                       type="button"
                       onClick={() => {
                         setIsCreateMode(false);
                         setEditingUser(null);
                         setShowPassword(false);
-                        onClose();
                       }}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 transition-all"
                     >
-                      Annuler
+                      Retour à la liste
                     </button>
                     <button
                       type="submit"
-                      className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
+                      className="flex items-center gap-2 px-6 py-2 text-sm font-bold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 dark:shadow-none transition-all hover:scale-[1.02] active:scale-95"
                     >
                       <Save className="w-4 h-4" />
-                      {editingUser ? "Mettre à jour" : "Créer"}
+                      {editingUser ? "Enregistrer les modifications" : "Créer le compte"}
                     </button>
                   </div>
                 </form>
@@ -372,7 +403,7 @@ export default function SettingsDialogs({ isAdmin, isOpen, onClose }: SettingsDi
                     <thead className="bg-gray-50 dark:bg-gray-900 sticky top-0 z-10">
                       <tr>
                         <th className="px-3 lg:px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">
-                          Pastille
+                          Avatar
                         </th>
                         <th className="px-3 lg:px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-widest">
                           ID
@@ -393,12 +424,6 @@ export default function SettingsDialogs({ isAdmin, isOpen, onClose }: SettingsDi
                         <tr>
                           <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
                             Chargement...
-                          </td>
-                        </tr>
-                      ) : users.length === 0 ? (
-                        <tr>
-                          <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
-                            Aucun utilisateur trouvé
                           </td>
                         </tr>
                       ) : (

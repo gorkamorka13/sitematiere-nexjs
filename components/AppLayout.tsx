@@ -126,8 +126,8 @@ export default function AppLayout({
                     w-72 shadow-2xl lg:shadow-none`}
             >
                 {/* Branding Header */}
-                <div className="flex items-center justify-between px-4 h-20 border-b border-gray-100 dark:border-gray-700 shrink-0">
-                    <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center justify-between px-3 h-20 border-b border-gray-100 dark:border-gray-700 shrink-0">
+                    <div className="flex items-center gap-2 min-w-0">
                         <div className="w-10 h-10 relative shrink-0">
                             <Image
                                 src="/Matiere_logo_512.png"
@@ -139,10 +139,10 @@ export default function AppLayout({
                         </div>
                         {!isSidebarCollapsed && (
                             <>
-                                <span className="matiere text-xl tracking-tight truncate">
+                                <span className="matiere text-lg lg:text-xl tracking-tight whitespace-nowrap">
                                     Matière
                                 </span>
-                                <div className="ml-2 scale-90 origin-left">
+                                <div className="ml-1 scale-90 origin-left">
                                     <ModeToggle />
                                 </div>
                             </>
@@ -171,7 +171,7 @@ export default function AppLayout({
                 </div>
 
                 {/* User Section */}
-                <div className={`p-4 ${isSidebarCollapsed ? "flex flex-col items-center" : ""}`}>
+                <div className={`p-4 border-b border-gray-100 dark:border-gray-700 ${isSidebarCollapsed ? "flex flex-col items-center" : ""}`}>
                     <div className="flex items-center gap-3 w-full bg-gray-50/50 dark:bg-gray-800/50 p-3 rounded-2xl border border-gray-100 dark:border-gray-700 transition-all group hover:border-indigo-200 dark:hover:border-indigo-900/50">
                         <UserBadge
                             username={user.username || null}
@@ -186,10 +186,6 @@ export default function AppLayout({
                                 <span className="text-sm font-bold text-gray-900 dark:text-white truncate">{user.name || user.username}</span>
                             </div>
                         )}
-                    </div>
-                    {/* Logout moved here to leave room for credits at the bottom */}
-                    <div className="w-full">
-                        <SignOutButton variant={isSidebarCollapsed ? "icon" : "sidebar"} />
                     </div>
                 </div>
 
@@ -262,6 +258,11 @@ export default function AppLayout({
                         </div>
                     )}
                 </nav>
+
+                {/* Sidebar Actions */}
+                <div className={`p-4 border-t border-gray-100 dark:border-gray-700 ${isSidebarCollapsed ? "flex flex-col items-center" : ""}`}>
+                    <SignOutButton variant={isSidebarCollapsed ? "icon" : "sidebar"} />
+                </div>
 
 
                 {/* Bottom Section: Credits */}

@@ -18,10 +18,10 @@ const userSchema = z.object({
 const updateUserSchema = z.object({
   id: z.string(),
   username: z.string().min(1).optional(),
-  name: z.string().optional(),
-  password: z.string().min(6).optional(),
+  name: z.string().optional().nullable(),
+  password: z.string().min(6).or(z.literal("")).optional(),
   role: z.enum(["ADMIN", "USER", "VISITOR"]).optional(),
-  color: z.string().optional(),
+  color: z.string().optional().nullable(),
 });
 
 async function checkAdminAccess() {
@@ -151,13 +151,28 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    // Si le username est modifié, vérifier s'il est déjà pris
+    if (updateData.username && updateData.username !== existingUser.username) {
+      const usernameTaken = await prisma.user.findUnique({
+        where: { username: updateData.username },
+      });
+      if (usernameTaken) {
+        return NextResponse.json(
+          { error: "Ce nom de connexion est déjà utilisé par un autre utilisateur" },
+          { status: 400 }
+        );
+      }
+    }
+
     // Préparer les données de mise à jour
-    const dataToUpdate: { username?: string; name?: string; role?: UserRole; passwordHash?: string; color?: string } = {};
+    const dataToUpdate: any = {};
     if (updateData.username) dataToUpdate.username = updateData.username;
     if (updateData.name !== undefined) dataToUpdate.name = updateData.name;
     if (updateData.role) dataToUpdate.role = updateData.role;
-    if (updateData.color) dataToUpdate.color = updateData.color;
-    if (updateData.password) {
+    if (updateData.color !== undefined) dataToUpdate.color = updateData.color;
+
+    // Uniquement si le mot de passe n'est pas vide
+    if (updateData.password && updateData.password.trim().length >= 6) {
       dataToUpdate.passwordHash = await hash(updateData.password, 10);
     }
 
