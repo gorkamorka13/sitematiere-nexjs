@@ -165,7 +165,13 @@ export async function PUT(request: NextRequest) {
     }
 
     // Préparer les données de mise à jour
-    const dataToUpdate: any = {};
+    const dataToUpdate: {
+      username?: string;
+      name?: string | null;
+      role?: any; // Role type comes from Prisma
+      color?: string | null;
+      passwordHash?: string;
+    } = {};
     if (updateData.username) dataToUpdate.username = updateData.username;
     if (updateData.name !== undefined) dataToUpdate.name = updateData.name;
     if (updateData.role) dataToUpdate.role = updateData.role;

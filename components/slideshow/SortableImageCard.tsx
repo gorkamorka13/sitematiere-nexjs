@@ -14,7 +14,6 @@ interface SortableImageCardProps {
     url: string;
     alt: string | null;
   };
-  order: number;
   isPublished: boolean;
   onRemove: () => void;
 }
@@ -22,7 +21,6 @@ interface SortableImageCardProps {
 export function SortableImageCard({
   id,
   image,
-  order,
   isPublished,
   onRemove,
 }: SortableImageCardProps) {

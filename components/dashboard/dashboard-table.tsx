@@ -51,15 +51,18 @@ export function DashboardTable({
         // Sort
         if (sortConfig) {
             result.sort((a, b) => {
-                let aValue: any;
-                let bValue: any;
+                let aValue: string | number | boolean | null | undefined;
+                let bValue: string | number | boolean | null | undefined;
 
                 if (sortConfig.key === 'statusLabel') {
                     aValue = getStatusLabel(a.status);
                     bValue = getStatusLabel(b.status);
                 } else {
-                    aValue = a[sortConfig.key as keyof Project];
-                    bValue = b[sortConfig.key as keyof Project];
+                    const key = sortConfig.key as keyof Project;
+                    const valA = a[key];
+                    const valB = b[key];
+                    aValue = (typeof valA === 'string' || typeof valA === 'number' || typeof valA === 'boolean' || valA === null) ? valA : String(valA);
+                    bValue = (typeof valB === 'string' || typeof valB === 'number' || typeof valB === 'boolean' || valB === null) ? valB : String(valB);
                 }
 
                 if (aValue === null || aValue === undefined) return 1;
