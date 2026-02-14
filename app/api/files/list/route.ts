@@ -65,7 +65,17 @@ export async function GET(request: Request) {
         orderBy: { name: "asc" }, // Sort alphabetically by name
         skip: (page - 1) * limit,
         take: limit,
-        include: {
+        select: {
+          id: true,
+          name: true,
+          blobUrl: true,
+          blobPath: true,
+          thumbnailUrl: true,
+          fileType: true,
+          size: true,
+          mimeType: true,
+          createdAt: true,
+          projectId: true,
           project: {
             select: {
               id: true,

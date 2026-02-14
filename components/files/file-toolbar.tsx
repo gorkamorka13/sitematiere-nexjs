@@ -30,13 +30,13 @@ export function FileToolbar({
              <span className="text-sm font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-md">
                {selectedCount} sélectionné{selectedCount > 1 ? "s" : ""}
              </span>
-             <button
-                onClick={onDelete}
-                className="p-1.5 text-destructive hover:bg-destructive/10 rounded-md transition-colors"
-                title="Supprimer la sélection"
-             >
-               <Trash2 className="h-4 w-4" />
-             </button>
+              <button
+                 onClick={onDelete}
+                 className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-500 dark:hover:text-red-400 dark:hover:bg-red-950/30 rounded-md transition-colors"
+                 title="Supprimer la sélection"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
            </div>
         ) : (
           <span className="text-sm text-muted-foreground px-2">

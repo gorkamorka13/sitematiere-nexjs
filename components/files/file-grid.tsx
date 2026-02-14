@@ -18,6 +18,16 @@ interface FileGridProps {
     onContextMenu?: (e: React.MouseEvent, id: string) => void;
 }
 
+/**
+ * Check if a file is from Client or Flag directory
+ * These directories need reduced display dimensions
+ */
+function isReducedSizeDirectory(blobPath: string): boolean {
+    const lowerPath = blobPath.toLowerCase();
+    return lowerPath.includes('/client/') || lowerPath.includes('/flag/') || 
+           lowerPath.startsWith('client/') || lowerPath.startsWith('flag/');
+}
+
 export function FileGrid({ files, selectedIds, onSelect, onRename, onPreview, onContextMenu }: FileGridProps) {
     if (files.length === 0) {
         return (
@@ -34,14 +44,16 @@ export function FileGrid({ files, selectedIds, onSelect, onRename, onPreview, on
                 const isSelected = selectedIds.has(file.id);
                 const isImage = file.fileType === "IMAGE";
                 const isVideo = file.fileType === "VIDEO";
+                const isReducedSize = isReducedSizeDirectory(file.blobPath);
 
                 return (
                     <div
                         key={file.id}
                         className={`
-                            group relative aspect-square rounded-xl border bg-card overflow-hidden cursor-pointer transition-all
+                            group relative rounded-xl border bg-card cursor-pointer transition-all
                             hover:shadow-md hover:border-primary/50
                             ${isSelected ? "ring-2 ring-primary border-primary bg-primary/5" : "border-border"}
+                            ${isReducedSize ? "h-24 sm:h-28 md:h-32" : "aspect-square"}
                         `}
                         onClick={(e) => {
                              e.stopPropagation();
@@ -57,30 +69,37 @@ export function FileGrid({ files, selectedIds, onSelect, onRename, onPreview, on
                         }}
                     >
                         {/* Thumbnail / Icon */}
-                        <div className="absolute inset-0 flex items-center justify-center bg-muted/20">
+                        <div className={`flex items-center justify-center bg-muted/20 ${isReducedSize ? "h-16 sm:h-20 md:h-24 w-full" : "absolute inset-0"}`}>
                             {isImage && file.thumbnailUrl ? (
                                 <Image
                                     src={file.thumbnailUrl}
                                     alt={file.name}
-                                    fill
-                                    className="object-cover"
-                                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
+                                    fill={!isReducedSize}
+                                    width={isReducedSize ? 80 : undefined}
+                                    height={isReducedSize ? 60 : undefined}
+                                    className={`${isReducedSize ? "object-contain max-h-full max-w-full w-auto h-auto" : "object-cover"}`}
+                                    sizes={isReducedSize ? "80px" : "(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"}
                                 />
                             ) : isImage && file.blobUrl ? (
                                  <Image
                                     src={file.blobUrl}
                                     alt={file.name}
-                                    fill
-                                    className="object-cover"
-                                    sizes="200px" // Fallback if no thumb
+                                    fill={!isReducedSize}
+                                    width={isReducedSize ? 80 : undefined}
+                                    height={isReducedSize ? 60 : undefined}
+                                    className={`${isReducedSize ? "object-contain max-h-full max-w-full w-auto h-auto" : "object-cover"}`}
+                                    sizes={isReducedSize ? "80px" : "200px"}
                                 />
                             ) : isVideo && file.thumbnailUrl ? (
-                                <div className="relative w-full h-full">
+                                <div className={`relative ${isReducedSize ? "w-full h-full" : "w-full h-full"}`}>
                                     <Image
                                         src={file.thumbnailUrl}
                                         alt={file.name}
-                                        fill
-                                        className="object-cover"
+                                        fill={!isReducedSize}
+                                        width={isReducedSize ? 80 : undefined}
+                                        height={isReducedSize ? 60 : undefined}
+                                        className={`${isReducedSize ? "object-contain max-h-full max-w-full w-auto h-auto" : "object-cover"}`}
+                                        sizes={isReducedSize ? "80px" : "200px"}
                                     />
                                     <div className="absolute inset-0 flex items-center justify-center bg-black/20">
                                         <div className="p-2 bg-black/50 rounded-full backdrop-blur-sm">
@@ -89,47 +108,52 @@ export function FileGrid({ files, selectedIds, onSelect, onRename, onPreview, on
                                     </div>
                                 </div>
                             ) : (
-                                <FileIconWrapper type={file.fileType} className="w-12 h-12 text-muted-foreground/50" />
+                                <FileIconWrapper type={file.fileType} className={`text-muted-foreground/50 ${isReducedSize ? "w-6 h-6" : "w-12 h-12"}`} />
                             )}
                         </div>
 
                         {/* Selection Checkbox */}
                         <div className={`
-                            absolute top-2 left-2 z-10 transition-opacity
+                            absolute z-10 transition-opacity
+                            ${isReducedSize ? "top-1 left-1" : "top-2 left-2"}
                             ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"}
                         `}>
                             <div className={`
-                                w-5 h-5 rounded-full border flex items-center justify-center
+                                rounded-full border flex items-center justify-center
                                 ${isSelected ? "bg-primary border-primary text-primary-foreground" : "bg-white/80 border-gray-300 hover:border-primary"}
+                                ${isReducedSize ? "w-4 h-4" : "w-5 h-5"}
                             `}>
-                                {isSelected && <CheckCircle2 className="w-3.5 h-3.5" />}
+                                {isSelected && <CheckCircle2 className={`${isReducedSize ? "w-2.5 h-2.5" : "w-3.5 h-3.5"}`} />}
                             </div>
                         </div>
 
                         {/* Edit Button */}
                          <div className={`
-                            absolute top-2 right-2 z-10 transition-opacity opacity-0 group-hover:opacity-100
+                            absolute z-10 transition-opacity opacity-0 group-hover:opacity-100
+                            ${isReducedSize ? "top-1 right-1" : "top-2 right-2"}
                         `}>
                              <button
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onRename?.(file);
                                 }}
-                                className="p-1 bg-white/80 rounded-full hover:bg-white text-gray-700 shadow-sm"
+                                className={`bg-white/80 rounded-full hover:bg-white text-gray-700 shadow-sm ${isReducedSize ? "p-0.5" : "p-1"}`}
                                 title="Renommer"
                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width={isReducedSize ? 10 : 14} height={isReducedSize ? 10 : 14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
                              </button>
                         </div>
 
                         {/* Footer Info */}
-                        <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent pt-6">
-                            <p className="text-xs font-medium text-white truncate" title={file.name}>
+                        <div className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent ${isReducedSize ? "p-1 pt-3" : "p-2 pt-6"}`}>
+                            <p className={`font-medium text-white truncate ${isReducedSize ? "text-[9px]" : "text-xs"}`} title={file.name}>
                                 {file.name}
                             </p>
-                            <p className="text-[10px] text-white/70">
-                                {formatBytes(file.size)}
-                            </p>
+                            {!isReducedSize && (
+                                <p className="text-[10px] text-white/70">
+                                    {formatBytes(file.size)}
+                                </p>
+                            )}
                         </div>
                     </div>
                 );

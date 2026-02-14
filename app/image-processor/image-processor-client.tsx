@@ -196,7 +196,7 @@ export default function ImageProcessorClient({ user, initialProjects }: ImagePro
         }}
         onManageFiles={() => setIsFileManagementOpen(true)}
     >
-      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8 py-6 lg:py-10 space-y-8">
+      <div className="mx-auto max-w-[1800px] px-2 sm:px-4 py-6 lg:py-10">
         {/* Notifications */}
         {notification && (
             <div className={`fixed top-4 right-4 z-[100] p-4 rounded-xl shadow-2xl flex items-center gap-3 border animate-in slide-in-from-right-full ${
@@ -223,24 +223,31 @@ export default function ImageProcessorClient({ user, initialProjects }: ImagePro
         )}
 
         {/* Header */}
-        <header className="text-center space-y-6">
+        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
           <div>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-2 uppercase tracking-tight">
-                <span className="text-indigo-600 dark:text-indigo-400">Gestion</span> Images
-            </h1>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Gestion Images</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 Outil optimisé pour recadrer, redimensionner et compresser vos images.
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 px-4 sm:px-0">
+          <div className="flex flex-wrap items-center gap-3">
+            {processedImage && (
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl">
+                    <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse" />
+                    <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wider">
+                        Modification en cours
+                    </span>
+                </div>
+            )}
+
              <Button
                 onClick={handleOpenLocalFile}
-                className="w-full sm:w-auto gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
-                size="lg"
+                className="flex-1 sm:flex-none gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase tracking-widest text-[10px] sm:text-xs px-4 sm:px-6"
+                size="sm"
              >
-                <Upload className="w-4 h-4" />
-                Ouvrir un fichier image
+                <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
+                Ouvrir
              </Button>
              <input
                 type="file"
@@ -253,60 +260,58 @@ export default function ImageProcessorClient({ user, initialProjects }: ImagePro
              <Button
                 onClick={() => setShowDatabasePicker(true)}
                 variant="outline"
-                className="w-full sm:w-auto gap-2"
-                size="lg"
+                className="flex-1 sm:flex-none gap-2 border-gray-200 dark:border-gray-700 font-bold uppercase tracking-widest text-[10px] sm:text-xs px-4 sm:px-6"
+                size="sm"
              >
-                <Database className="w-4 h-4" />
-                Choisir depuis la base
+                <Database className="w-3 h-3 sm:w-4 sm:h-4" />
+                Bibliothèque
              </Button>
           </div>
+        </header>
 
-          {processedImage && (
-            <div className="flex items-center justify-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                <div className="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 p-3 rounded-2xl flex items-center gap-4 shadow-sm">
-                    <div className="flex flex-col items-start px-2">
-                        <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Aperçu en cours</span>
-                        <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
-                            {processedImage.tempAction || 'Modification'}
-                            {processedImage.tempDetails ? ` : ${processedImage.tempDetails}` : ''}
-                        </span>
-                    </div>
-                    <div className="h-8 w-[1px] bg-indigo-100 dark:bg-indigo-800" />
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={cancelProcessedImage}
-                            className="h-9 text-xs font-bold uppercase tracking-wider hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20"
-                        >
-                            <X className="w-4 h-4 mr-2" /> Annuler
-                        </Button>
-                        <Button
-                            size="sm"
-                            onClick={commitProcessedImage}
-                            className="h-9 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold uppercase tracking-wider px-6 shadow-md"
-                        >
-                            <Check className="w-4 h-4 mr-2" /> Valider
-                        </Button>
-                    </div>
+        {/* Processing Status Bar */}
+        {processedImage && (
+            <div className="mb-6 flex items-center justify-between bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 p-3 rounded-2xl animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="flex flex-col items-start px-2">
+                    <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Aperçu en cours</span>
+                    <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                        {processedImage.tempAction || 'Modification'}
+                        {processedImage.tempDetails ? ` : ${processedImage.tempDetails}` : ''}
+                    </span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={cancelProcessedImage}
+                        className="h-9 text-xs font-bold uppercase tracking-wider hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20"
+                    >
+                        <X className="w-4 h-4 mr-2" /> Annuler
+                    </Button>
+                    <Button
+                        size="sm"
+                        onClick={commitProcessedImage}
+                        className="h-9 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold uppercase tracking-wider px-6 shadow-md"
+                    >
+                        <Check className="w-4 h-4 mr-2" /> Valider
+                    </Button>
                 </div>
             </div>
-          )}
-        </header>
+        )}
 
         {/* Drop Zone (Only if no image loaded) */}
         {!originalImage && (
-          <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <section className="mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <DropZone onImageLoad={loadImage} isLoading={isProcessing} />
           </section>
         )}
 
         {/* Main Workspace */}
         {originalImage && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-500">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 animate-in fade-in duration-500">
 
             {/* Left Column: Controls & History */}
-            <div className="lg:col-span-1 space-y-6">
+            <div className="lg:col-span-1 space-y-4">
                  {/* Controls */}
                 <Controls
                   originalDimensions={currentImage ? { width: currentImage.width, height: currentImage.height } : null}
@@ -332,12 +337,12 @@ export default function ImageProcessorClient({ user, initialProjects }: ImagePro
             </div>
 
             {/* Right Column: Previews */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2">
 
                 {/* Result Preview (if processed) */}
                 {processedImage ? (
-                     <div className="space-y-4">
-                        <div className="flex items-center justify-between">
+                     <div>
+                        <div className="flex items-center justify-between mb-4">
                             <h2 className="text-lg font-bold text-gray-900 dark:text-white">Résultat</h2>
                         </div>
                         <Comparison

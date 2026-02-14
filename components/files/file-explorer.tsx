@@ -19,6 +19,7 @@ export interface FileData {
     id: string;
     name: string;
     blobUrl: string;
+    blobPath: string;
     thumbnailUrl: string | null;
     fileType: FileType;
     size: number;
