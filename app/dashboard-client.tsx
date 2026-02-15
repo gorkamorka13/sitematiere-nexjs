@@ -135,6 +135,12 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
             const isSelectedStillValid = selectedProject && filteredProjects.some(p => p.id === selectedProject.id);
             if (!selectedProject || !isSelectedStillValid) {
                 setSelectedProject(filteredProjects[0]);
+            } else {
+                // Allows updating the selected project if its data changes (e.g. status status)
+                const currentInFiltered = filteredProjects.find(p => p.id === selectedProject.id);
+                if (currentInFiltered && currentInFiltered !== selectedProject) {
+                    setSelectedProject(currentInFiltered);
+                }
             }
         } else {
             setSelectedProject(null);

@@ -35,8 +35,48 @@ export async function updateProject(formData: ProjectUpdateInput) {
         fabrication: validatedData.fabrication,
         transport: validatedData.transport,
         construction: validatedData.construction,
+        status: validatedData.status,
       },
     });
+
+    // Mise à jour automatique du document "PIN" basé sur le statut
+    if (validatedData.status) {
+      const R2_PUBLIC_URL = process.env.NEXT_PUBLIC_R2_PUBLIC_URL || "https://pub-78c42489fd854dc3a6975810aa00edf2.r2.dev";
+      let pinUrl = "";
+
+      switch (validatedData.status) {
+        case 'DONE':
+          pinUrl = `${R2_PUBLIC_URL}/pins/realise.png`;
+          break;
+        case 'CURRENT':
+          pinUrl = `${R2_PUBLIC_URL}/pins/en_cours.png`;
+          break;
+        case 'PROSPECT':
+        default:
+          pinUrl = `${R2_PUBLIC_URL}/pins/prospection.png`;
+          break;
+      }
+
+      const existingPin = await prisma.document.findFirst({
+        where: { projectId: validatedData.id, type: "PIN" }
+      });
+
+      if (existingPin) {
+        await prisma.document.update({
+          where: { id: existingPin.id },
+          data: { url: pinUrl, name: "Pin Carte (Auto)" }
+        });
+      } else {
+        await prisma.document.create({
+          data: {
+            projectId: validatedData.id,
+            type: "PIN",
+            url: pinUrl,
+            name: "Pin Carte (Auto)",
+          }
+        });
+      }
+    }
 
     // Mise à jour ou création du document "FLAG"
     if (validatedData.flagName !== undefined) {
@@ -98,35 +138,7 @@ export async function updateProject(formData: ProjectUpdateInput) {
       }
     }
 
-    // Mise à jour ou création du document "PIN"
-    if (validatedData.pinName !== undefined) {
-      const existingPin = await prisma.document.findFirst({
-        where: { projectId: validatedData.id, type: "PIN" }
-      });
 
-      if (validatedData.pinName !== "") {
-        if (existingPin) {
-          await prisma.document.update({
-            where: { id: existingPin.id },
-            data: { url: validatedData.pinName }
-          });
-        } else {
-          await prisma.document.create({
-            data: {
-              projectId: validatedData.id,
-              type: "PIN",
-              url: validatedData.pinName,
-              name: "Pin Carte",
-            }
-          });
-        }
-      } else if (existingPin) {
-        // Supprimer l'association si le champ est vidé
-        await prisma.document.delete({
-          where: { id: existingPin.id }
-        });
-      }
-    }
 
     revalidatePath("/");
     return { success: true };

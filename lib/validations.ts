@@ -10,6 +10,7 @@ export const ProjectUpdateSchema = z.object({
   fabrication: z.number().min(0).max(100).optional(),
   transport: z.number().min(0).max(100).optional(),
   construction: z.number().min(0).max(100).optional(),
+  status: z.enum(["PROSPECT", "CURRENT", "DONE"]).optional(),
   flagName: z.string().optional(),
   clientLogoName: z.string().optional(),
   pinName: z.string().optional(),

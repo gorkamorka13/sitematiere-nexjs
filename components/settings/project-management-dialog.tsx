@@ -291,7 +291,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
   // Mettre à jour les champs lors du changement de projet
   useEffect(() => {
     if (selectedProjectId) {
-    const project = projects.find(p => p.id === selectedProjectId) as Project & { documents: ProjectDocument[] };
+      const project = projects.find(p => p.id === selectedProjectId) as Project & { documents: ProjectDocument[] };
       if (project) {
         const flagDoc = project.documents?.find((d) => d.type === "FLAG");
         const logoDoc = project.documents?.find((d) => d.type === "CLIENT_LOGO" || d.name.toLowerCase().includes('logo'));
@@ -308,7 +308,9 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
           construction: project.construction || 0,
           flagName: flagDoc?.url || "",
           clientLogoName: logoDoc?.url || "",
+          clientLogoName: logoDoc?.url || "",
           pinName: pinDoc?.url || "",
+          status: project.status || ProjectStatus.PROSPECT,
         });
         setStatus(null);
       }
@@ -324,7 +326,10 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
         construction: 0,
         flagName: "",
         clientLogoName: "",
+        flagName: "",
+        clientLogoName: "",
         pinName: "",
+        status: ProjectStatus.PROSPECT,
       });
     }
   }, [selectedProjectId, projects]);
@@ -489,7 +494,9 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
         construction: formData.construction,
         flagName: formData.flagName,
         clientLogoName: formData.clientLogoName,
+        clientLogoName: formData.clientLogoName,
         pinName: formData.pinName,
+        status: formData.status,
       });
 
       if (result.success) {
@@ -838,6 +845,27 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                 </div>
               </div>
 
+              {/* Statut du Projet */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Statut du Projet</label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value as ProjectStatus })}
+                  disabled={!selectedProjectId}
+                  className="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white"
+                >
+                  {Object.values(ProjectStatus).map(s => (
+                    <option key={s} value={s}>
+                      {s === 'CURRENT' ? '🔴 ' : s === 'DONE' ? '🟢 ' : '🔵 '}
+                      {s === 'CURRENT' ? 'En cours' : s === 'DONE' ? 'Réalisé' : 'Prospection'}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-2 text-xs text-gray-500 italic">
+                  Le pin sur la carte sera automatiquement mis à jour selon le statut choisi.
+                </p>
+              </div>
+
               <div className="space-y-4">
                 <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
                   <FolderOpen className="w-4 h-4" /> Identité Visuelle
@@ -934,57 +962,8 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                       </div>
                     </div>
                   </div>
-
-                  {/* Pin Carte */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      Pin Carte (Carte Globale)
-                    </label>
-                    <div className="flex items-center gap-3">
-                      <div className="relative group w-24 h-16 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 flex items-center justify-center shrink-0 shadow-sm">
-                        {formData.pinName ? (
-                          <NextImage
-                            src={formData.pinName.startsWith('http') || formData.pinName.startsWith('/') ? formData.pinName : `/${formData.pinName}`}
-                            alt="Pin"
-                            width={32}
-                            height={32}
-                            className="object-contain p-2"
-                          />
-                        ) : (
-                          <MapPin className="w-6 h-6 text-gray-300" />
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => setIsPinPickerOpen(true)}
-                          className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold uppercase tracking-widest"
-                        >
-                          Choisir
-                        </button>
-                      </div>
-                      <div className="flex-1">
-                        <button
-                          type="button"
-                          onClick={() => setIsPinPickerOpen(true)}
-                          className="w-full px-4 py-2 text-left bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl hover:border-indigo-400 transition-all text-xs text-gray-500 dark:text-gray-400 truncate"
-                        >
-                          {formData.pinName ? formData.pinName.split('/').pop() : "Sélectionner une image..."}
-                        </button>
-                        {formData.pinName && (
-                          <button
-                            type="button"
-                            onClick={() => setFormData({ ...formData, pinName: "" })}
-                            className="text-[10px] text-red-500 font-bold uppercase mt-1 ml-1 hover:underline"
-                          >
-                            Supprimer
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
-
-
 
               {/* Status Messages */}
               {status && (
@@ -1405,162 +1384,165 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                 </button>
               </div>
             </form>
-          )}
+          )
+          }
 
-          {activeTab === 'delete' && (
-            <div className="p-6 space-y-6">
-              <div className="p-4 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-xl border border-red-100 dark:border-red-800 flex items-center gap-3">
-                <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                <div className="flex flex-col">
-                  <span className="text-sm font-bold">Zone de danger : Suppression de projet</span>
-                  <span className="text-xs">Cette action est irréversible. Toutes les données et fichiers associés seront définitivement supprimés.</span>
-                </div>
-              </div>
-
-              {/* Filtre pays, Sélection du projet à supprimer */}
-              <div className="flex flex-col md:flex-row gap-4">
-                {/* Filtre par pays */}
-                <div className="flex-1 md:flex-[0.3]">
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Filtrer par pays</label>
-                  <select
-                    value={countryFilter}
-                    onChange={(e) => {
-                      setCountryFilter(e.target.value);
-                      setSelectedProjectId(""); // Réinitialiser la sélection
-                    }}
-                    className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 transition-all dark:text-white"
-                  >
-                    <option value="Tous">Tous les pays</option>
-                    {countries.map(country => (
-                      <option key={country} value={country}>{country}</option>
-                    ))}
-                  </select>
+          {
+            activeTab === 'delete' && (
+              <div className="p-6 space-y-6">
+                <div className="p-4 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-xl border border-red-100 dark:border-red-800 flex items-center gap-3">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold">Zone de danger : Suppression de projet</span>
+                    <span className="text-xs">Cette action est irréversible. Toutes les données et fichiers associés seront définitivement supprimés.</span>
+                  </div>
                 </div>
 
-                <div className="flex-1 md:flex-[0.35]">
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Choisir le projet</label>
-                  <select
-                    value={selectedProjectId}
-                    onChange={(e) => setSelectedProjectId(e.target.value)}
-                    className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 transition-all dark:text-white"
-                  >
-                    <option value="">
-                      {sortedProjects.length === 0 ? "Aucun projet" : "-- Sélectionner --"}
-                    </option>
-                    {sortedProjects.map(p => (
-                      <option key={p.id} value={p.id}>{p.name} ({p.country})</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex-1 md:flex-[0.35] relative">
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Recherche rapide</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={searchQuery}
+                {/* Filtre pays, Sélection du projet à supprimer */}
+                <div className="flex flex-col md:flex-row gap-4">
+                  {/* Filtre par pays */}
+                  <div className="flex-1 md:flex-[0.3]">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Filtrer par pays</label>
+                    <select
+                      value={countryFilter}
                       onChange={(e) => {
-                        setSearchQuery(e.target.value);
-                        setShowSuggestions(true);
+                        setCountryFilter(e.target.value);
+                        setSelectedProjectId(""); // Réinitialiser la sélection
                       }}
-                      onFocus={() => setShowSuggestions(true)}
-                      onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                      placeholder="Tapez le nom..."
-                      className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 transition-all dark:text-white"
-                    />
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-
-                    {showSuggestions && searchSuggestions.length > 0 && (
-                      <div className="absolute z-[110] w-full mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-48 overflow-auto animate-in fade-in slide-in-from-top-2 duration-200">
-                        {searchSuggestions.map((project: Project) => (
-                          <button
-                            key={project.id}
-                            type="button"
-                            onClick={() => handleSearchSelect(project)}
-                            className="w-full text-left px-4 py-2 text-sm hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
-                          >
-                            <span className="font-semibold">{project.name}</span>
-                            <span className="ml-2 text-xs opacity-60">({project.country})</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {selectedProjectId && (
-                <div className="bg-gray-50 dark:bg-gray-900/50 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 animate-in fade-in zoom-in duration-300">
-                  <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Récapitulatif du projet</h3>
-
-                  {(() => {
-                    const project = projects.find(p => p.id === selectedProjectId);
-                    if (!project) return null;
-                    return (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <p className="text-xs text-gray-500 uppercase font-bold">Nom de l&apos;ouvrage</p>
-                          <p className="text-lg font-bold text-gray-900 dark:text-white">{project.name}</p>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-xs text-gray-500 uppercase font-bold">Pays</p>
-                          <p className="text-lg font-bold text-gray-900 dark:text-white">{project.country}</p>
-                        </div>
-                        <div className="space-y-1 text-red-600 dark:text-red-400">
-                          <p className="text-xs uppercase font-bold opacity-70">Attention</p>
-                          <p className="text-sm font-medium italic">Tous les documents et photos seront supprimés.</p>
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                  <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
-                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                      Veuillez taper <span className="text-red-600 dark:text-red-400 font-mono">&quot;{projects.find(p => p.id === selectedProjectId)?.name}&quot;</span> pour confirmer la suppression :
-                    </label>
-                    <input
-                      type="text"
-                      value={confirmName}
-                      onChange={(e) => setConfirmName(e.target.value)}
-                      placeholder="Nom du projet..."
-                      className="w-full px-4 py-3 bg-white dark:bg-gray-800 border-2 border-red-200 dark:border-red-900/30 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all dark:text-white font-medium"
-                    />
+                      className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 transition-all dark:text-white"
+                    >
+                      <option value="Tous">Tous les pays</option>
+                      {countries.map(country => (
+                        <option key={country} value={country}>{country}</option>
+                      ))}
+                    </select>
                   </div>
 
-                  <div className="flex justify-end gap-3 mt-8">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedProjectId('');
-                        setConfirmName('');
-                      }}
-                      className="px-6 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-all"
+                  <div className="flex-1 md:flex-[0.35]">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Choisir le projet</label>
+                    <select
+                      value={selectedProjectId}
+                      onChange={(e) => setSelectedProjectId(e.target.value)}
+                      className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 transition-all dark:text-white"
                     >
-                      Annuler
-                    </button>
-                    <button
-                      type="button"
-                      disabled={isSubmitting || confirmName !== projects.find(p => p.id === selectedProjectId)?.name}
-                      onClick={handleDelete}
-                      className="flex items-center gap-2 px-8 py-2.5 text-sm font-bold text-white bg-red-600 hover:bg-red-700 disabled:opacity-30 disabled:cursor-not-allowed rounded-xl shadow-lg shadow-red-200 dark:shadow-none transition-all active:scale-95"
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          Suppression...
-                        </>
-                      ) : (
-                        <>
-                          <Trash2 className="w-4 h-4" />
-                          Supprimer définitivement
-                        </>
+                      <option value="">
+                        {sortedProjects.length === 0 ? "Aucun projet" : "-- Sélectionner --"}
+                      </option>
+                      {sortedProjects.map(p => (
+                        <option key={p.id} value={p.id}>{p.name} ({p.country})</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex-1 md:flex-[0.35] relative">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Recherche rapide</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => {
+                          setSearchQuery(e.target.value);
+                          setShowSuggestions(true);
+                        }}
+                        onFocus={() => setShowSuggestions(true)}
+                        onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                        placeholder="Tapez le nom..."
+                        className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 transition-all dark:text-white"
+                      />
+                      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+
+                      {showSuggestions && searchSuggestions.length > 0 && (
+                        <div className="absolute z-[110] w-full mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-48 overflow-auto animate-in fade-in slide-in-from-top-2 duration-200">
+                          {searchSuggestions.map((project: Project) => (
+                            <button
+                              key={project.id}
+                              type="button"
+                              onClick={() => handleSearchSelect(project)}
+                              className="w-full text-left px-4 py-2 text-sm hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+                            >
+                              <span className="font-semibold">{project.name}</span>
+                              <span className="ml-2 text-xs opacity-60">({project.country})</span>
+                            </button>
+                          ))}
+                        </div>
                       )}
-                    </button>
+                    </div>
                   </div>
                 </div>
-              )}
-            </div>
-          )}
+
+                {selectedProjectId && (
+                  <div className="bg-gray-50 dark:bg-gray-900/50 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 animate-in fade-in zoom-in duration-300">
+                    <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Récapitulatif du projet</h3>
+
+                    {(() => {
+                      const project = projects.find(p => p.id === selectedProjectId);
+                      if (!project) return null;
+                      return (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                            <p className="text-xs text-gray-500 uppercase font-bold">Nom de l&apos;ouvrage</p>
+                            <p className="text-lg font-bold text-gray-900 dark:text-white">{project.name}</p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-xs text-gray-500 uppercase font-bold">Pays</p>
+                            <p className="text-lg font-bold text-gray-900 dark:text-white">{project.country}</p>
+                          </div>
+                          <div className="space-y-1 text-red-600 dark:text-red-400">
+                            <p className="text-xs uppercase font-bold opacity-70">Attention</p>
+                            <p className="text-sm font-medium italic">Tous les documents et photos seront supprimés.</p>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+                      <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                        Veuillez taper <span className="text-red-600 dark:text-red-400 font-mono">&quot;{projects.find(p => p.id === selectedProjectId)?.name}&quot;</span> pour confirmer la suppression :
+                      </label>
+                      <input
+                        type="text"
+                        value={confirmName}
+                        onChange={(e) => setConfirmName(e.target.value)}
+                        placeholder="Nom du projet..."
+                        className="w-full px-4 py-3 bg-white dark:bg-gray-800 border-2 border-red-200 dark:border-red-900/30 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all dark:text-white font-medium"
+                      />
+                    </div>
+
+                    <div className="flex justify-end gap-3 mt-8">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedProjectId('');
+                          setConfirmName('');
+                        }}
+                        className="px-6 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-all"
+                      >
+                        Annuler
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isSubmitting || confirmName !== projects.find(p => p.id === selectedProjectId)?.name}
+                        onClick={handleDelete}
+                        className="flex items-center gap-2 px-8 py-2.5 text-sm font-bold text-white bg-red-600 hover:bg-red-700 disabled:opacity-30 disabled:cursor-not-allowed rounded-xl shadow-lg shadow-red-200 dark:shadow-none transition-all active:scale-95"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            Suppression...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="w-4 h-4" />
+                            Supprimer définitivement
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          }
 
           {/* Pickers - Global */}
           <DatabaseImagePicker
@@ -1604,18 +1586,20 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
             }}
           />
 
-        </div>
-      </div>
+        </div >
+      </div >
 
       {/* Toast Notification */}
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-          duration={5000}
-        />
-      )}
-    </div>
+      {
+        toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+            duration={5000}
+          />
+        )
+      }
+    </div >
   );
 }

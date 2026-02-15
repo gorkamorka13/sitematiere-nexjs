@@ -255,11 +255,10 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
                                 <button
                                     key={p.id}
                                     onClick={() => setInternalProjectId(p.id)}
-                                    className={`w-full text-left p-3 rounded-xl transition-all flex items-center justify-between group ${
-                                        selectedProjectId === p.id
-                                        ? 'bg-indigo-600 shadow-lg shadow-indigo-200 dark:shadow-none text-white'
-                                        : 'hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
-                                    }`}
+                                    className={`w-full text-left p-3 rounded-xl transition-all flex items-center justify-between group ${selectedProjectId === p.id
+                                            ? 'bg-indigo-600 shadow-lg shadow-indigo-200 dark:shadow-none text-white'
+                                            : 'hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
+                                        }`}
                                 >
                                     <div className="min-w-0">
                                         <p className="text-sm font-bold truncate">{p.name}</p>
@@ -341,7 +340,7 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
                                             onPublish={publish}
                                             onRemove={removeImage}
                                             onReorder={reorderImages}
-                                            onAdd={() => {}} // Handle this via DatabaseImagePicker
+                                            onAdd={() => { }} // Handle this via DatabaseImagePicker
                                             addImage={addImage}
                                             projectName={selectedProject?.name}
                                             onRetouch={handleRetouch}
@@ -526,7 +525,7 @@ function SlideshowTab({
                                     id={activeId}
                                     image={images.find((img: SlideshowImage) => img.id === activeId)!.image}
                                     isPublished={images.find((img: SlideshowImage) => img.id === activeId)!.isPublished}
-                                    onRemove={() => {}}
+                                    onRemove={() => { }}
                                 />
                             </div>
                         ) : null}
@@ -586,50 +585,7 @@ function VideosTab({
 
     return (
         <div className="space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Add Video Form (URL) */}
-                <div className="bg-gray-50 dark:bg-gray-800/50 rounded-3xl p-6 border border-gray-100 dark:border-gray-800">
-                    <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <LinkIcon className="w-3.5 h-3.5" />
-                        AJOUTER VIA URL (YOUTUBE, ETC.)
-                    </h4>
-                    <form onSubmit={onAdd} className="space-y-4">
-                        <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-1">URL de la vidéo</label>
-                            <div className="relative">
-                                <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                <input
-                                    type="url"
-                                    required
-                                    placeholder="https://youtube.com/..."
-                                    value={url}
-                                    onChange={(e) => setUrl(e.target.value)}
-                                    className="w-full h-11 pl-10 pr-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-                                />
-                            </div>
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-1">Titre</label>
-                            <div className="flex gap-3">
-                                <input
-                                    type="text"
-                                    placeholder="Ex: Drone view"
-                                    value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
-                                    className="flex-grow h-11 px-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-                                />
-                                <Button
-                                    type="submit"
-                                    disabled={isAdding || !url}
-                                    className="h-11 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase text-[10px] tracking-widest rounded-xl shadow-lg shrink-0"
-                                >
-                                    {isAdding ? <Loader2 className="w-4 h-4 animate-spin" /> : "AJOUTER"}
-                                </Button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-
+            <div className="grid grid-cols-1 gap-6">
                 {/* Upload Video File */}
                 <div className="bg-gray-50 dark:bg-gray-800/50 rounded-3xl p-6 border border-gray-100 dark:border-gray-800">
                     <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
@@ -819,11 +775,10 @@ function VideoDropzone({ projectId, onSuccess, onError }: VideoDropzoneProps) {
     return (
         <div
             {...getRootProps()}
-            className={`relative flex flex-col items-center justify-center h-40 border-2 border-dashed rounded-2xl transition-all cursor-pointer ${
-                isDragActive ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' :
-                uploading ? 'border-gray-200 bg-gray-50/50 cursor-not-allowed' :
-                'border-gray-200 dark:border-gray-700 hover:border-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-800/50'
-            }`}
+            className={`relative flex flex-col items-center justify-center h-40 border-2 border-dashed rounded-2xl transition-all cursor-pointer ${isDragActive ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' :
+                    uploading ? 'border-gray-200 bg-gray-50/50 cursor-not-allowed' :
+                        'border-gray-200 dark:border-gray-700 hover:border-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                }`}
         >
             <input {...getInputProps()} />
 
