@@ -59,6 +59,10 @@ function MapUpdater({ projects, fitNonce }: { projects: Project[]; fitNonce?: nu
     return null;
 }
 
+interface BouncingMarker extends L.Marker {
+    _bounceInterval?: ReturnType<typeof setInterval> | null;
+}
+
 export default function ProjectsMap({ projects, onSelectProject, selectedProjectId, fitNonce, globalCenterNonce, globalCenterPoint, isCapture }: MultiMapProps) {
     const tileUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
     const markersRef = useRef<Map<string, L.Marker>>(new Map());
@@ -69,23 +73,22 @@ export default function ProjectsMap({ projects, onSelectProject, selectedProject
     useEffect(() => {
         if (!selectedProjectId) return;
 
-        const selectedMarker = markersRef.current.get(selectedProjectId);
+        const selectedMarker = markersRef.current.get(selectedProjectId) as BouncingMarker;
 
         // Stop all other markers from bouncing
         markersRef.current.forEach((marker, id) => {
             if (id !== selectedProjectId) {
+                const bouncingMarker = marker as BouncingMarker;
                 // Clear any existing animation interval
-                const markerAny = marker as any;
-                if (markerAny._bounceInterval) {
-                    clearInterval(markerAny._bounceInterval);
-                    markerAny._bounceInterval = null;
+                if (bouncingMarker._bounceInterval) {
+                    clearInterval(bouncingMarker._bounceInterval);
+                    bouncingMarker._bounceInterval = null;
                 }
             }
         });
 
         // Start bouncing the selected marker using Leaflet's native animation
         if (selectedMarker) {
-            const markerAny = selectedMarker as any;
             const originalLatLng = selectedMarker.getLatLng();
             let bounceUp = true;
             let offset = 0;
@@ -93,12 +96,12 @@ export default function ProjectsMap({ projects, onSelectProject, selectedProject
             const step = maxOffset / 10;
 
             // Clear any existing animation
-            if (markerAny._bounceInterval) {
-                clearInterval(markerAny._bounceInterval);
+            if (selectedMarker._bounceInterval) {
+                clearInterval(selectedMarker._bounceInterval);
             }
 
             // Create bounce animation
-            markerAny._bounceInterval = setInterval(() => {
+            selectedMarker._bounceInterval = setInterval(() => {
                 if (bounceUp) {
                     offset += step;
                     if (offset >= maxOffset) {
@@ -120,10 +123,9 @@ export default function ProjectsMap({ projects, onSelectProject, selectedProject
         // Cleanup function
         return () => {
             if (selectedMarker) {
-                const markerAny = selectedMarker as any;
-                if (markerAny._bounceInterval) {
-                    clearInterval(markerAny._bounceInterval);
-                    markerAny._bounceInterval = null;
+                if (selectedMarker._bounceInterval) {
+                    clearInterval(selectedMarker._bounceInterval);
+                    selectedMarker._bounceInterval = null;
                 }
             }
         };

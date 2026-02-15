@@ -23,3 +23,4 @@ Prévenir les échecs de build sur Vercel/Cloudflare en imposant une rigueur str
 ## Compatibilité Cloudflare (Edge Runtime)
 1. **Runtime Edge Obligatoire** : Pour tout déploiement sur Cloudflare Pages, toutes les routes API et pages dynamiques (utilisant `headers()`, `cookies()`, etc.) DOIVENT exporter explicitement `export const runtime = 'edge';`.
 2. **Script de Bascule** : Toujours vérifier que les nouvelles routes sont ajoutées au script `scripts/toggle-runtime.js` pour gérer automatiquement la bascule entre le développement local (Node.js) et la production (Edge).
+3. **Prudence sur les Commandes de Build** : Ne jamais lancer `npm run build:cloudflare` ou tout script utilisant `toggle-runtime.js` de manière impromptue. Ces scripts modifient des dizaines de fichiers. Si une exécution est nécessaire pour vérification, elle doit être explicitement planifiée et suivie d'un `npm run local` immédiat pour restaurer l'environnement de développement.
