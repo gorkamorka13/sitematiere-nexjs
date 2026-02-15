@@ -197,7 +197,7 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-4 lg:p-8 outline-none pt-16 sm:pt-4 lg:pl-72">
+        <div className="fixed inset-0 z-[1050] flex items-center justify-center p-4 lg:p-8">
             {/* Backdrop */}
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose} />
 
@@ -256,8 +256,8 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
                                     key={p.id}
                                     onClick={() => setInternalProjectId(p.id)}
                                     className={`w-full text-left p-3 rounded-xl transition-all flex items-center justify-between group ${selectedProjectId === p.id
-                                            ? 'bg-indigo-600 shadow-lg shadow-indigo-200 dark:shadow-none text-white'
-                                            : 'hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
+                                        ? 'bg-indigo-600 shadow-lg shadow-indigo-200 dark:shadow-none text-white'
+                                        : 'hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
                                         }`}
                                 >
                                     <div className="min-w-0">
@@ -776,8 +776,8 @@ function VideoDropzone({ projectId, onSuccess, onError }: VideoDropzoneProps) {
         <div
             {...getRootProps()}
             className={`relative flex flex-col items-center justify-center h-40 border-2 border-dashed rounded-2xl transition-all cursor-pointer ${isDragActive ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' :
-                    uploading ? 'border-gray-200 bg-gray-50/50 cursor-not-allowed' :
-                        'border-gray-200 dark:border-gray-700 hover:border-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                uploading ? 'border-gray-200 bg-gray-50/50 cursor-not-allowed' :
+                    'border-gray-200 dark:border-gray-700 hover:border-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-800/50'
                 }`}
         >
             <input {...getInputProps()} />

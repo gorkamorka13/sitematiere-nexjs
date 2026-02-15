@@ -68,6 +68,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
     flagName: "",
     clientLogoName: "",
     pinName: "",
+    status: ProjectStatus.PROSPECT,
   });
 
   const [createFormData, setCreateFormData] = useState({
@@ -509,7 +510,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center bg-black/60 backdrop-blur-sm p-2 lg:p-4 animate-in fade-in duration-300 pt-16 sm:pt-4 lg:pl-72">
+    <div className="fixed inset-0 z-[1050] flex items-start sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
       <div
         className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-5xl max-h-[calc(90vh-4rem)] sm:max-h-[90vh] overflow-hidden border border-gray-100 dark:border-gray-700 transition-all animate-in fade-in zoom-in duration-200 flex flex-col"
       >
