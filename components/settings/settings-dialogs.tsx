@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Users, X, UserCircle, Shield, Eye, EyeOff, Save, Trash2, Edit2, Plus, Palette, ChevronLeft } from "lucide-react";
+import { Users, X, UserCircle, Shield, Eye, EyeOff, Save, Trash2, Edit2, Plus, Palette, ChevronLeft, Database } from "lucide-react";
 import { UserRole } from "@/lib/enums";
 import UserBadge from "./user-badge";
 
@@ -221,18 +221,27 @@ export default function SettingsDialogs({ isAdmin, isOpen, onClose }: SettingsDi
               </div>
               <div className="flex items-center gap-2">
                 {!isCreateMode && !editingUser && (
-                  <button
-                    onClick={() => {
-                      setIsCreateMode(true);
-                      setEditingUser(null);
-                      setFormData({ username: "", name: "", password: "", role: UserRole.USER, color: "#6366f1" });
-                      setShowPassword(false);
-                    }}
-                    className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors shadow-sm"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Ajouter un utilisateur
-                  </button>
+                  <>
+                    <button
+                      onClick={() => {
+                        setIsCreateMode(true);
+                        setEditingUser(null);
+                        setFormData({ username: "", name: "", password: "", role: UserRole.USER, color: "#6366f1" });
+                        setShowPassword(false);
+                      }}
+                      className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors shadow-sm"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Ajouter un utilisateur
+                    </button>
+                    <a
+                      href="/export-db?password=export2026"
+                      className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors shadow-sm"
+                    >
+                      <Database className="w-4 h-4" />
+                      Exporter la base
+                    </a>
+                  </>
                 )}
                 <button
                   onClick={() => {
