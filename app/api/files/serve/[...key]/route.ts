@@ -25,8 +25,8 @@ export async function GET(
     });
 
     try {
-      // @ts-expect-error - S3Client might have type resolution issues in some environments but works at runtime
-      const response = await r2Client.send(command);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await (r2Client as any).send(command);
 
       const contentType = response.ContentType || "";
       const isPdf = contentType.toLowerCase() === "application/pdf";

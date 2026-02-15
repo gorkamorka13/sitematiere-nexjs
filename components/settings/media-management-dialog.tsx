@@ -93,9 +93,6 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
     // Video state
     const [videos, setVideos] = useState<ProjectVideo[]>([]);
     const [loadingVideos, setLoadingVideos] = useState(false);
-    const [isAddingVideo, setIsAddingVideo] = useState(false);
-    const [videoUrl, setVideoUrl] = useState('');
-    const [videoTitle, setVideoTitle] = useState('');
 
     // Filter state
     const [searchQuery, setSearchQuery] = useState('');
@@ -126,22 +123,6 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
     }, [selectedProjectId]);
 
 
-    const handleAddVideo = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!selectedProjectId || !videoUrl) return;
-
-        setIsAddingVideo(true);
-        const result = await addProjectVideo(selectedProjectId, videoUrl, videoTitle);
-        if (result.success) {
-            setVideoUrl('');
-            setVideoTitle('');
-            fetchVideos();
-            setToast({ message: 'Vidéo ajoutée avec succès', type: 'success' });
-        } else {
-            setToast({ message: result.error || 'Erreur lors de l\'ajout', type: 'error' });
-        }
-        setIsAddingVideo(false);
-    };
 
     const handleDeleteVideo = async (videoId: string) => {
         if (!confirm('Supprimer cette vidéo ?')) return;
