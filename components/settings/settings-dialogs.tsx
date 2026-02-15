@@ -194,8 +194,12 @@ export default function SettingsDialogs({ isAdmin, isOpen, onClose }: SettingsDi
     <>
       {/* Dialog Gestion des utilisateurs */}
       {isOpen && isAdmin && (
-        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300 px-2 lg:px-4 pt-16 sm:pt-4 lg:pl-72">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div className="fixed inset-0 z-[1050] flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose} />
+
+          {/* Modal Body */}
+          <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col border border-gray-100 dark:border-gray-700 overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center gap-4">
                 {(isCreateMode || editingUser) && (

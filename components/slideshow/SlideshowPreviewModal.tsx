@@ -28,7 +28,7 @@ export function SlideshowPreviewModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/95 flex flex-col animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[1050] bg-black/95 flex flex-col animate-in fade-in duration-300">
       {/* Close Button Overlay */}
       <div className="absolute top-6 right-6 z-[110]">
         <Button

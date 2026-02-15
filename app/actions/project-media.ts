@@ -2,10 +2,15 @@
 
 import prisma from "@/lib/prisma";
 import { naturalSort } from "@/lib/sort-utils";
+import { auth } from "@/lib/auth";
+import { UserRole } from "@/lib/enums";
 
 export async function getProjectMedia(projectName: string) {
   // Normalisation du nom de projet pour correspondre aux dossiers
   const folderName = projectName.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+  const session = await auth();
+  const userRole = (session?.user as any)?.role as UserRole || UserRole.VISITOR;
 
   const result = {
     images: [] as { url: string; name: string }[],
@@ -57,8 +62,8 @@ export async function getProjectMedia(projectName: string) {
           if (slideshowImages.length === 0 && file.fileType === 'IMAGE') {
             result.images.push({ url: file.blobUrl, name: file.name });
           }
-          // Dans tous les cas, on prend les PDFs
-          else if (file.fileType === 'DOCUMENT' && file.mimeType === 'application/pdf') {
+          // Dans tous les cas, on prend les PDFs - SAUF pour les visiteurs
+          else if (file.fileType === 'DOCUMENT' && file.mimeType === 'application/pdf' && userRole !== UserRole.VISITOR) {
             result.pdfs.push({ url: file.blobUrl, name: file.name });
           }
         });

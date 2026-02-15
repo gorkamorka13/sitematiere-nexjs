@@ -22,7 +22,7 @@ export function FileDeleteDialog({ fileCount, isPermanent = false, onClose, onCo
     };
 
     return (
-        <div className="fixed inset-0 z-[1900] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[1050] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-300">
             <div className="bg-background p-6 rounded-lg shadow-xl w-full max-w-sm border border-red-100 dark:border-red-900/30">
                 <div className="flex items-center gap-3 mb-4 text-red-600 dark:text-red-400">
                     <div className="p-2 bg-red-100 dark:bg-red-900/20 rounded-full">

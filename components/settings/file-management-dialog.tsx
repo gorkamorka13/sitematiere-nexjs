@@ -17,7 +17,7 @@ interface FileManagementDialogProps {
 type Tab = "dashboard" | "explorer" | "upload";
 
 export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileManagementDialogProps) {
-// const router = useRouter();
+    // const router = useRouter();
     const [activeTab, setActiveTab] = useState<Tab>("dashboard");
 
     // Statistiques
@@ -26,7 +26,7 @@ export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileM
 
     // Upload State
     const [uploads, setUploads] = useState<FileUploadState[]>([]);
-// const [isUploading, setIsUploading] = useState(false);
+    // const [isUploading, setIsUploading] = useState(false);
 
     useEffect(() => {
         if (isOpen && isAdmin) {
@@ -126,14 +126,14 @@ export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileM
                         // Refresh stats
                         fetchStatistics();
                     } catch {
-                         updateUploadStatus(file, { status: "error", error: "Invalid response" });
+                        updateUploadStatus(file, { status: "error", error: "Invalid response" });
                     }
                 } else {
                     let errorMessage = "Upload failed";
                     try {
                         const res = JSON.parse(xhr.responseText);
                         errorMessage = res.error || errorMessage;
-                    } catch {}
+                    } catch { }
                     updateUploadStatus(file, { status: "error", error: errorMessage });
                 }
             };
@@ -182,7 +182,7 @@ export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileM
     if (!isOpen || !isAdmin) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-4 pt-16 sm:pt-4 lg:pl-72">
+        <div className="fixed inset-0 z-[1050] flex items-center justify-center p-4">
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
@@ -215,31 +215,28 @@ export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileM
                     <div className="flex px-4 sm:px-5 gap-4 sm:gap-6 overflow-x-auto min-w-0 border-b border-gray-100 dark:border-gray-700 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700">
                         <button
                             onClick={() => setActiveTab("dashboard")}
-                            className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 whitespace-nowrap shrink-0 ${
-                                activeTab === "dashboard"
+                            className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 whitespace-nowrap shrink-0 ${activeTab === "dashboard"
                                     ? "text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400"
                                     : "text-gray-400 border-transparent hover:text-gray-600 dark:hover:text-gray-200"
-                            }`}
+                                }`}
                         >
                             Tableau de bord
                         </button>
                         <button
                             onClick={() => setActiveTab("explorer")}
-                            className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 whitespace-nowrap shrink-0 ${
-                                activeTab === "explorer"
+                            className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 whitespace-nowrap shrink-0 ${activeTab === "explorer"
                                     ? "text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400"
                                     : "text-gray-400 border-transparent hover:text-gray-600 dark:hover:text-gray-200"
-                            }`}
+                                }`}
                         >
                             Explorateur
                         </button>
                         <button
                             onClick={() => setActiveTab("upload")}
-                            className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 whitespace-nowrap shrink-0 ${
-                                activeTab === "upload"
+                            className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 whitespace-nowrap shrink-0 ${activeTab === "upload"
                                     ? "text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400"
                                     : "text-gray-400 border-transparent hover:text-gray-600 dark:hover:text-gray-200"
-                            }`}
+                                }`}
                         >
                             Téléverser
                         </button>
@@ -308,7 +305,7 @@ export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileM
                                 </div>
                             </div>
 
-                             <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-900/50 p-6 rounded-2xl">
+                            <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-900/50 p-6 rounded-2xl">
                                 <div className="flex gap-4">
                                     <div className="p-3 bg-white dark:bg-gray-800 rounded-xl shadow-sm h-fit">
                                         <Info className="w-5 h-5 text-indigo-500" />
@@ -329,12 +326,12 @@ export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileM
 
                     {activeTab === "explorer" && (
                         <div className="h-full animate-in fade-in slide-in-from-bottom-2 duration-300">
-                             <FileExplorer />
+                            <FileExplorer />
                         </div>
                     )}
 
                     {activeTab === "upload" && (
-                         <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-6">
+                        <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-6">
                             <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 text-sm text-blue-800 dark:text-blue-200">
                                 <p className="flex items-center gap-2">
                                     <Info className="h-4 w-4" />

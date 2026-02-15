@@ -27,7 +27,7 @@ const ProjectMap = dynamic(() => import("@/components/ui/project-map"), { ssr: f
 const Dialog = ({ open, children }: { open: boolean; children: React.ReactNode; onClose: () => void }) => {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-2">
+    <div className="fixed inset-0 z-[1050] flex items-center justify-center bg-black/60 backdrop-blur-sm px-2">
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col border border-gray-100 dark:border-gray-700 overflow-hidden animate-in zoom-in-95 duration-200">
         {children}
       </div>
@@ -76,7 +76,7 @@ export function ProjectExportDialog({
   /**
    * Premium Image Loader: Center-crop (cover)
    */
-  const loadPremiumImage = (url: string, targetRatio: number = 16/9): Promise<string> => {
+  const loadPremiumImage = (url: string, targetRatio: number = 16 / 9): Promise<string> => {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.crossOrigin = "anonymous";
@@ -104,16 +104,16 @@ export function ProjectExportDialog({
           offsetY = (img.height - drawHeight) / 2;
         }
 
-      // Final canvas size (scaled for quality)
-      canvas.width = 1200;
-      canvas.height = canvas.width / targetRatio;
+        // Final canvas size (scaled for quality)
+        canvas.width = 1200;
+        canvas.height = canvas.width / targetRatio;
 
-      // Draw the image cropped and centered (no rounded corners)
-      ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight, 0, 0, canvas.width, canvas.height);
+        // Draw the image cropped and centered (no rounded corners)
+        ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight, 0, 0, canvas.width, canvas.height);
 
-      // Support transparency for PNG
-      const isPng = url.toLowerCase().endsWith('.png');
-      resolve(canvas.toDataURL(isPng ? "image/png" : "image/jpeg", 0.9));
+        // Support transparency for PNG
+        const isPng = url.toLowerCase().endsWith('.png');
+        resolve(canvas.toDataURL(isPng ? "image/png" : "image/jpeg", 0.9));
       };
       img.onerror = () => reject(`Failed to load image at ${url}`);
       img.src = url.startsWith('http') ? url : window.location.origin + (url.startsWith('/') ? url : '/' + url);
@@ -241,10 +241,10 @@ export function ProjectExportDialog({
       doc.text("RAPPORT TECHNIQUE", margin, yPos);
 
       const getPdfProgressColor = (val: number) => {
-          if (val >= 100) return [34, 197, 94]; // Green-500 #22C55E
-          if (val > 50) return [251, 191, 36]; // Yellow-500 #FBBF24
-          if (val > 25) return [249, 115, 22]; // Orange-500 #F97316
-          return [239, 68, 68]; // Red-500 #EF4444
+        if (val >= 100) return [34, 197, 94]; // Green-500 #22C55E
+        if (val > 50) return [251, 191, 36]; // Yellow-500 #FBBF24
+        if (val > 25) return [249, 115, 22]; // Orange-500 #F97316
+        return [239, 68, 68]; // Red-500 #EF4444
       };
 
       yPos += 12;
@@ -301,7 +301,7 @@ export function ProjectExportDialog({
       const lastPhoto = images[images.length - 1];
       if (options.lastPhoto && lastPhoto) {
         try {
-          const imgData = await loadPremiumImage(lastPhoto.url, 16/9);
+          const imgData = await loadPremiumImage(lastPhoto.url, 16 / 9);
           const imgWidth = contentWidth;
           const imgHeight = (imgWidth * 9) / 16;
 
@@ -356,12 +356,12 @@ export function ProjectExportDialog({
 
         if (options.globalMap) {
           doc.setTextColor(79, 70, 229);
-          doc.text("Vue régionale", margin + mapWidth/2, yPos, { align: "center" });
+          doc.text("Vue régionale", margin + mapWidth / 2, yPos, { align: "center" });
           doc.setFont("helvetica", "normal");
           doc.setTextColor(107, 114, 128);
           doc.setFontSize(7);
           const projectCount = projectsForMap.length;
-          doc.text(`${projectCount} projet${projectCount > 1 ? 's' : ''} dans la région`, margin + mapWidth/2, yPos + 4, { align: "center" });
+          doc.text(`${projectCount} projet${projectCount > 1 ? 's' : ''} dans la région`, margin + mapWidth / 2, yPos + 4, { align: "center" });
         }
 
         if (options.projectMap) {
@@ -369,15 +369,15 @@ export function ProjectExportDialog({
           doc.setFontSize(9);
           doc.setFont("helvetica", "bold");
           doc.setTextColor(79, 70, 229);
-          doc.text("Localisation précise", rightX + mapWidth/2, yPos, { align: "center" });
+          doc.text("Localisation précise", rightX + mapWidth / 2, yPos, { align: "center" });
           doc.setFont("helvetica", "normal");
           doc.setTextColor(107, 114, 128);
           doc.setFontSize(7);
-          doc.text(project.name, rightX + mapWidth/2, yPos + 4, { align: "center" });
+          doc.text(project.name, rightX + mapWidth / 2, yPos + 4, { align: "center" });
           // Coordinates in sexagesimal format
           const latDMS = decimalToDMS(project.latitude, true);
           const lngDMS = decimalToDMS(project.longitude, false);
-          doc.text(`${latDMS} | ${lngDMS}`, rightX + mapWidth/2, yPos + 8, { align: "center" });
+          doc.text(`${latDMS} | ${lngDMS}`, rightX + mapWidth / 2, yPos + 8, { align: "center" });
         }
 
         setExportStatus("Finalisation...");
@@ -454,9 +454,9 @@ export function ProjectExportDialog({
 
           // Progress bar
           if (step.val > 0) {
-              const color = getPdfProgressColor(step.val);
-              doc.setFillColor(color[0], color[1], color[2]);
-              doc.roundedRect(margin + 45, yPos - 3.5, step.val, 3.5, 1.5, 1.5, "F");
+            const color = getPdfProgressColor(step.val);
+            doc.setFillColor(color[0], color[1], color[2]);
+            doc.roundedRect(margin + 45, yPos - 3.5, step.val, 3.5, 1.5, 1.5, "F");
           }
 
           doc.setFont("helvetica", "normal");
@@ -475,43 +475,43 @@ export function ProjectExportDialog({
         yPos = addSectionHeader("Plans & Documentation Technique", yPos);
 
         if (planDocs.length > 0) {
-            for (const plan of planDocs) {
-                if (yPos > pageHeight - 40) { doc.addPage(); yPos = margin + 15; }
+          for (const plan of planDocs) {
+            if (yPos > pageHeight - 40) { doc.addPage(); yPos = margin + 15; }
 
-                doc.setTextColor(gray900[0], gray900[1], gray900[2]);
-                doc.setFontSize(10);
-                doc.setFont("helvetica", "bold");
-                doc.text(`Plan: ${plan.name}`, margin, yPos);
-                yPos += 8;
+            doc.setTextColor(gray900[0], gray900[1], gray900[2]);
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "bold");
+            doc.text(`Plan: ${plan.name}`, margin, yPos);
+            yPos += 8;
 
-                const planVisual = images.find(img => img.name.toLowerCase().includes('plan') || img.name.toLowerCase().includes(plan.name.split('.')[0].toLowerCase()));
-                if (planVisual) {
-                    try {
-                        const planImgData = await loadPremiumImage(planVisual.url, 3/2);
-                        const pImgWidth = contentWidth * 0.8;
-                        const pImgHeight = (pImgWidth * 2) / 3;
+            const planVisual = images.find(img => img.name.toLowerCase().includes('plan') || img.name.toLowerCase().includes(plan.name.split('.')[0].toLowerCase()));
+            if (planVisual) {
+              try {
+                const planImgData = await loadPremiumImage(planVisual.url, 3 / 2);
+                const pImgWidth = contentWidth * 0.8;
+                const pImgHeight = (pImgWidth * 2) / 3;
 
-                        if (yPos + pImgHeight > pageHeight - 20) { doc.addPage(); yPos = margin + 15; }
+                if (yPos + pImgHeight > pageHeight - 20) { doc.addPage(); yPos = margin + 15; }
 
-                        doc.addImage(planImgData, "JPEG", margin + (contentWidth - pImgWidth)/2, yPos, pImgWidth, pImgHeight);
-                        yPos += pImgHeight + 12;
-                    } catch (e) {
-                        console.warn("Could not load plan preview", e);
-                    }
-                }
+                doc.addImage(planImgData, "JPEG", margin + (contentWidth - pImgWidth) / 2, yPos, pImgWidth, pImgHeight);
+                yPos += pImgHeight + 12;
+              } catch (e) {
+                console.warn("Could not load plan preview", e);
+              }
             }
-            yPos += 5;
+          }
+          yPos += 5;
         }
 
         if (otherDocs.length > 0) {
-            otherDocs.forEach(d => {
-                if (yPos > pageHeight - 15) { doc.addPage(); yPos = margin + 15; }
-                doc.setTextColor(gray500[0], gray500[1], gray500[2]);
-                doc.setFontSize(9);
-                doc.setFont("helvetica", "normal");
-                doc.text(`• ${d.name} (${d.type})`, margin + 5, yPos);
-                yPos += 6;
-            });
+          otherDocs.forEach(d => {
+            if (yPos > pageHeight - 15) { doc.addPage(); yPos = margin + 15; }
+            doc.setTextColor(gray500[0], gray500[1], gray500[2]);
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "normal");
+            doc.text(`• ${d.name} (${d.type})`, margin + 5, yPos);
+            yPos += 6;
+          });
         }
       }
 
@@ -674,17 +674,17 @@ export function ProjectExportDialog({
           />
 
           <div className="pt-2">
-             <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 px-1">Extensions Cartographiques</div>
-             <div className="space-y-3">
-                <OptionRow
-                    id="projectMap" label="Géo-localisation ponctuelle" icon={MapIcon} color="text-indigo-400"
-                    checked={options.projectMap} onChange={(v: boolean) => setOptions(o => ({ ...o, projectMap: v }))}
-                />
-                <OptionRow
-                    id="globalMap" label="Contexte régional (Carte globale)" icon={MapIcon} color="text-gray-400"
-                    checked={options.globalMap} onChange={(v: boolean) => setOptions(o => ({ ...o, globalMap: v }))}
-                />
-             </div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 px-1">Extensions Cartographiques</div>
+            <div className="space-y-3">
+              <OptionRow
+                id="projectMap" label="Géo-localisation ponctuelle" icon={MapIcon} color="text-indigo-400"
+                checked={options.projectMap} onChange={(v: boolean) => setOptions(o => ({ ...o, projectMap: v }))}
+              />
+              <OptionRow
+                id="globalMap" label="Contexte régional (Carte globale)" icon={MapIcon} color="text-gray-400"
+                checked={options.globalMap} onChange={(v: boolean) => setOptions(o => ({ ...o, globalMap: v }))}
+              />
+            </div>
           </div>
         </div>
       </div>

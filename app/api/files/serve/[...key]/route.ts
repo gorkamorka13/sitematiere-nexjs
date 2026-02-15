@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { r2Client, R2_BUCKET_NAME } from "@/lib/storage/r2-client";
+import { auth } from "@/lib/auth";
+import { UserRole } from "@/lib/enums";
 
 // export const runtime = 'edge'; // Commenté pour le dev local
 
@@ -13,9 +15,9 @@ export async function GET(
     const { key } = await params;
     const fileKey = key.join("/");
 
-    if (!fileKey) {
-      return NextResponse.json({ error: "File key is required" }, { status: 400 });
-    }
+    // Authentification et autorisation
+    const session = await auth();
+    const userRole = (session?.user as any)?.role as UserRole || UserRole.VISITOR;
 
     const command = new GetObjectCommand({
       Bucket: R2_BUCKET_NAME,
@@ -23,7 +25,15 @@ export async function GET(
     });
 
     try {
-      const response = await r2Client.send(command);
+      const response = await (r2Client as any).send(command);
+
+      const contentType = response.ContentType || "";
+      const isPdf = contentType.toLowerCase() === "application/pdf";
+
+      // Restriction : Les visiteurs (ou non-connectés) ne peuvent pas lire les PDFs
+      if (isPdf && userRole === UserRole.VISITOR) {
+        return NextResponse.json({ error: "Accès refusé. Les plans ne sont pas accessibles aux visiteurs." }, { status: 403 });
+      }
 
       // Edge Runtime compatible: response.Body is already a Web ReadableStream
       const stream = response.Body as ReadableStream;
