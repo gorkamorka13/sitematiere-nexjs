@@ -19,5 +19,13 @@ type Props = {
 };
 
 export default function ProjectMapWrapper(props: Props) {
-    return <ProjectMap {...props} />;
+    return (
+        <ProjectMap
+            {...props}
+            status={props.status ?? null}
+            projectName={props.projectName ?? "Projet sans nom"}
+            country={props.country ?? ""}
+            customPinUrl={props.customPinUrl ?? null}
+        />
+    );
 }
