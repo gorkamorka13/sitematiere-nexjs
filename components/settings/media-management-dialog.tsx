@@ -18,8 +18,6 @@ import {
     AlertCircle,
     PlayCircle,
     Wand2,
-    Undo2,
-    Redo2,
     Monitor,
     Zap
 } from 'lucide-react';
@@ -162,7 +160,7 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
         setToast({ message: 'Chargement de l\'image dans l\'éditeur...', type: 'success' });
         await processor.loadImageFromUrl(imageUrl, filename);
         setActiveTab('edit');
-    }, [processor]);
+    }, [processor, setToast]);
 
     // Load media when project changes
     useEffect(() => {
@@ -857,7 +855,7 @@ function EditTab({ processor, projectId, onSuccess }: EditTabProps) {
     const [isSaving, setIsSaving] = useState(false);
     const [showDatabasePicker, setShowDatabasePicker] = useState(false);
 
-    const handleSaveToDatabase = async () => {
+    const handleSaveToDatabase = useCallback(async () => {
         if (!processor.currentImage || !projectId) return;
         setIsSaving(true);
 
@@ -904,7 +902,7 @@ function EditTab({ processor, projectId, onSuccess }: EditTabProps) {
         } finally {
             setIsSaving(false);
         }
-    };
+    }, [processor.currentImage, processor.originalImage, projectId, onSuccess]);
 
     // Override the global dispatchUploadEvent for the Controls component
     useEffect(() => {
@@ -912,7 +910,7 @@ function EditTab({ processor, projectId, onSuccess }: EditTabProps) {
         return () => {
             window.dispatchUploadEvent = undefined;
         };
-    }, [processor.currentImage, projectId]);
+    }, [handleSaveToDatabase]);
 
     if (!processor.originalImage) {
         return (

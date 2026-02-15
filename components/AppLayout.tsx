@@ -9,7 +9,6 @@ import {
     FolderOpen,
     Folders,
     FileStack,
-    Image as ImageIcon,
     Menu,
     PanelLeftClose,
     ChevronRight,
@@ -263,16 +262,7 @@ export default function AppLayout({
                                 <FileStack className={`w-5 h-5 ${isSidebarCollapsed ? "mx-auto" : ""} text-gray-400 group-hover:text-indigo-500`} />
                                 {!isSidebarCollapsed && <span className="text-sm font-medium group-hover:text-gray-900 dark:group-hover:text-white">Gestion Fichiers</span>}
                             </button>
-                            <button
-                                onClick={() => {
-                                    onManageMedia?.('edit');
-                                    setIsMobileMenuOpen(false);
-                                }}
-                                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer ${isActive('/image-processor') ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold" : "hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400"} ${isSidebarCollapsed ? "justify-center" : ""}`}
-                            >
-                                <ImageIcon className={`w-5 h-5 transition-colors ${isActive('/image-processor') ? "text-indigo-600 dark:text-indigo-400" : "text-gray-400 group-hover:text-indigo-500"}`} />
-                                {!isSidebarCollapsed && <span className="text-sm">Outils Images</span>}
-                            </button>
+
                             <button
                                 onClick={() => {
                                     onManageMedia?.('photos');
