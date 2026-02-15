@@ -90,7 +90,11 @@ export default function ProjectsMap({ projects, onSelectProject, selectedProject
             {!isCapture && (
                 <button
                     onClick={() => setIsFullScreen(!isFullScreen)}
-                    className="absolute top-4 right-4 z-[700] p-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all transform hover:scale-105 active:scale-95"
+                    className={`absolute right-4 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all transform hover:scale-105 active:scale-95 ${
+                        isFullScreen 
+                            ? "top-16 lg:top-4 z-[1000]" 
+                            : "top-4 z-[700]"
+                    }`}
                     title={isFullScreen ? "Quitter le plein écran" : "Plein écran"}
                 >
                     {isFullScreen ? <Minimize2 className="w-5 h-5 text-red-500" /> : <Maximize2 className="w-5 h-5 text-indigo-600" />}
