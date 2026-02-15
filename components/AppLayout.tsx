@@ -88,7 +88,7 @@ export default function AppLayout({
             onTouchEnd={swipeHandlers.onTouchEnd}
         >
             {/* Mobile Header - Sticky */}
-            <div className="lg:hidden fixed top-0 left-0 right-0 z-50 h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 flex items-center justify-between shadow-sm">
+            <div className="lg:hidden fixed top-0 left-0 right-0 z-[1002] h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 flex items-center justify-between shadow-sm">
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 relative">
                         <Image
@@ -116,14 +116,14 @@ export default function AppLayout({
             {/* Sidebar Mobile Overlay */}
             {isMobileMenuOpen && (
                 <div
-                    className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[55] transition-opacity animate-in fade-in duration-300"
+                    className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] transition-opacity animate-in fade-in duration-300"
                     onClick={() => setIsMobileMenuOpen(false)}
                 />
             )}
 
             {/* Sidebar Desktop & Mobile Drawer */}
             <aside
-                className={`fixed top-0 left-0 z-[60] h-screen transition-all duration-300 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col
+                className={`fixed top-0 left-0 z-[1001] h-screen transition-all duration-300 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col
                     ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
                     ${isSidebarCollapsed ? "lg:w-20" : "lg:w-64"}
                     w-72 shadow-2xl lg:shadow-none`}

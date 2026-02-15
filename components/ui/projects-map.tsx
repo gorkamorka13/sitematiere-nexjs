@@ -1,11 +1,11 @@
-"use client";
-
-import { MapContainer, TileLayer, Marker, Tooltip, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Tooltip, useMap, CircleMarker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import type { Project, Document } from "@prisma/client";
 import { getIcon } from "@/lib/map-icons";
+import { Maximize2, Minimize2 } from "lucide-react";
+import { Portal } from "./portal";
 
 type ProjectWithDocs = Project & { documents?: Document[] };
 
@@ -18,6 +18,19 @@ type MultiMapProps = {
     globalCenterPoint?: [number, number] | null;
     isCapture?: boolean;
 };
+
+// Sub-component to handle map resize when fullscreen toggles
+function MapResizer({ isFullScreen }: { isFullScreen: boolean }) {
+    const map = useMap();
+    useEffect(() => {
+        // Delay slightly to allow the container transition to finish
+        const timer = setTimeout(() => {
+            map.invalidateSize();
+        }, 100);
+        return () => clearTimeout(timer);
+    }, [isFullScreen, map]);
+    return null;
+}
 
 function CenterView({ point, nonce }: { point: [number, number] | null; nonce?: number }) {
     const map = useMap();
@@ -36,9 +49,6 @@ function MapUpdater({ projects, fitNonce }: { projects: Project[]; fitNonce?: nu
 
     useEffect(() => {
         if (projects.length === 0) return;
-
-        // This effect now depends on fitNonce to prevent zooming on every project selection
-        // but still uses the latest projects list to calculate bounds.
 
         const validProjects = projects.filter(p => p.latitude !== 0 && p.longitude !== 0);
 
@@ -59,119 +69,93 @@ function MapUpdater({ projects, fitNonce }: { projects: Project[]; fitNonce?: nu
     return null;
 }
 
-interface BouncingMarker extends L.Marker {
-    _bounceInterval?: ReturnType<typeof setInterval> | null;
-}
-
 export default function ProjectsMap({ projects, onSelectProject, selectedProjectId, fitNonce, globalCenterNonce, globalCenterPoint, isCapture }: MultiMapProps) {
     const tileUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
-    const markersRef = useRef<Map<string, L.Marker>>(new Map());
+    const [isFullScreen, setIsFullScreen] = useState(false);
 
     const validProjects = projects.filter(p => p.latitude !== 0 || p.longitude !== 0);
+    const selectedProject = validProjects.find(p => p.id === selectedProjectId);
 
-    // Effect to handle bounce animation when selectedProjectId changes
+    // Escape sets fullscreen to false
     useEffect(() => {
-        if (!selectedProjectId) return;
-
-        const selectedMarker = markersRef.current.get(selectedProjectId) as BouncingMarker;
-
-        // Stop all other markers from bouncing
-        markersRef.current.forEach((marker, id) => {
-            if (id !== selectedProjectId) {
-                const bouncingMarker = marker as BouncingMarker;
-                // Clear any existing animation interval
-                if (bouncingMarker._bounceInterval) {
-                    clearInterval(bouncingMarker._bounceInterval);
-                    bouncingMarker._bounceInterval = null;
-                }
-            }
-        });
-
-        // Start bouncing the selected marker using Leaflet's native animation
-        if (selectedMarker) {
-            const originalLatLng = selectedMarker.getLatLng();
-            let bounceUp = true;
-            let offset = 0;
-            const maxOffset = 0.0003; // Approximately 30 meters in latitude
-            const step = maxOffset / 10;
-
-            // Clear any existing animation
-            if (selectedMarker._bounceInterval) {
-                clearInterval(selectedMarker._bounceInterval);
-            }
-
-            // Create bounce animation
-            selectedMarker._bounceInterval = setInterval(() => {
-                if (bounceUp) {
-                    offset += step;
-                    if (offset >= maxOffset) {
-                        bounceUp = false;
-                    }
-                } else {
-                    offset -= step;
-                    if (offset <= 0) {
-                        bounceUp = true;
-                        offset = 0;
-                    }
-                }
-
-                const newLat = originalLatLng.lat + offset;
-                selectedMarker.setLatLng([newLat, originalLatLng.lng]);
-            }, 30); // 30ms interval for smooth animation
-        }
-
-        // Cleanup function
-        return () => {
-            if (selectedMarker) {
-                if (selectedMarker._bounceInterval) {
-                    clearInterval(selectedMarker._bounceInterval);
-                    selectedMarker._bounceInterval = null;
-                }
-            }
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") setIsFullScreen(false);
         };
-    }, [selectedProjectId]);
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, []);
 
-    return (
-        <MapContainer
-            center={[0, 0]}
-            zoom={2}
-            scrollWheelZoom={false}
-            zoomControl={!isCapture}
-            attributionControl={!isCapture}
-            preferCanvas={!isCapture}
-            className="h-full w-full rounded-lg z-0"
-            style={{ height: "100%", width: "100%", minHeight: "400px" }}
-        >
-            <CenterView point={globalCenterPoint || null} nonce={globalCenterNonce} />
-            <TileLayer
-                url={tileUrl}
-            />
-            {validProjects.map((project) => (
-                <Marker
-                    key={project.id}
-                    position={[project.latitude, project.longitude]}
-                    icon={getIcon(project.status, project.documents?.find(d => d.type === 'PIN')?.url)}
-                    ref={(ref) => {
-                        if (ref) {
-                            markersRef.current.set(project.id, ref as unknown as L.Marker);
-                        }
-                    }}
-                    eventHandlers={{
-                        click: () => onSelectProject?.(project),
-                        popupopen: () => onSelectProject?.(project),
-                    }}
+    const mapContent = (
+        <div className={isFullScreen ? "fixed inset-0 z-[999] bg-white dark:bg-gray-950 p-4 animate-in fade-in zoom-in-95 duration-200" : "relative h-full w-full"}>
+            {!isCapture && (
+                <button
+                    onClick={() => setIsFullScreen(!isFullScreen)}
+                    className="absolute top-4 right-4 z-[700] p-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all transform hover:scale-105 active:scale-95"
+                    title={isFullScreen ? "Quitter le plein écran" : "Plein écran"}
                 >
-                    {!isCapture && (
-                        <Tooltip direction="top" offset={[0, -32]} opacity={1}>
-                            <div className="font-bold text-xs uppercase tracking-tight">
-                                {project.name}
-                            </div>
-                        </Tooltip>
-                    )}
-                </Marker>
-            ))}
+                    {isFullScreen ? <Minimize2 className="w-5 h-5 text-red-500" /> : <Maximize2 className="w-5 h-5 text-indigo-600" />}
+                </button>
+            )}
 
-            <MapUpdater projects={validProjects} fitNonce={fitNonce} />
-        </MapContainer>
+            <MapContainer
+                center={[0, 0]}
+                zoom={2}
+                scrollWheelZoom={isFullScreen}
+                zoomControl={!isCapture}
+                attributionControl={!isCapture}
+                preferCanvas={!isCapture}
+                className="h-full w-full rounded-lg z-0"
+                style={{ height: "100%", width: "100%", minHeight: isFullScreen ? "100%" : "400px" }}
+            >
+                <MapResizer isFullScreen={isFullScreen} />
+                <CenterView point={globalCenterPoint || null} nonce={globalCenterNonce} />
+                <TileLayer
+                    url={tileUrl}
+                />
+                {validProjects.map((project) => (
+                    <Marker
+                        key={project.id}
+                        position={[project.latitude, project.longitude]}
+                        icon={getIcon(project.status, project.documents?.find(d => d.type === 'PIN')?.url)}
+                        zIndexOffset={project.id === selectedProjectId ? 1000 : 0}
+                        eventHandlers={{
+                            click: () => onSelectProject?.(project),
+                            popupopen: () => onSelectProject?.(project),
+                        }}
+                    >
+                        {!isCapture && (
+                            <Tooltip direction="top" offset={[0, -32]} opacity={1}>
+                                <div className="font-bold text-xs uppercase tracking-tight">
+                                    {project.name}
+                                </div>
+                            </Tooltip>
+                        )}
+                    </Marker>
+                ))}
+
+                {/* Selection Halo */}
+                {selectedProject && (
+                    <CircleMarker
+                        center={[selectedProject.latitude, selectedProject.longitude]}
+                        radius={20}
+                        pathOptions={{
+                            color: '#E62726',
+                            fillColor: '#E62726',
+                            fillOpacity: 0.2,
+                            weight: 2,
+                            dashArray: '5, 5'
+                        }}
+                    />
+                )}
+
+                <MapUpdater projects={validProjects} fitNonce={fitNonce} />
+            </MapContainer>
+        </div>
     );
+
+    if (isFullScreen) {
+        return <Portal>{mapContent}</Portal>;
+    }
+
+    return mapContent;
 }

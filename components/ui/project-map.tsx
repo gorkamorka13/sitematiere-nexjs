@@ -1,64 +1,90 @@
-"use client";
-
 import { MapContainer, TileLayer, Marker, Tooltip, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { getIcon } from "@/lib/map-icons";
-
-// Sub-component to handle map view changes
-function ChangeView({ latitude, longitude, zoom, nonce }: { latitude: number; longitude: number; zoom: number; nonce?: number }) {
-    const map = useMap();
-    useEffect(() => {
-        map.setView([latitude, longitude], zoom, { animate: true });
-    }, [latitude, longitude, zoom, map, nonce]);
-    return null;
-}
-
+import { Maximize2, Minimize2 } from "lucide-react";
+import { Portal } from "./portal";
 
 type MapProps = {
     latitude: number;
     longitude: number;
-    status?: string | null;
-    projectName?: string;
-    country?: string;
-    customPinUrl?: string;
-    // popupText?: string; // Removed unused prop
+    status: string | null;
+    projectName: string;
+    country: string;
+    popupText?: string;
+    customPinUrl?: string | null;
     nonce?: number;
     isCapture?: boolean;
 };
 
+// Sub-component to handle map resize when fullscreen toggles
+function MapResizer({ isFullScreen }: { isFullScreen: boolean }) {
+    const map = useMap();
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            map.invalidateSize();
+        }, 100);
+        return () => clearTimeout(timer);
+    }, [isFullScreen, map]);
+    return null;
+}
+
 export default function ProjectMap({ latitude, longitude, status, projectName, country, customPinUrl, nonce, isCapture }: MapProps) {
     const tileUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+    const [isFullScreen, setIsFullScreen] = useState(false);
 
-    return (
-        <MapContainer
-            center={[latitude, longitude]}
-            zoom={13}
-            scrollWheelZoom={false}
-            zoomControl={!isCapture}
-            attributionControl={!isCapture}
-            preferCanvas={!isCapture}
-            className="h-full w-full rounded-lg z-0"
-            style={{ height: "100%", width: "100%", minHeight: "300px" }}
-        >
-            <ChangeView latitude={latitude} longitude={longitude} zoom={13} nonce={nonce} />
-            <TileLayer
-                url={tileUrl}
-            />
-            <Marker position={[latitude, longitude]} icon={getIcon(status, customPinUrl)}>
-                {!isCapture && (
-                    <Tooltip direction="top" offset={[0, -32]} opacity={1}>
-                        <div className="text-center p-1">
-                            <strong className="block text-sm mb-0.5">{projectName || "Projet"}</strong>
-                            <span className="text-xs text-indigo-600 dark:text-indigo-400 font-bold block mb-1 opacity-80">{country || "Emplacement"}</span>
-                            <div className="w-full h-px bg-gray-100 dark:bg-gray-700 my-1" />
-                            <span className="text-[10px] font-mono text-gray-400 block italic leading-none">
-                                {latitude.toFixed(6)}, {longitude.toFixed(6)}
-                            </span>
-                        </div>
-                    </Tooltip>
-                )}
-            </Marker>
-        </MapContainer>
+    // Escape sets fullscreen to false
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") setIsFullScreen(false);
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, []);
+
+    const mapContent = (
+        <div className={isFullScreen ? "fixed inset-0 z-[999] bg-white dark:bg-gray-950 p-4 animate-in fade-in zoom-in-95 duration-200" : "relative h-full w-full"}>
+            {!isCapture && (
+                <button
+                    onClick={() => setIsFullScreen(!isFullScreen)}
+                    className="absolute top-4 right-4 z-[700] p-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all transform hover:scale-105 active:scale-95"
+                    title={isFullScreen ? "Quitter le plein écran" : "Plein écran"}
+                >
+                    {isFullScreen ? <Minimize2 className="w-5 h-5 text-red-500" /> : <Maximize2 className="w-5 h-5 text-indigo-600" />}
+                </button>
+            )}
+
+            <MapContainer
+                key={`${latitude}-${longitude}-${nonce}-${isFullScreen}`}
+                center={[latitude, longitude]}
+                zoom={14}
+                scrollWheelZoom={isFullScreen}
+                zoomControl={!isCapture}
+                attributionControl={!isCapture}
+                className="h-full w-full rounded-lg z-0 transition-opacity duration-300"
+                style={{ height: "100%", width: "100%", minHeight: isFullScreen ? "100%" : "300px" }}
+            >
+                <MapResizer isFullScreen={isFullScreen} />
+                <TileLayer url={tileUrl} />
+                <Marker
+                    position={[latitude, longitude]}
+                    icon={getIcon(status, customPinUrl)}
+                >
+                    {!isCapture && (
+                        <Tooltip direction="top" offset={[0, -32]} opacity={1}>
+                            <div className="font-bold text-xs uppercase tracking-tight">
+                                {projectName}
+                            </div>
+                        </Tooltip>
+                    )}
+                </Marker>
+            </MapContainer>
+        </div>
     );
+
+    if (isFullScreen) {
+        return <Portal>{mapContent}</Portal>;
+    }
+
+    return mapContent;
 }

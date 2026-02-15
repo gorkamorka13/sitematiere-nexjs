@@ -377,9 +377,9 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
 
                 {/* Dual Map Section */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-                    <div className="bg-white dark:bg-gray-800 p-3 lg:px-3 lg:py-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 h-[400px] lg:h-[600px] flex flex-col z-0 relative overflow-hidden transition-colors">
+                    <div className="bg-white dark:bg-gray-800 p-3 lg:px-3 lg:py-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 h-[400px] lg:h-[600px] flex flex-col relative overflow-hidden transition-colors">
                         <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">Carte Globale</h3>
-                        <div className="flex-grow relative w-full z-0 overflow-hidden rounded-xl border border-gray-100 dark:border-gray-700">
+                        <div className="flex-grow relative w-full overflow-hidden rounded-xl border border-gray-100 dark:border-gray-700">
                             <ProjectsMapWrapper
                                 projects={mapProjects}
                                 onSelectProject={handleProjectSelect}
@@ -391,9 +391,9 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-gray-800 p-3 lg:px-3 lg:py-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 h-[400px] lg:h-[600px] flex flex-col z-0 relative overflow-hidden transition-colors">
+                    <div className="bg-white dark:bg-gray-800 p-3 lg:px-3 lg:py-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 h-[400px] lg:h-[600px] flex flex-col relative overflow-hidden transition-colors">
                         <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1 truncate">Projet : {selectedProject?.name || "Aucun"}</h3>
-                        <div className="flex-grow relative bg-gray-50 dark:bg-gray-900 rounded-xl w-full z-0 overflow-hidden border border-gray-100 dark:border-gray-700">
+                        <div className="flex-grow relative bg-gray-50 dark:bg-gray-900 rounded-xl w-full overflow-hidden border border-gray-100 dark:border-gray-700">
                             {selectedProject ? (
                                 <ProjectMapWrapper
                                     latitude={selectedProject.latitude}
