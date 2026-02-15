@@ -11,6 +11,7 @@ const ProjectsMap = dynamic(() => import("./projects-map"), {
 type Props = {
     projects: Project[];
     onSelectProject?: (project: Project) => void;
+    selectedProjectId?: string;
     fitNonce?: number;
     globalCenterNonce?: number;
     globalCenterPoint?: [number, number] | null;

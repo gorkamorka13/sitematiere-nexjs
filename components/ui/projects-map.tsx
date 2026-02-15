@@ -3,7 +3,7 @@
 import { MapContainer, TileLayer, Marker, Tooltip, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type { Project, Document } from "@prisma/client";
 import { getIcon } from "@/lib/map-icons";
 
@@ -12,6 +12,7 @@ type ProjectWithDocs = Project & { documents?: Document[] };
 type MultiMapProps = {
     projects: ProjectWithDocs[];
     onSelectProject?: (project: Project) => void;
+    selectedProjectId?: string;
     fitNonce?: number;
     globalCenterNonce?: number;
     globalCenterPoint?: [number, number] | null;
@@ -58,10 +59,75 @@ function MapUpdater({ projects, fitNonce }: { projects: Project[]; fitNonce?: nu
     return null;
 }
 
-export default function ProjectsMap({ projects, onSelectProject, fitNonce, globalCenterNonce, globalCenterPoint, isCapture }: MultiMapProps) {
+export default function ProjectsMap({ projects, onSelectProject, selectedProjectId, fitNonce, globalCenterNonce, globalCenterPoint, isCapture }: MultiMapProps) {
     const tileUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+    const markersRef = useRef<Map<string, L.Marker>>(new Map());
 
     const validProjects = projects.filter(p => p.latitude !== 0 || p.longitude !== 0);
+
+    // Effect to handle bounce animation when selectedProjectId changes
+    useEffect(() => {
+        if (!selectedProjectId) return;
+
+        const selectedMarker = markersRef.current.get(selectedProjectId);
+
+        // Stop all other markers from bouncing
+        markersRef.current.forEach((marker, id) => {
+            if (id !== selectedProjectId) {
+                // Clear any existing animation interval
+                const markerAny = marker as any;
+                if (markerAny._bounceInterval) {
+                    clearInterval(markerAny._bounceInterval);
+                    markerAny._bounceInterval = null;
+                }
+            }
+        });
+
+        // Start bouncing the selected marker using Leaflet's native animation
+        if (selectedMarker) {
+            const markerAny = selectedMarker as any;
+            const originalLatLng = selectedMarker.getLatLng();
+            let bounceUp = true;
+            let offset = 0;
+            const maxOffset = 0.0003; // Approximately 30 meters in latitude
+            const step = maxOffset / 10;
+
+            // Clear any existing animation
+            if (markerAny._bounceInterval) {
+                clearInterval(markerAny._bounceInterval);
+            }
+
+            // Create bounce animation
+            markerAny._bounceInterval = setInterval(() => {
+                if (bounceUp) {
+                    offset += step;
+                    if (offset >= maxOffset) {
+                        bounceUp = false;
+                    }
+                } else {
+                    offset -= step;
+                    if (offset <= 0) {
+                        bounceUp = true;
+                        offset = 0;
+                    }
+                }
+
+                const newLat = originalLatLng.lat + offset;
+                selectedMarker.setLatLng([newLat, originalLatLng.lng]);
+            }, 30); // 30ms interval for smooth animation
+        }
+
+        // Cleanup function
+        return () => {
+            if (selectedMarker) {
+                const markerAny = selectedMarker as any;
+                if (markerAny._bounceInterval) {
+                    clearInterval(markerAny._bounceInterval);
+                    markerAny._bounceInterval = null;
+                }
+            }
+        };
+    }, [selectedProjectId]);
 
     return (
         <MapContainer
@@ -83,6 +149,11 @@ export default function ProjectsMap({ projects, onSelectProject, fitNonce, globa
                     key={project.id}
                     position={[project.latitude, project.longitude]}
                     icon={getIcon(project.status, project.documents?.find(d => d.type === 'PIN')?.url)}
+                    ref={(ref) => {
+                        if (ref) {
+                            markersRef.current.set(project.id, ref as unknown as L.Marker);
+                        }
+                    }}
                     eventHandlers={{
                         click: () => onSelectProject?.(project),
                         popupopen: () => onSelectProject?.(project),

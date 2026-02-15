@@ -383,6 +383,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                             <ProjectsMapWrapper
                                 projects={mapProjects}
                                 onSelectProject={handleProjectSelect}
+                                selectedProjectId={selectedProject?.id}
                                 fitNonce={fitNonce}
                                 globalCenterNonce={globalCenterNonce}
                                 globalCenterPoint={globalCenterPoint}
