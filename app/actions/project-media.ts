@@ -10,7 +10,7 @@ export async function getProjectMedia(projectName: string) {
   const folderName = projectName.toLowerCase().replace(/[^a-z0-9]/g, '');
 
   const session = await auth();
-  const userRole = (session?.user as any)?.role as UserRole || UserRole.VISITOR;
+  const userRole = session?.user?.role || UserRole.VISITOR;
 
   const result = {
     images: [] as { url: string; name: string }[],

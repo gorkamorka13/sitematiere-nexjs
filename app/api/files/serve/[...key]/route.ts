@@ -17,7 +17,7 @@ export async function GET(
 
     // Authentification et autorisation
     const session = await auth();
-    const userRole = (session?.user as any)?.role as UserRole || UserRole.VISITOR;
+    const userRole = session?.user?.role || UserRole.VISITOR;
 
     const command = new GetObjectCommand({
       Bucket: R2_BUCKET_NAME,
@@ -25,7 +25,8 @@ export async function GET(
     });
 
     try {
-      const response = await (r2Client as any).send(command);
+      // @ts-expect-error - S3Client might have type resolution issues in some environments but works at runtime
+      const response = await r2Client.send(command);
 
       const contentType = response.ContentType || "";
       const isPdf = contentType.toLowerCase() === "application/pdf";

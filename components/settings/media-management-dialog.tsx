@@ -14,7 +14,6 @@ import {
     Globe,
     ArrowRight,
     Youtube,
-    Link as LinkIcon,
     AlertCircle,
     PlayCircle,
     Wand2,
@@ -349,13 +348,7 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
                                         <VideosTab
                                             videos={videos}
                                             loading={loadingVideos}
-                                            onAdd={handleAddVideo}
                                             onDelete={handleDeleteVideo}
-                                            url={videoUrl}
-                                            setUrl={setVideoUrl}
-                                            title={videoTitle}
-                                            setTitle={setVideoTitle}
-                                            isAdding={isAddingVideo}
                                             projectId={selectedProjectId}
                                             onRefresh={fetchVideos}
                                             setToast={setToast}
@@ -555,13 +548,7 @@ function SlideshowTab({
 interface VideosTabProps {
     videos: ProjectVideo[];
     loading: boolean;
-    onAdd: (e: React.FormEvent) => Promise<void>;
     onDelete: (id: string) => Promise<void>;
-    url: string;
-    setUrl: (url: string) => void;
-    title: string;
-    setTitle: (title: string) => void;
-    isAdding: boolean;
     projectId: string;
     onRefresh: () => void;
     setToast: (toast: { message: string; type: 'success' | 'error' } | null) => void;
@@ -570,13 +557,7 @@ interface VideosTabProps {
 function VideosTab({
     videos,
     loading,
-    onAdd,
     onDelete,
-    url,
-    setUrl,
-    title,
-    setTitle,
-    isAdding,
     projectId,
     onRefresh,
     setToast
