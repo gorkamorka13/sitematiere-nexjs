@@ -25,7 +25,8 @@ import AppLayout from "@/components/AppLayout";
 import ProjectManagementDialog from "@/components/settings/project-management-dialog";
 import FileManagementDialog from "@/components/settings/file-management-dialog";
 import SettingsDialogs from "@/components/settings/settings-dialogs";
-import { UserRole, Project } from "@prisma/client";
+import type { Project } from "@prisma/client";
+import { UserRole } from "@/lib/enums";
 
 interface ImageProcessorClientProps {
     user: { name?: string | null; username?: string | null; role?: UserRole; color?: string | null };

@@ -21,12 +21,13 @@ type MapProps = {
     status?: string | null;
     projectName?: string;
     country?: string;
+    customPinUrl?: string;
     // popupText?: string; // Removed unused prop
     nonce?: number;
     isCapture?: boolean;
 };
 
-export default function ProjectMap({ latitude, longitude, status, projectName, country, nonce, isCapture }: MapProps) {
+export default function ProjectMap({ latitude, longitude, status, projectName, country, customPinUrl, nonce, isCapture }: MapProps) {
     const tileUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 
     return (
@@ -44,7 +45,7 @@ export default function ProjectMap({ latitude, longitude, status, projectName, c
             <TileLayer
                 url={tileUrl}
             />
-            <Marker position={[latitude, longitude]} icon={getIcon(status)}>
+            <Marker position={[latitude, longitude]} icon={getIcon(status, customPinUrl)}>
                 {!isCapture && (
                     <Tooltip direction="top" offset={[0, -32]} opacity={1}>
                         <div className="text-center p-1">

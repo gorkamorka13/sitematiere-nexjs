@@ -1,4 +1,5 @@
-import { Project, ProjectStatus, ProjectType } from "@prisma/client";
+import type { Project } from "@prisma/client";
+import { ProjectStatus, ProjectType } from "@/lib/enums";
 import { Download, Search, ArrowUpDown, ArrowUpIcon, ArrowDownIcon } from "lucide-react";
 import { getStatusLabel } from "@/lib/utils";
 import { useState, useMemo } from "react";

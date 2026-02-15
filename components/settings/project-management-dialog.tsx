@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { X, Save, MapPin, AlignLeft, FolderOpen, AlertCircle, CheckCircle2, Globe, Search, Undo2, Redo2, Plus, Trash2, Edit, UploadCloud, Image as ImageIcon } from "lucide-react";
 import NextImage from "next/image";
-import { Project, Document as ProjectDocument, ProjectType, ProjectStatus, UserRole } from "@prisma/client";
+import type { Project, Document as ProjectDocument } from "@prisma/client";
+import { ProjectType, ProjectStatus, UserRole } from "@/lib/enums";
 import { updateProject, createProject, deleteProject } from "@/app/actions/project-actions";
 import EditableMapWrapper from "@/components/ui/editable-map-wrapper";
 import { decimalToDMS, dmsToDecimal, isValidLatitude, isValidLongitude } from "@/lib/coordinate-utils";
@@ -72,8 +73,8 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
   const [createFormData, setCreateFormData] = useState({
     name: "",
     country: "",
-    type: ProjectType.PRS as ProjectType,
-    status: ProjectStatus.PROSPECT as ProjectStatus,
+    type: ProjectType.PRS,
+    status: ProjectStatus.PROSPECT,
     latitude: 44.916672,
     longitude: 2.45,
     description: "",
@@ -290,7 +291,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
   // Mettre à jour les champs lors du changement de projet
   useEffect(() => {
     if (selectedProjectId) {
-      const project = projects.find(p => p.id === selectedProjectId) as Project & { documents: ProjectDocument[] };
+    const project = projects.find(p => p.id === selectedProjectId) as Project & { documents: ProjectDocument[] };
       if (project) {
         const flagDoc = project.documents?.find((d) => d.type === "FLAG");
         const logoDoc = project.documents?.find((d) => d.type === "CLIENT_LOGO" || d.name.toLowerCase().includes('logo'));
@@ -407,8 +408,8 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
         setCreateFormData({
           name: "",
           country: "",
-          type: ProjectType.PRS as ProjectType,
-          status: ProjectStatus.PROSPECT as ProjectStatus,
+          type: ProjectType.PRS,
+          status: ProjectStatus.PROSPECT,
           latitude: 44.916672,
           longitude: 2.45,
           description: "",
@@ -1062,7 +1063,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Type de projet *</label>
                   <select
                     value={createFormData.type}
-                    onChange={(e) => setCreateFormData({ ...createFormData, type: e.target.value as ProjectType })}
+                    onChange={(e) => setCreateFormData({ ...createFormData, type: e.target.value as unknown as ProjectType })}
                     className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white"
                     required
                   >
@@ -1075,7 +1076,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Statut *</label>
                   <select
                     value={createFormData.status}
-                    onChange={(e) => setCreateFormData({ ...createFormData, status: e.target.value as ProjectStatus })}
+                    onChange={(e) => setCreateFormData({ ...createFormData, status: e.target.value as unknown as ProjectStatus })}
                     className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white"
                     required
                   >

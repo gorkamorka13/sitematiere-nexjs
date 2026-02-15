@@ -1,5 +1,6 @@
 import { Search } from "lucide-react";
-import { Project, ProjectStatus, ProjectType } from "@prisma/client";
+import type { Project } from "@prisma/client";
+import { ProjectStatus, ProjectType } from "@/lib/enums";
 import { getStatusLabel } from "@/lib/utils";
 
 interface DashboardFiltersProps {

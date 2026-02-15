@@ -7,66 +7,138 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Modèle utilisateur pour l'authentification
 model User {
-  id            String    @id @default(cuid())
-  username      String?   @unique  // Nom de connexion (ex: admin)
-  email         String?   @unique  // Deprecated: gardé pour compatibilité
-  name          String?            // Nom complet de l'utilisateur
-  passwordHash  String             // Hashé avec bcrypt
-  role          UserRole  @default(USER)
-  color         String?   @default("#6366f1") // Couleur de la pastille (défaut: indigo)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  projects      Project[] @relation("ProjectOwner")
+  id           String    @id @default(cuid())
+  email        String?   @unique
+  name         String?
+  passwordHash String
+  role         UserRole  @default(USER)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  username     String?   @unique
+  color        String?   @default("#6366f1")
+  projects     Project[] @relation("ProjectOwner")
 
   @@map("users")
+}
+
+model Project {
+  id              String           @id @default(cuid())
+  name            String           @db.VarChar(255)
+  country         String           @db.VarChar(255)
+  latitude        Float
+  longitude       Float
+  description     String?
+  type            ProjectType
+  status          ProjectStatus    @default(PROSPECT)
+  prospection     Int              @default(0)
+  studies         Int              @default(0)
+  fabrication     Int              @default(0)
+  transport       Int              @default(0)
+  construction    Int              @default(0)
+  projectCode     String?          @db.VarChar(255)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  ownerId         String
+  documents       Document[]
+  files           File[]
+  images          Image[]
+  owner           User             @relation("ProjectOwner", fields: [ownerId], references: [id])
+  slideshowImages SlideshowImage[]
+  videos          Video[]
+
+  @@index([country])
+  @@index([type])
+  @@index([status])
+  @@map("projects")
+}
+
+model Image {
+  id              String           @id @default(cuid())
+  url             String
+  alt             String?
+  order           Int              @default(0)
+  projectId       String
+  createdAt       DateTime         @default(now())
+  project         Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  slideshowImages SlideshowImage[]
+
+  @@index([projectId])
+  @@map("images")
+}
+
+model SlideshowImage {
+  id          String   @id @default(cuid())
+  projectId   String
+  imageId     String
+  order       Int      @default(0)
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  image       Image    @relation(fields: [imageId], references: [id], onDelete: Cascade)
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, imageId])
+  @@index([projectId, order])
+  @@index([projectId, isPublished])
+  @@map("slideshow_images")
+}
+
+model Video {
+  id        String   @id @default(cuid())
+  url       String
+  title     String?
+  projectId String
+  createdAt DateTime @default(now())
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("videos")
+}
+
+model Document {
+  id        String       @id @default(cuid())
+  url       String
+  name      String
+  type      DocumentType
+  projectId String
+  createdAt DateTime     @default(now())
+  project   Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("documents")
+}
+
+model File {
+  id           String    @id @default(cuid())
+  name         String
+  blobUrl      String    @unique
+  blobPath     String
+  fileType     FileType
+  mimeType     String
+  size         Int
+  projectId    String?
+  thumbnailUrl String?
+  width        Int?
+  height       Int?
+  duration     Int?
+  isDeleted    Boolean   @default(false)
+  deletedAt    DateTime?
+  deletedBy    String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  project      Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([isDeleted])
+  @@index([fileType])
+  @@map("files")
 }
 
 enum UserRole {
   USER
   ADMIN
   VISITOR
-}
-
-// Modèle principal des projets de ponts
-model Project {
-  id              String        @id @default(cuid())
-  name            String        @db.VarChar(255)
-  country         String        @db.VarChar(255)
-  latitude        Float
-  longitude       Float
-  description     String?       @db.Text
-  type            ProjectType
-  status          ProjectStatus @default(PROSPECT)
-
-  // Progression (0-100)
-  prospection     Int           @default(0)
-  studies         Int           @default(0) // "etudes"
-  fabrication     Int           @default(0)
-  transport       Int           @default(0)
-  construction    Int           @default(0)
-
-  // Relations
-  images          Image[]
-  videos          Video[]
-  documents       Document[]
-  files           File[]
-  slideshowImages SlideshowImage[]
-
-  // Métadonnées
-  projectCode     String?       @db.VarChar(255) // "prochantier"
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  // Relation propriétaire
-  ownerId         String
-  owner           User          @relation("ProjectOwner", fields: [ownerId], references: [id])
-
-  @@index([country])
-  @@index([type])
-  @@index([status])
-  @@map("projects")
 }
 
 enum ProjectType {
@@ -85,66 +157,6 @@ enum ProjectStatus {
   PROSPECT
 }
 
-// Modèle pour les images
-model Image {
-  id              String           @id @default(cuid())
-  url             String           // URL Cloudflare or S3
-  alt             String?
-  order           Int              @default(0)
-  projectId       String
-  project         Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  createdAt       DateTime         @default(now())
-  slideshowImages SlideshowImage[]
-
-  @@index([projectId])
-  @@map("images")
-}
-
-// Modèle pour la gestion des slideshows de projet
-model SlideshowImage {
-  id          String   @id @default(cuid())
-  projectId   String
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  imageId     String
-  image       Image    @relation(fields: [imageId], references: [id], onDelete: Cascade)
-  order       Int      @default(0)
-  isPublished Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@unique([projectId, imageId])
-  @@index([projectId, order])
-  @@index([projectId, isPublished])
-  @@map("slideshow_images")
-}
-
-// Modèle pour les vidéos
-model Video {
-  id          String   @id @default(cuid())
-  url         String
-  title       String?
-  projectId   String
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-
-  @@index([projectId])
-  @@map("videos")
-}
-
-// Modèle pour les documents (PDF, plans)
-model Document {
-  id          String       @id @default(cuid())
-  url         String
-  name        String
-  type        DocumentType
-  projectId   String
-  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  createdAt   DateTime     @default(now()) // Correction from plan: should be @default(now())
-
-  @@index([projectId])
-  @@map("documents")
-}
-
 enum DocumentType {
   PLAN
   FLAG
@@ -153,7 +165,6 @@ enum DocumentType {
   OTHER
 }
 
-// Enum pour les types de fichiers
 enum FileType {
   IMAGE
   DOCUMENT
@@ -161,36 +172,4 @@ enum FileType {
   AUDIO
   ARCHIVE
   OTHER
-}
-
-// Modèle pour la gestion unifiée des fichiers
-model File {
-  id          String    @id @default(cuid())
-  name        String    // Nom affiché
-  blobUrl     String    @unique // URL Cloudflare/Vercel
-  blobPath    String    // Chemin: projetId/uuid.ext
-  fileType    FileType
-  mimeType    String
-  size        Int       // Taille en bytes
-  projectId   String?
-  project     Project?   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  // Métadonnées pour miniatures
-  thumbnailUrl String?  // URL miniature (images/vidéos)
-  width       Int?      // Largeur (images/vidéos)
-  height      Int?      // Hauteur (images/vidéos)
-  duration    Int?      // Durée en secondes (vidéos/audio)
-
-  // Historique - Soft delete
-  isDeleted   Boolean   @default(false)
-  deletedAt   DateTime?
-  deletedBy   String?   // User ID qui a supprimé
-
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  @@index([projectId])
-  @@index([isDeleted])
-  @@index([fileType])
-  @@map("files")
 }

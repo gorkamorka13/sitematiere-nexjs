@@ -20,7 +20,7 @@ import {
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import UserBadge from "@/components/settings/user-badge";
 import { ModeToggle } from "@/components/ui/mode-toggle";
-import { UserRole } from "@prisma/client";
+import { UserRole } from "@/lib/enums";
 import { useSwipe } from '@/hooks/use-swipe';
 import packageInfo from '../package.json';
 const version = packageInfo.version;
@@ -189,7 +189,7 @@ export default function AppLayout({
                         />
                         {!isSidebarCollapsed && (
                             <div className="flex flex-col min-w-0">
-                                <span className="text-[10px] text-gray-500 uppercase font-semibold tracking-wider">{getRoleLabel(user.role || "USER")}</span>
+                                <span className="text-[10px] text-gray-500 uppercase font-semibold tracking-wider">{getRoleLabel(user.role || UserRole.USER)}</span>
                                 <span className="text-sm font-bold text-gray-900 dark:text-white truncate">{user.name || user.username}</span>
                             </div>
                         )}

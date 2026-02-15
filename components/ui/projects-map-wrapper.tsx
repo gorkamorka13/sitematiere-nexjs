@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Project } from "@prisma/client";
+import type { Project } from "@prisma/client";
 
 const ProjectsMap = dynamic(() => import("./projects-map"), {
     ssr: false,

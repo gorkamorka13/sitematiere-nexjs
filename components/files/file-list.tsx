@@ -1,6 +1,6 @@
 "use client";
 
-import { FileType as PrismaFileType } from "@prisma/client";
+import { FileType as PrismaFileType } from "@/lib/enums";
 import { FileIcon, ImageIcon, FileText, Video, Archive, MoreVertical, ChevronUp, ChevronDown } from "lucide-react";
 import Image from "next/image";
 import { formatBytes } from "@/lib/utils";

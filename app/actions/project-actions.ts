@@ -192,17 +192,18 @@ export async function createProject(formData: ProjectCreateInput) {
     // Créer le document "PIN" - utiliser le pin personnalisé si fourni, sinon assigner selon le statut
     let pinUrl = validatedData.pinName;
     if (!pinUrl || pinUrl === "") {
+      const R2_PUBLIC_URL = process.env.NEXT_PUBLIC_R2_PUBLIC_URL || "https://pub-78c42489fd854dc3a6975810aa00edf2.r2.dev";
       // Assigner un pin par défaut selon le statut
       switch (validatedData.status) {
         case 'DONE':
-          pinUrl = '/pins/realise.png';
+          pinUrl = `${R2_PUBLIC_URL}/pins/realise.png`;
           break;
         case 'CURRENT':
-          pinUrl = '/pins/en_cours.png';
+          pinUrl = `${R2_PUBLIC_URL}/pins/en_cours.png`;
           break;
         case 'PROSPECT':
         default:
-          pinUrl = '/pins/prospection.png';
+          pinUrl = `${R2_PUBLIC_URL}/pins/prospection.png`;
           break;
       }
     }

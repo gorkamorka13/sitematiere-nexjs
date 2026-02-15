@@ -3,7 +3,8 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { getProjectMedia } from "@/app/actions/project-media";
 
-import { Project, ProjectStatus, ProjectType, UserRole, Document as ProjectDocument, Video as ProjectVideo } from "@prisma/client";
+import type { Project, Document as ProjectDocument, Video as ProjectVideo } from "@prisma/client";
+import { ProjectStatus, ProjectType, UserRole, DocumentType } from "@/lib/enums";
 import ProjectsMapWrapper from "@/components/ui/projects-map-wrapper";
 import ProjectMapWrapper from "@/components/ui/project-map-wrapper";
 
@@ -107,21 +108,22 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
             if (searchQuery.trim() && !project.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
 
             // Filtrage par Type
-            if (selectedTypes.length > 0 && !selectedTypes.includes(project.type)) return false;
+            if (selectedTypes.length > 0 && !selectedTypes.includes(project.type as unknown as ProjectType)) return false;
 
             // Filtrage par Statut
-            if (selectedStatuses.length > 0 && !selectedStatuses.includes(project.status)) return false;
+            if (selectedStatuses.length > 0 && !selectedStatuses.includes(project.status as unknown as ProjectStatus)) return false;
 
             return true;
         });
     }, [initialProjects, selectedCountry, searchQuery, selectedTypes, selectedStatuses]);
 
     // Extraire le drapeau et le logo du client pour le projet sélectionné
-    const { flagDoc, logoDoc } = useMemo(() => {
+    const { flagDoc, logoDoc, pinDoc } = useMemo(() => {
         const docs = (selectedProject as ProjectWithDocuments | null)?.documents || [];
         return {
             flagDoc: docs.find((d) => d.type === "FLAG"),
-            logoDoc: docs.find((d) => d.type === "CLIENT_LOGO" || d.name.replace(/_/g, ' ').toLowerCase().includes('logo'))
+            logoDoc: docs.find((d) => d.type === "CLIENT_LOGO" || d.name.replace(/_/g, ' ').toLowerCase().includes('logo')),
+            pinDoc: docs.find((d) => d.type === DocumentType.PIN)
         };
     }, [selectedProject]);
 
@@ -182,8 +184,8 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
 
             if (selectedCountry && project.country !== selectedCountry) return false;
             // Note: We intentionally do NOT filter by selectedName here
-            if (selectedTypes.length > 0 && !selectedTypes.includes(project.type)) return false;
-            if (selectedStatuses.length > 0 && !selectedStatuses.includes(project.status)) return false;
+            if (selectedTypes.length > 0 && !selectedTypes.includes(project.type as unknown as ProjectType)) return false;
+            if (selectedStatuses.length > 0 && !selectedStatuses.includes(project.status as unknown as ProjectStatus)) return false;
             return true;
         });
     }, [initialProjects, selectedCountry, selectedTypes, selectedStatuses]);
@@ -244,8 +246,8 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
         setSelectedCountry(project.country || "");
         setSelectedProject(project);
 
-        if (project.status) setSelectedStatuses([project.status]);
-        if (project.type) setSelectedTypes([project.type]);
+        if (project.status) setSelectedStatuses([project.status as unknown as ProjectStatus]);
+        if (project.type) setSelectedTypes([project.type as unknown as ProjectType]);
 
         setMapNonce(Date.now());
 
@@ -301,8 +303,8 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
             setSelectedCountry(project.country || "");
 
             // Focus on this specific project's status and type
-            if (project.status) setSelectedStatuses([project.status]);
-            if (project.type) setSelectedTypes([project.type]);
+            if (project.status) setSelectedStatuses([project.status as unknown as ProjectStatus]);
+            if (project.type) setSelectedTypes([project.type as unknown as ProjectType]);
 
             setMapNonce(Date.now());
 
@@ -399,6 +401,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                                     country={selectedProject.country || ""}
                                     popupText={selectedProject.name}
                                     status={selectedProject.status}
+                                    customPinUrl={pinDoc?.url}
                                     nonce={mapNonce}
                                 />
                             ) : (

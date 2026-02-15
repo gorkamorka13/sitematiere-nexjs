@@ -14,6 +14,7 @@ type Props = {
     country?: string;
     popupText?: string;
     status?: string | null;
+    customPinUrl?: string;
     nonce?: number;
 };
 

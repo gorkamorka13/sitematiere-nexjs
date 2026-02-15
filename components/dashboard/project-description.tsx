@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Project, Document as ProjectDocument } from "@prisma/client";
+import type { Project, Document as ProjectDocument } from "@prisma/client";
 import { FileText } from "lucide-react";
 import { normalizeImageUrl } from "@/lib/utils/image-url";
 

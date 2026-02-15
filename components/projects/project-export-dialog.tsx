@@ -12,7 +12,7 @@ import {
   Paperclip,
   X,
 } from "lucide-react";
-import { Project, Document as ProjectDocument, Video as ProjectVideo } from "@prisma/client";
+import type { Project, Document as ProjectDocument, Video as ProjectVideo } from "@prisma/client";
 import jsPDF from "jspdf";
 import * as htmlToImage from "html-to-image";
 import JSZip from "jszip";

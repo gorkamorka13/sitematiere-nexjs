@@ -4,7 +4,7 @@ import { MapContainer, TileLayer, Marker, Tooltip, useMap } from "react-leaflet"
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useEffect } from "react";
-import { Project, Document } from "@prisma/client";
+import type { Project, Document } from "@prisma/client";
 import { getIcon } from "@/lib/map-icons";
 
 type ProjectWithDocs = Project & { documents?: Document[] };

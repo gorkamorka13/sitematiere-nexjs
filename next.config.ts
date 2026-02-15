@@ -11,11 +11,9 @@ const autoIncrementVersion = (phase: string) => {
   try {
     const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
 
-    // Only increment during a production build or at the very start of a dev session
+    // Only increment during a production build
     const isBuild = phase === PHASE_PRODUCTION_BUILD;
-    const isDev = phase === PHASE_DEVELOPMENT_SERVER;
-
-    if (!isBuild && !isDev) return pkg.version;
+    if (!isBuild) return pkg.version;
 
     // Prevent re-incrementing in worker processes or during reloads
     // Next.js spawns multiple processes; we only want the main one to increment

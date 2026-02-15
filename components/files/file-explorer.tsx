@@ -9,7 +9,7 @@ import { FilePreviewModal } from "./file-preview-modal";
 import { FileContextMenu } from "./file-context-menu";
 import { FileMoveDialog } from "./file-move-dialog";
 import { FileDeleteDialog } from "./file-delete-dialog";
-import { FileType } from "@prisma/client";
+import { FileType } from "@/lib/enums";
 import { Toast, ToastType } from "@/components/ui/toast";
 
 import { useDebounce } from "@/hooks/use-debounce";

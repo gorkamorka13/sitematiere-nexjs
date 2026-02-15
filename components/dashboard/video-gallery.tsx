@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Video as ProjectVideo } from "@prisma/client";
+import type { Video as ProjectVideo } from "@prisma/client";
 import { Video, X, Play } from "lucide-react";
 
 interface VideoGalleryProps {
@@ -24,8 +24,8 @@ export function VideoGallery({ videos }: VideoGalleryProps) {
                     <div className="p-4">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {videos.map((vid) => (
-                                <div 
-                                    key={vid.id} 
+                                <div
+                                    key={vid.id}
                                     onClick={() => setSelectedVideo(vid)}
                                     className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors cursor-pointer group"
                                 >
@@ -45,11 +45,11 @@ export function VideoGallery({ videos }: VideoGalleryProps) {
 
             {/* Modal Lecteur Vidéo */}
             {selectedVideo && (
-                <div 
+                <div
                     className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
                     onClick={() => setSelectedVideo(null)}
                 >
-                    <div 
+                    <div
                         className="bg-black rounded-xl overflow-hidden shadow-2xl max-w-4xl w-full"
                         onClick={(e) => e.stopPropagation()}
                     >
@@ -57,7 +57,7 @@ export function VideoGallery({ videos }: VideoGalleryProps) {
                             <h3 className="text-sm font-medium text-white truncate pr-4">
                                 {selectedVideo.title || "Vidéo"}
                             </h3>
-                            <button 
+                            <button
                                 onClick={() => setSelectedVideo(null)}
                                 className="p-1 hover:bg-gray-800 rounded-lg transition-colors"
                             >
@@ -65,8 +65,8 @@ export function VideoGallery({ videos }: VideoGalleryProps) {
                             </button>
                         </div>
                         <div className="aspect-video bg-black">
-                            <video 
-                                controls 
+                            <video
+                                controls
                                 autoPlay
                                 className="w-full h-full"
                                 src={selectedVideo.url}

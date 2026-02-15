@@ -2,7 +2,7 @@
 
 import AppLayout from "@/components/AppLayout";
 import { SlideshowManager } from "@/components/slideshow/SlideshowManager";
-import { UserRole } from "@prisma/client";
+import { UserRole } from "@/lib/enums";
 
 interface Project {
   id: string;

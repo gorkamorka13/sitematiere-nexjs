@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Users, X, UserCircle, Shield, Eye, EyeOff, Save, Trash2, Edit2, Plus, Palette, ChevronLeft } from "lucide-react";
-import { UserRole } from "@prisma/client";
+import { UserRole } from "@/lib/enums";
 import UserBadge from "./user-badge";
 
 interface User {
@@ -50,7 +50,7 @@ export default function SettingsDialogs({ isAdmin, isOpen, onClose }: SettingsDi
     username: "",
     name: "",
     password: "",
-    role: "USER" as UserRole,
+    role: UserRole.USER,
     color: "#6366f1",
   });
 
@@ -90,7 +90,7 @@ export default function SettingsDialogs({ isAdmin, isOpen, onClose }: SettingsDi
       if (response.ok) {
         await fetchUsers();
         setIsCreateMode(false);
-        setFormData({ username: "", name: "", password: "", role: "USER", color: "#6366f1" });
+        setFormData({ username: "", name: "", password: "", role: UserRole.USER, color: "#6366f1" });
         setShowPassword(false);
       } else {
         const error = await response.json();
@@ -119,7 +119,7 @@ export default function SettingsDialogs({ isAdmin, isOpen, onClose }: SettingsDi
       if (response.ok) {
         await fetchUsers();
         setEditingUser(null);
-        setFormData({ username: "", name: "", password: "", role: "USER", color: "#6366f1" });
+        setFormData({ username: "", name: "", password: "", role: UserRole.USER, color: "#6366f1" });
         setShowPassword(false);
       } else {
         const error = await response.json();
@@ -221,7 +221,7 @@ export default function SettingsDialogs({ isAdmin, isOpen, onClose }: SettingsDi
                     onClick={() => {
                       setIsCreateMode(true);
                       setEditingUser(null);
-                      setFormData({ username: "", name: "", password: "", role: "USER", color: "#6366f1" });
+                      setFormData({ username: "", name: "", password: "", role: UserRole.USER, color: "#6366f1" });
                       setShowPassword(false);
                     }}
                     className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors shadow-sm"

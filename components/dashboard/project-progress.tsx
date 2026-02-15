@@ -1,4 +1,4 @@
-import { Project } from "@prisma/client";
+import type { Project } from "@prisma/client";
 import { Ruler, Search, Factory, Truck, HardHat } from "lucide-react";
 
 interface ProjectProgressProps {

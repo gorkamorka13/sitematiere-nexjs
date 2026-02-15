@@ -1,4 +1,4 @@
-import { UserRole } from "@prisma/client";
+import { UserRole } from "./enums";
 import { JWT } from "next-auth/jwt";
 import { Session } from "next-auth";
 

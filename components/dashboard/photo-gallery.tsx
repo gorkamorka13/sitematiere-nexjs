@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { Project } from "@prisma/client";
+import type { Project } from "@prisma/client";
 import { ImageIcon, ChevronLeft, ChevronRight, SkipBack, Play, Pause, Square, SkipForward } from "lucide-react";
 import { normalizeImageUrl } from "@/lib/utils/image-url";
 
