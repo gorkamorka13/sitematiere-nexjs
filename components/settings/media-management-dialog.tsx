@@ -202,16 +202,16 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose} />
 
             {/* Modal Body */}
-            <div className="relative w-full max-w-6xl h-[90vh] bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-300 border border-gray-200 dark:border-gray-800">
+            <div className="relative w-full h-full lg:h-[90vh] lg:max-w-6xl bg-white dark:bg-gray-900 lg:rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-300 border border-gray-200 dark:border-gray-800">
                 {/* Header */}
-                <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-white dark:bg-gray-900 sticky top-0 z-10">
+                <div className="px-4 lg:px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-white dark:bg-gray-900 sticky top-0 z-10 shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl">
                             <ImageIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Gestion Média</h2>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Configurez le diaporama et les vidéos par projet</p>
+                            <h2 className="text-lg lg:text-xl font-bold text-gray-900 dark:text-white">Gestion Média</h2>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 hidden sm:block">Configurez le diaporama et les vidéos par projet</p>
                         </div>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors">
@@ -219,9 +219,12 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
                     </button>
                 </div>
 
-                <div className="flex-grow flex overflow-hidden">
+                <div className="flex-grow flex overflow-hidden relative">
                     {/* Sidebar: Projects List */}
-                    <div className="w-80 border-r border-gray-100 dark:border-gray-800 flex flex-col bg-gray-50/30 dark:bg-gray-900/30 shrink-0">
+                    <div className={`
+                        w-full lg:w-80 border-r border-gray-100 dark:border-gray-800 flex flex-col bg-gray-50/30 dark:bg-gray-900/30 shrink-0 transition-all duration-300 absolute inset-0 z-20 lg:static lg:z-auto
+                        ${selectedProjectId ? 'translate-x-full lg:translate-x-0 opacity-0 lg:opacity-100 pointer-events-none lg:pointer-events-auto' : 'translate-x-0 opacity-100'}
+                    `}>
                         <div className="p-4 space-y-4 border-b border-gray-100 dark:border-gray-800">
                             {/* Filters */}
                             <div className="space-y-3">
@@ -276,9 +279,9 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
                     </div>
 
                     {/* Main Content Area */}
-                    <div className="flex-grow flex flex-col overflow-hidden bg-white dark:bg-gray-900">
+                    <div className="flex-grow flex flex-col overflow-hidden bg-white dark:bg-gray-900 w-full">
                         {!selectedProjectId ? (
-                            <div className="flex-grow flex flex-col items-center justify-center text-gray-400 p-8 text-center">
+                            <div className="flex-grow hidden lg:flex flex-col items-center justify-center text-gray-400 p-8 text-center">
                                 <div className="w-20 h-20 bg-gray-50 dark:bg-gray-800/50 rounded-full flex items-center justify-center mb-6 animate-pulse">
                                     <Globe className="w-10 h-10 opacity-20" />
                                 </div>
@@ -288,40 +291,47 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
                         ) : (
                             <>
                                 {/* Project Toolbar */}
-                                <div className="px-6 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between shrink-0">
-                                    <div className="flex flex-col">
+                                <div className="px-4 lg:px-6 py-3 border-b border-gray-100 dark:border-gray-800 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 shrink-0">
+                                    <div className="flex flex-col w-full lg:w-auto">
+                                        <button
+                                            onClick={() => setInternalProjectId(null)}
+                                            className="lg:hidden flex items-center gap-1 text-[10px] font-bold text-gray-400 hover:text-gray-600 mb-2 uppercase tracking-wider"
+                                        >
+                                            <ArrowRight className="w-3 h-3 rotate-180" />
+                                            Retour aux projets
+                                        </button>
                                         <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest leading-none mb-1">PROJET SÉLECTIONNÉ</span>
                                         <h3 className="text-lg font-bold text-gray-900 dark:text-white truncate max-w-md">{selectedProject?.name}</h3>
                                     </div>
 
                                     {/* Tabs */}
-                                    <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl">
+                                    <div className="flex w-full lg:w-auto p-1 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-x-auto no-scrollbar">
                                         <button
                                             onClick={() => setActiveTab('photos')}
-                                            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'photos' ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+                                            className={`flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${activeTab === 'photos' ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
                                         >
-                                            <ImageIcon className="w-4 h-4" />
+                                            <ImageIcon className="w-4 h-4 shrink-0" />
                                             PHOTOS
                                         </button>
                                         <button
                                             onClick={() => setActiveTab('videos')}
-                                            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'videos' ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+                                            className={`flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${activeTab === 'videos' ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
                                         >
-                                            <VideoIcon className="w-4 h-4" />
+                                            <VideoIcon className="w-4 h-4 shrink-0" />
                                             VIDÉOS
                                         </button>
                                         <button
                                             onClick={() => setActiveTab('edit')}
-                                            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'edit' ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+                                            className={`flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${activeTab === 'edit' ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
                                         >
-                                            <Wand2 className="w-4 h-4" />
-                                            OUTILS IMAGES
+                                            <Wand2 className="w-4 h-4 shrink-0" />
+                                            OUTILS
                                         </button>
                                     </div>
                                 </div>
 
                                 {/* Tab Content */}
-                                <div className="flex-grow overflow-y-auto p-6">
+                                <div className="flex-grow overflow-y-auto p-4 lg:p-6">
                                     {activeTab === 'photos' ? (
                                         <SlideshowTab
                                             images={slideshowImages}

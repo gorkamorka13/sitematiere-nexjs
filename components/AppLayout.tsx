@@ -300,7 +300,7 @@ export default function AppLayout({
 
             {/* Main Content Area */}
             <main
-                className={`flex-grow transition-all duration-300
+                className={`flex-grow transition-all duration-300 ml-0
                     ${isSidebarCollapsed ? "lg:ml-20" : "lg:ml-64"}
                     min-w-0 pt-20 lg:pt-0 pb-12 lg:pb-0 px-2 sm:px-4`}
             >
