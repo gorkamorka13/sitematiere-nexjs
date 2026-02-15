@@ -80,7 +80,7 @@ export async function addSlideshowImage(projectId: string, imageId: string) {
       },
     });
 
-    revalidatePath("/slideshow");
+    revalidatePath("/");
     revalidatePath(`/slideshow/view/${projectId}`);
 
     return { success: true, slideshowImage };
@@ -191,7 +191,7 @@ export async function reorderSlideshowImages(projectId: string, orderedImageIds:
       )
     );
 
-    revalidatePath("/slideshow");
+    revalidatePath("/");
     revalidatePath(`/slideshow/view/${projectId}`);
 
     return { success: true };
@@ -218,7 +218,7 @@ export async function publishSlideshow(projectId: string) {
       data: { isPublished: true },
     });
 
-    revalidatePath("/slideshow");
+    revalidatePath("/");
     revalidatePath(`/slideshow/view/${projectId}`);
 
     return { success: true };
@@ -244,7 +244,7 @@ export async function unpublishSlideshow(projectId: string) {
       data: { isPublished: false },
     });
 
-    revalidatePath("/slideshow");
+    revalidatePath("/");
     revalidatePath(`/slideshow/view/${projectId}`);
 
     return { success: true };

@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { ImageFormat } from '@/types/image-processor';
-import { RotateCw, Crop, Download, Play, GripHorizontal } from 'lucide-react';
+import { RotateCw, Crop, Download, Play, GripHorizontal, Database } from 'lucide-react';
 import { calculateAspectRatio } from '@/lib/image-utils';
 
 interface ControlsProps {
@@ -187,17 +187,17 @@ export function Controls({
                     onClick={onDownload}
                     variant="secondary"
                     disabled={isProcessing}
-                    className="h-11 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 text-[11px] sm:text-xs px-2"
+                    className="h-11 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 text-sm font-bold px-4"
                 >
-                    <Download className="w-4 h-4 mr-2 hidden xs:block" /> Sur mon PC
+                    <Download className="w-4 h-4 mr-2" /> Sur mon PC
                 </Button>
                 <Button
                     onClick={() => window.dispatchUploadEvent?.()}
                     variant="secondary"
                     disabled={isProcessing}
-                    className="h-11 bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 text-[11px] sm:text-xs px-2"
+                    className="h-11 bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 text-sm font-bold px-4"
                 >
-                    <RotateCw className="w-4 h-4 mr-2 hidden xs:block" /> Sur la Base
+                    <Database className="w-4 h-4 mr-2" /> Sur la Base
                 </Button>
             </div>
         </div>

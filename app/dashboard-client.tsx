@@ -13,6 +13,8 @@ import { ProjectExportDialog } from "@/components/projects/project-export-dialog
 import AppLayout from "@/components/AppLayout";
 import ProjectManagementDialog from "@/components/settings/project-management-dialog";
 import FileManagementDialog from "@/components/settings/file-management-dialog";
+import MediaManagementDialog from "@/components/settings/media-management-dialog";
+import ImageManagementDialog from "@/components/settings/image-management-dialog";
 import SettingsDialogs from "@/components/settings/settings-dialogs";
 
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
@@ -20,7 +22,6 @@ import { ProjectProgress } from "@/components/dashboard/project-progress";
 import { ProjectDescription } from "@/components/dashboard/project-description";
 import { PhotoGallery } from "@/components/dashboard/photo-gallery";
 import { PdfViewer } from "@/components/dashboard/pdf-viewer";
-import { VideoGallery } from "@/components/dashboard/video-gallery";
 import { DashboardTable } from "@/components/dashboard/dashboard-table";
 
 type DashboardClientProps = {
@@ -64,6 +65,8 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
     const [projectManagementDefaultTab, setProjectManagementDefaultTab] = useState<'create' | 'modify' | 'delete'>('modify');
     const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
     const [isFileManagementOpen, setIsFileManagementOpen] = useState(false);
+    const [isMediaManagementOpen, setIsMediaManagementOpen] = useState(false);
+    const [isImageManagementOpen, setIsImageManagementOpen] = useState(false);
     const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
     const [projectToExport, setProjectToExport] = useState<ProjectWithDocuments | null>(null);
     const [mapNonce, setMapNonce] = useState<number>(0);
@@ -333,6 +336,8 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                 setIsProjectManagementOpen(true);
             }}
             onManageFiles={() => setIsFileManagementOpen(true)}
+            onManageMedia={() => setIsMediaManagementOpen(true)}
+            onManageImages={() => setIsImageManagementOpen(true)}
         >
             <div className="mx-auto max-w-[1800px] px-2 sm:px-4 py-6 lg:py-10">
                 <div className="mb-8">
@@ -430,6 +435,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                         key={selectedProject?.id || 'no-project'}
                         selectedProject={selectedProject}
                         dynamicImages={dynamicMedia.images}
+                        videos={(selectedProject as Project & { videos: ProjectVideo[] })?.videos || []}
                         isLoading={isLoadingMedia}
                     />
                 </div>
@@ -457,11 +463,6 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                             )}
                         </div>
                     </div>
-                )}
-
-                {/* Vidéos */}
-                {selectedProject && (selectedProject as Project & { videos: ProjectVideo[] }).videos?.length > 0 && (
-                    <VideoGallery videos={(selectedProject as Project & { videos: ProjectVideo[] }).videos} />
                 )}
 
                 {/* Results Table */}
@@ -501,6 +502,17 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                 isOpen={isFileManagementOpen}
                 isAdmin={user.role === "ADMIN"}
                 onClose={() => setIsFileManagementOpen(false)}
+            />
+
+            <MediaManagementDialog
+                isOpen={isMediaManagementOpen}
+                onClose={() => setIsMediaManagementOpen(false)}
+                projects={initialProjects}
+            />
+
+            <ImageManagementDialog
+                isOpen={isImageManagementOpen}
+                onClose={() => setIsImageManagementOpen(false)}
             />
 
             <SettingsDialogs

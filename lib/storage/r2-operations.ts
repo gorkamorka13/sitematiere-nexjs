@@ -63,6 +63,22 @@ export async function getSignedDownloadUrl(key: string, expiresIn = 3600): Promi
 }
 
 /**
+ * Get a signed URL for uploading a file
+ * @param key - Storage key (path) where the file will be stored
+ * @param contentType - MIME type of the file
+ * @param expiresIn - Expiration time in seconds (default: 1 hour)
+ * @returns Signed URL for PUT request
+ */
+export async function getSignedUploadUrl(key: string, contentType: string, expiresIn = 3600): Promise<string> {
+  const command = new PutObjectCommand({
+    Bucket: R2_BUCKET_NAME,
+    Key: key,
+    ContentType: contentType,
+  });
+  return await getSignedUrl(r2Client, command, { expiresIn });
+}
+
+/**
  * Extract the R2 key from a full URL
  * @param url - Full URL (either R2 public URL or API route)
  * @returns Storage key

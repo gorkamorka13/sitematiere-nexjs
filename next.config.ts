@@ -1,4 +1,4 @@
-import { PHASE_PRODUCTION_BUILD, PHASE_DEVELOPMENT_SERVER } from "next/constants";
+import { PHASE_PRODUCTION_BUILD } from "next/constants";
 import { execSync } from "child_process";
 import fs from "fs";
 import path from "path";
@@ -50,19 +50,19 @@ const autoIncrementVersion = (phase: string) => {
       return pkg.version;
     }
     return pkg.version;
-  } catch (e) {
+  } catch {
     return "0.0.1";
   }
 };
 
-export default (phase: string) => {
+const config = (phase: string) => {
   const version = autoIncrementVersion(phase);
 
   // Get git commit hash (short)
   let gitCommit = "no-git";
   try {
     gitCommit = execSync("git rev-parse --short HEAD", { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
-  } catch (e) {
+  } catch {
     // Silent fallback
   }
 
@@ -100,3 +100,5 @@ export default (phase: string) => {
 
   return nextConfig;
 };
+
+export default config;

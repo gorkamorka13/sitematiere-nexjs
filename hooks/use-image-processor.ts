@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import {
   ImageData,
   ProcessedImage,
@@ -45,7 +45,7 @@ export const useImageProcessor = (): UseImageProcessorReturn => {
   const [processedImage, setProcessedImage] = useState<ProcessedImage | null>(null);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [isCropping, setIsCropping] = useState<boolean>(false);
-  const [cropData, setCropData] = useState<CropData | null>(null);
+  const [cropData] = useState<CropData | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
 
   // Helper to add to history

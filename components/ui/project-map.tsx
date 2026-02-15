@@ -29,7 +29,7 @@ function MapResizer({ isFullScreen }: { isFullScreen: boolean }) {
     return null;
 }
 
-export default function ProjectMap({ latitude, longitude, status, projectName, country, customPinUrl, nonce, isCapture }: MapProps) {
+export default function ProjectMap({ latitude, longitude, status, projectName, customPinUrl, nonce, isCapture }: MapProps) {
     const tileUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
     const [isFullScreen, setIsFullScreen] = useState(false);
 
