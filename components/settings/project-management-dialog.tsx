@@ -310,7 +310,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
           flagName: flagDoc?.url || "",
           clientLogoName: logoDoc?.url || "",
           pinName: pinDoc?.url || "",
-          status: project.status || ProjectStatus.PROSPECT,
+          status: (project.status as unknown as ProjectStatus) || ProjectStatus.PROSPECT,
         });
         setStatus(null);
       }
