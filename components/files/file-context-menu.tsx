@@ -56,7 +56,7 @@ export function FileContextMenu({
         <div
             ref={menuRef}
             style={style}
-            className="fixed z-50 w-56 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md animate-in fade-in zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
+            className="fixed z-[1600] w-56 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md animate-in fade-in zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
         >
             <div className="px-2 py-1.5 border-b mb-1">
                 <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">

@@ -35,6 +35,10 @@ interface UseImageProcessorReturn {
   cancelCrop: () => void;
   downloadImage: () => void;
   loadFromHistory: (index: number) => void;
+  undo: () => void;
+  redo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
   setIsProcessing: (isProcessing: boolean) => void;
   reset: () => void;
 }
@@ -47,6 +51,7 @@ export const useImageProcessor = (): UseImageProcessorReturn => {
   const [isCropping, setIsCropping] = useState<boolean>(false);
   const [cropData] = useState<CropData | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [redoStack, setRedoStack] = useState<ImageData[]>([]);
 
   // Helper to add to history
   const addToHistory = useCallback((action: string, details: string, newImage: ImageData) => {
@@ -59,6 +64,7 @@ export const useImageProcessor = (): UseImageProcessorReturn => {
       imageData: newImage
     };
     setHistory(prev => [newItem, ...prev].slice(0, 10));
+    setRedoStack([]); // Clear redo stack on new action
   }, []);
 
   const loadImage = useCallback(async (file: File) => {
@@ -76,6 +82,7 @@ export const useImageProcessor = (): UseImageProcessorReturn => {
       setCurrentImage(imageData);
       setProcessedImage(null);
       setHistory([]);
+      setRedoStack([]);
     } catch (error) {
       console.error("Failed to load image", error);
     } finally {
@@ -219,14 +226,55 @@ export const useImageProcessor = (): UseImageProcessorReturn => {
     if (item) {
       setCurrentImage(item.imageData);
       setProcessedImage(null);
+      setRedoStack([]); // Loading from history restarts the chain
     }
   }, [history]);
+
+  const undo = useCallback(() => {
+    if (history.length > 0 && currentImage) {
+      const lastItem = history[0];
+      const newHistory = history.slice(1);
+
+      setRedoStack(prev => [currentImage, ...prev]);
+      setHistory(newHistory);
+
+      // If there's a previous item in the new history, that's our new current
+      // Otherwise it's the original image
+      if (newHistory.length > 0) {
+        setCurrentImage(newHistory[0].imageData);
+      } else if (originalImage) {
+        setCurrentImage(originalImage);
+      }
+    }
+  }, [history, currentImage, originalImage]);
+
+  const redo = useCallback(() => {
+    if (redoStack.length > 0 && currentImage) {
+      const nextImage = redoStack[0];
+      const newRedoStack = redoStack.slice(1);
+
+      // Add current to history before moving forward
+      const newItem: HistoryItem = {
+        id: crypto.randomUUID(),
+        action: 'Redo',
+        details: 'Rétablissement de l\'action',
+        thumbnail: nextImage.src,
+        timestamp: new Date(),
+        imageData: nextImage
+      };
+
+      setHistory(prev => [newItem, ...prev]);
+      setRedoStack(newRedoStack);
+      setCurrentImage(nextImage);
+    }
+  }, [redoStack, currentImage]);
 
   const reset = useCallback(() => {
     setOriginalImage(null);
     setCurrentImage(null);
     setProcessedImage(null);
     setHistory([]);
+    setRedoStack([]);
     setIsCropping(false);
   }, []);
 
@@ -248,6 +296,10 @@ export const useImageProcessor = (): UseImageProcessorReturn => {
     cancelCrop,
     downloadImage,
     loadFromHistory,
+    undo,
+    redo,
+    canUndo: history.length > 0,
+    canRedo: redoStack.length > 0,
     setIsProcessing,
     reset
   };

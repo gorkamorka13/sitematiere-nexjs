@@ -2,7 +2,7 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Trash2, CheckCircle2, Clock } from 'lucide-react';
+import { GripVertical, Trash2, CheckCircle2, Clock, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { normalizeImageUrl } from '@/lib/utils/image-url';
@@ -16,6 +16,7 @@ interface SortableImageCardProps {
   };
   isPublished: boolean;
   onRemove: () => void;
+  onEdit?: () => void;
 }
 
 export function SortableImageCard({
@@ -23,6 +24,7 @@ export function SortableImageCard({
   image,
   isPublished,
   onRemove,
+  onEdit,
 }: SortableImageCardProps) {
   const {
     attributes,
@@ -107,8 +109,25 @@ export function SortableImageCard({
         )}
       </div>
 
-      {/* Remove Button - Two-step confirmation logic */}
-      <div className="relative">
+      {/* Action Buttons */}
+      <div className="flex items-center gap-2">
+        {onEdit && (
+            <Button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit();
+                }}
+                variant="ghost"
+                size="sm"
+                className="flex items-center gap-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 px-3 h-9"
+            >
+                <Wand2 className="w-4 h-4" />
+                <span className="text-[10px] font-bold uppercase">Retoucher</span>
+            </Button>
+        )}
+
+        {/* Remove Button - Two-step confirmation logic */}
+        <div className="relative">
         <Button
           type="button"
           onMouseDown={(e) => {
@@ -146,6 +165,7 @@ export function SortableImageCard({
             Supprimer ?
           </span>
         </Button>
+        </div>
       </div>
     </div>
   );

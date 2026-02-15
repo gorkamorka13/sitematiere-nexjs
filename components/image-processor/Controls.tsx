@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { ImageFormat } from '@/types/image-processor';
-import { RotateCw, Crop, Download, Play, GripHorizontal, Database } from 'lucide-react';
+import { RotateCw, Crop, Download, Play, GripHorizontal, Database, Undo2, Redo2 } from 'lucide-react';
 import { calculateAspectRatio } from '@/lib/image-utils';
 
 interface ControlsProps {
@@ -23,6 +23,10 @@ interface ControlsProps {
   onResize: (width: number, height: number, quality: number, format: ImageFormat) => void;
   onCrop: () => void;
   onDownload: () => void;
+  onUndo: () => void;
+  onRedo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
   isProcessing: boolean;
 }
 
@@ -31,6 +35,10 @@ export function Controls({
   onResize,
   onCrop,
   onDownload,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
   isProcessing
 }: ControlsProps) {
   const [width, setWidth] = useState<number>(0);
@@ -73,6 +81,32 @@ export function Controls({
 
   return (
     <div className="space-y-6 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+
+      {/* 0. History (Undo / Redo) */}
+      <div className="flex items-center gap-2 mb-2">
+        <Button
+            onClick={onUndo}
+            disabled={!canUndo || isProcessing}
+            variant="outline"
+            size="sm"
+            className="flex-1 h-9 bg-gray-50/50 dark:bg-gray-900/30 font-bold hover:bg-gray-100 dark:hover:bg-gray-800 transition-all border-dashed"
+            title="Annuler (Ctrl+Z)"
+        >
+            <Undo2 className="w-4 h-4 mr-2" /> Annuler
+        </Button>
+        <Button
+            onClick={onRedo}
+            disabled={!canRedo || isProcessing}
+            variant="outline"
+            size="sm"
+            className="flex-1 h-9 bg-gray-50/50 dark:bg-gray-900/30 font-bold hover:bg-gray-100 dark:hover:bg-gray-800 transition-all border-dashed"
+            title="Rétablir (Ctrl+Y)"
+        >
+            <Redo2 className="w-4 h-4 mr-2" /> Rétablir
+        </Button>
+      </div>
+
+      <div className="h-px bg-gray-100 dark:bg-gray-700 my-4" />
 
       {/* 1. Dimensions */}
       <div className="space-y-4">

@@ -53,7 +53,7 @@ export function FileMoveDialog({ fileIds, currentProjectId, onClose, onMove }: F
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[1800] flex items-center justify-center bg-black/50 backdrop-blur-sm">
             <div className="bg-background p-6 rounded-lg shadow-xl w-full max-w-md border">
                 <h3 className="text-lg font-semibold mb-2">Déplacer les fichiers</h3>
                 <p className="text-sm text-muted-foreground mb-4">

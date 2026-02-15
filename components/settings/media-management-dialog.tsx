@@ -16,10 +16,21 @@ import {
     Youtube,
     Link as LinkIcon,
     AlertCircle,
-    PlayCircle
+    PlayCircle,
+    Wand2,
+    Undo2,
+    Redo2,
+    Monitor,
+    Zap
 } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
+import { useImageProcessor } from '@/hooks/use-image-processor';
+import { DropZone } from '@/components/image-processor/DropZone';
+import { Controls } from '@/components/image-processor/Controls';
+import { CropTool } from '@/components/image-processor/CropTool';
+import { ImagePreview } from '@/components/image-processor/ImagePreview';
+import { Comparison } from '@/components/image-processor/Comparison';
 import {
     DndContext,
     closestCenter,
@@ -55,11 +66,15 @@ interface MediaManagementDialogProps {
     isOpen: boolean;
     onClose: () => void;
     projects: Project[];
+    defaultTab?: 'photos' | 'videos' | 'edit';
 }
 
-export default function MediaManagementDialog({ isOpen, onClose, projects }: MediaManagementDialogProps) {
-    const [activeTab, setActiveTab] = useState<'photos' | 'videos'>('photos');
+export default function MediaManagementDialog({ isOpen, onClose, projects, defaultTab = 'photos' }: MediaManagementDialogProps) {
+    const [activeTab, setActiveTab] = useState<'photos' | 'videos' | 'edit'>(defaultTab);
     const [selectedProjectId, setInternalProjectId] = useState<string | null>(null);
+
+    // Image Processor hook
+    const processor = useImageProcessor();
 
     // Slideshow state
     const {
@@ -88,6 +103,13 @@ export default function MediaManagementDialog({ isOpen, onClose, projects }: Med
     // Filter state
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCountry, setSelectedCountry] = useState('');
+
+    // Sync active tab when defaultTab changes (from external trigger)
+    useEffect(() => {
+        if (isOpen && defaultTab) {
+            setActiveTab(defaultTab);
+        }
+    }, [isOpen, defaultTab]);
 
     // Sync internal project ID with hook
     useEffect(() => {
@@ -135,6 +157,12 @@ export default function MediaManagementDialog({ isOpen, onClose, projects }: Med
             setToast({ message: result.error || 'Erreur', type: 'error' });
         }
     };
+
+    const handleRetouch = useCallback(async (imageUrl: string, filename: string) => {
+        setToast({ message: 'Chargement de l\'image dans l\'éditeur...', type: 'success' });
+        await processor.loadImageFromUrl(imageUrl, filename);
+        setActiveTab('edit');
+    }, [processor]);
 
     // Load media when project changes
     useEffect(() => {
@@ -284,6 +312,13 @@ export default function MediaManagementDialog({ isOpen, onClose, projects }: Med
                                             <VideoIcon className="w-4 h-4" />
                                             VIDÉOS
                                         </button>
+                                        <button
+                                            onClick={() => setActiveTab('edit')}
+                                            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'edit' ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+                                        >
+                                            <Wand2 className="w-4 h-4" />
+                                            OUTILS IMAGES
+                                        </button>
                                     </div>
                                 </div>
 
@@ -301,8 +336,9 @@ export default function MediaManagementDialog({ isOpen, onClose, projects }: Med
                                             onAdd={() => {}} // Handle this via DatabaseImagePicker
                                             addImage={addImage}
                                             projectName={selectedProject?.name}
+                                            onRetouch={handleRetouch}
                                         />
-                                    ) : (
+                                    ) : activeTab === 'videos' ? (
                                         <VideosTab
                                             videos={videos}
                                             loading={loadingVideos}
@@ -316,6 +352,15 @@ export default function MediaManagementDialog({ isOpen, onClose, projects }: Med
                                             projectId={selectedProjectId}
                                             onRefresh={fetchVideos}
                                             setToast={setToast}
+                                        />
+                                    ) : (
+                                        <EditTab
+                                            processor={processor}
+                                            projectId={selectedProjectId}
+                                            onSuccess={() => {
+                                                loadSlideshowImages();
+                                                setActiveTab('photos');
+                                            }}
                                         />
                                     )}
                                 </div>
@@ -350,6 +395,7 @@ interface SlideshowTabProps {
     onAdd: () => void;
     addImage: (url: string, name: string, fileId: string) => Promise<boolean>;
     projectName?: string;
+    onRetouch: (url: string, filename: string) => void;
 }
 
 function SlideshowTab({
@@ -361,7 +407,8 @@ function SlideshowTab({
     onRemove,
     onReorder,
     addImage,
-    projectName
+    projectName,
+    onRetouch
 }: SlideshowTabProps) {
     const [showPicker, setShowPicker] = useState(false);
     const [showPreview, setShowPreview] = useState(false);
@@ -459,6 +506,7 @@ function SlideshowTab({
                                     image={img.image}
                                     isPublished={img.isPublished}
                                     onRemove={() => onRemove(img.id)}
+                                    onEdit={() => onRetouch(img.image.url, img.image.alt || 'photo.jpg')}
                                 />
                             ))}
                         </div>
@@ -795,6 +843,217 @@ function VideoDropzone({ projectId, onSuccess, onError }: VideoDropzoneProps) {
                     </div>
                 </div>
             )}
+        </div>
+    );
+}
+
+interface EditTabProps {
+    processor: ReturnType<typeof useImageProcessor>;
+    projectId: string | null;
+    onSuccess: () => void;
+}
+
+function EditTab({ processor, projectId, onSuccess }: EditTabProps) {
+    const [isSaving, setIsSaving] = useState(false);
+    const [showDatabasePicker, setShowDatabasePicker] = useState(false);
+
+    const handleSaveToDatabase = async () => {
+        if (!processor.currentImage || !projectId) return;
+        setIsSaving(true);
+
+        try {
+            // Get the image data
+            const res = await fetch(processor.currentImage.src);
+            if (!res.ok) throw new Error("Failed to fetch image data");
+            const actualBlob = await res.blob();
+
+            // Prepare filename
+            const ext = processor.currentImage.src.split(';')[0].split('/')[1] || 'png';
+            const baseName = processor.originalImage?.file?.name.replace(/\.[^/.]+$/, "") || `edit_${Date.now()}`;
+            const filename = `mod_${baseName}.${ext}`;
+
+            const file = new File([actualBlob], filename, { type: actualBlob.type });
+
+            // Upload
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('projectId', projectId);
+
+            const uploadRes = await fetch('/api/files/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await uploadRes.json();
+            if (result.success && result.files && result.files.length > 0) {
+                // Add to slideshow
+                const { addImageToSlideshow } = await import('@/app/actions/slideshow-actions');
+                const addRes = await addImageToSlideshow(projectId, result.files[0].id);
+
+                if (addRes.success) {
+                    onSuccess();
+                } else {
+                    throw new Error(addRes.error || "Erreur lors de l'ajout au diaporama");
+                }
+            } else {
+                throw new Error(result.error || "Erreur lors du téléversement");
+            }
+        } catch (error) {
+            console.error("Save error:", error);
+            alert(error instanceof Error ? error.message : "Une erreur est survenue");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    // Override the global dispatchUploadEvent for the Controls component
+    useEffect(() => {
+        window.dispatchUploadEvent = handleSaveToDatabase;
+        return () => {
+            window.dispatchUploadEvent = undefined;
+        };
+    }, [processor.currentImage, projectId]);
+
+    if (!processor.originalImage) {
+        return (
+            <div className="h-full flex flex-col items-center justify-center py-12">
+                <DropZone onImageLoad={processor.loadImage} isLoading={processor.isProcessing} />
+                <div className="mt-8 flex gap-4">
+                    <Button
+                        variant="outline"
+                        onClick={() => setShowDatabasePicker(true)}
+                        className="text-xs font-bold uppercase tracking-widest px-6 h-11 border-dashed"
+                    >
+                        <ImageIcon className="w-4 h-4 mr-2" />
+                        BIBLIOTHÈQUE (R2)
+                    </Button>
+                </div>
+
+                <DatabaseImagePicker
+                    isOpen={showDatabasePicker}
+                    onClose={() => setShowDatabasePicker(false)}
+                    onSelect={(url) => {
+                        processor.loadImageFromUrl(url, url.split('/').pop() || 'image.jpg');
+                        setShowDatabasePicker(false);
+                    }}
+                />
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-6 relative h-full flex flex-col">
+            {/* Status & Validation Bar */}
+            {processor.processedImage && (
+                <div className="flex items-center justify-between bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 p-3 rounded-2xl animate-in fade-in slide-in-from-top-2">
+                    <div className="flex flex-col items-start px-2">
+                        <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Aperçu des modifications</span>
+                        <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                            {processor.processedImage.tempAction} : {processor.processedImage.tempDetails}
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="sm" onClick={processor.cancelProcessedImage} className="text-xs font-bold uppercase tracking-wider">
+                            Annuler
+                        </Button>
+                        <Button size="sm" onClick={processor.commitProcessedImage} className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold uppercase tracking-wider">
+                            Valider
+                        </Button>
+                    </div>
+                </div>
+            )}
+
+            {isSaving && (
+                <div className="absolute inset-0 z-50 bg-white/50 backdrop-blur-sm flex items-center justify-center rounded-3xl">
+                    <div className="flex flex-col items-center gap-4">
+                        <Loader2 className="w-10 h-10 animate-spin text-indigo-600" />
+                        <p className="font-bold text-gray-900">Enregistrement...</p>
+                    </div>
+                </div>
+            )}
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-grow ">
+                <div className="lg:col-span-1 space-y-4">
+                    <Controls
+                        originalDimensions={processor.currentImage ? { width: processor.currentImage.width, height: processor.currentImage.height } : null}
+                        onResize={processor.resizeImageAction}
+                        onCrop={processor.enableCrop}
+                        onDownload={processor.downloadImage}
+                        onUndo={processor.undo}
+                        onRedo={processor.redo}
+                        canUndo={processor.canUndo}
+                        canRedo={processor.canRedo}
+                        isProcessing={processor.isProcessing}
+                    />
+
+                    <div className="p-4 bg-amber-50 dark:bg-amber-900/10 rounded-2xl border border-amber-100 dark:border-amber-900/30">
+                        <div className="flex items-center gap-3 mb-2">
+                            <Zap className="w-4 h-4 text-amber-500" />
+                            <span className="text-xs font-bold text-amber-900 dark:text-amber-300 uppercase tracking-widest">MODE ÉDITION</span>
+                        </div>
+                        <p className="text-[10px] text-amber-700 dark:text-amber-400 leading-relaxed font-medium">
+                            Vous travaillez sur une copie. Cliquez sur &quot;Sur la Base&quot; pour enregistrer et ajouter l&apos;image au diaporama.
+                        </p>
+                    </div>
+
+                    <Button
+                        variant="ghost"
+                        onClick={processor.reset}
+                        className="w-full text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-red-500 hover:bg-red-50"
+                    >
+                        Abandonner l&apos;édition
+                    </Button>
+                </div>
+
+                <div className="lg:col-span-2 flex flex-col h-full bg-gray-50/50 dark:bg-gray-900/50 rounded-3xl border border-gray-100 dark:border-gray-800/50 overflow-hidden min-h-[500px]">
+                    <div className="flex-grow p-4 lg:p-8 flex items-center justify-center">
+                        {processor.processedImage ? (
+                            <Comparison original={processor.originalImage} processed={processor.processedImage} />
+                        ) : (
+                            processor.currentImage && (
+                                <ImagePreview
+                                    imageSrc={processor.currentImage.src}
+                                    title="Résultat actuel"
+                                    size={processor.currentImage.size}
+                                    dimensions={{ width: processor.currentImage.width, height: processor.currentImage.height }}
+                                    filename={processor.originalImage.file.name}
+                                />
+                            )
+                        )}
+                    </div>
+
+                    <div className="px-6 py-4 bg-white/50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <Monitor className="w-4 h-4 text-gray-400" />
+                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Aperçu temps réel</span>
+                        </div>
+                        <div className="text-[10px] font-mono text-gray-400">
+                            {processor.currentImage?.width}x{processor.currentImage?.height} • {Math.round((processor.currentImage?.size || 0) / 1024)} KB
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Crop Overlay */}
+            {processor.isCropping && processor.currentImage && (
+                <div className="absolute inset-0 z-[1300] bg-black/80 backdrop-blur-sm rounded-3xl overflow-hidden animate-in fade-in duration-300">
+                    <CropTool
+                        imageSrc={processor.currentImage.src}
+                        onApply={processor.applyCrop}
+                        onCancel={processor.cancelCrop}
+                    />
+                </div>
+            )}
+
+            {/* Database Picker */}
+            <DatabaseImagePicker
+                isOpen={showDatabasePicker}
+                onClose={() => setShowDatabasePicker(false)}
+                onSelect={(url) => {
+                    processor.loadImageFromUrl(url, url.split('/').pop() || 'image.jpg');
+                    setShowDatabasePicker(false);
+                }}
+            />
         </div>
     );
 }

@@ -79,7 +79,7 @@ export function FilePreviewModal({ file, files, onClose, onNavigate }: FilePrevi
     };
 
     return (
-        <div className="fixed inset-0 z-[200] flex flex-col bg-black/95 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[1700] flex flex-col bg-black/95 backdrop-blur-sm animate-in fade-in duration-200">
             {/* Header */}
             <div className="flex items-center justify-between p-4 text-white z-10 bg-black/50">
                 <div className="flex flex-col">

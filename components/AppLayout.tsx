@@ -39,8 +39,7 @@ interface AppLayoutProps {
     onManageUsers?: () => void;
     onManageProjects?: (tab: 'create' | 'modify' | 'delete') => void;
     onManageFiles?: () => void;
-    onManageMedia?: () => void;
-    onManageImages?: () => void;
+    onManageMedia?: (tab?: 'photos' | 'videos' | 'edit') => void;
 }
 
 const getRoleLabel = (role: UserRole) => {
@@ -62,8 +61,7 @@ export default function AppLayout({
     onManageUsers,
     onManageProjects,
     onManageFiles,
-    onManageMedia,
-    onManageImages
+    onManageMedia
 }: AppLayoutProps) {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -267,7 +265,7 @@ export default function AppLayout({
                             </button>
                             <button
                                 onClick={() => {
-                                    onManageImages?.();
+                                    onManageMedia?.('edit');
                                     setIsMobileMenuOpen(false);
                                 }}
                                 className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer ${isActive('/image-processor') ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold" : "hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400"} ${isSidebarCollapsed ? "justify-center" : ""}`}
@@ -277,7 +275,7 @@ export default function AppLayout({
                             </button>
                             <button
                                 onClick={() => {
-                                    onManageMedia?.();
+                                    onManageMedia?.('photos');
                                     setIsMobileMenuOpen(false);
                                 }}
                                 className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer ${isActive('/slideshow') ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold" : "hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400"} ${isSidebarCollapsed ? "justify-center" : ""}`}

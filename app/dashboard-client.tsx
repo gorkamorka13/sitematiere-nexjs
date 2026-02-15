@@ -14,7 +14,6 @@ import AppLayout from "@/components/AppLayout";
 import ProjectManagementDialog from "@/components/settings/project-management-dialog";
 import FileManagementDialog from "@/components/settings/file-management-dialog";
 import MediaManagementDialog from "@/components/settings/media-management-dialog";
-import ImageManagementDialog from "@/components/settings/image-management-dialog";
 import SettingsDialogs from "@/components/settings/settings-dialogs";
 
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
@@ -66,7 +65,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
     const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
     const [isFileManagementOpen, setIsFileManagementOpen] = useState(false);
     const [isMediaManagementOpen, setIsMediaManagementOpen] = useState(false);
-    const [isImageManagementOpen, setIsImageManagementOpen] = useState(false);
+    const [activeMediaTab, setActiveMediaTab] = useState<'photos' | 'videos' | 'edit'>('photos');
     const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
     const [projectToExport, setProjectToExport] = useState<ProjectWithDocuments | null>(null);
     const [mapNonce, setMapNonce] = useState<number>(0);
@@ -336,8 +335,10 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                 setIsProjectManagementOpen(true);
             }}
             onManageFiles={() => setIsFileManagementOpen(true)}
-            onManageMedia={() => setIsMediaManagementOpen(true)}
-            onManageImages={() => setIsImageManagementOpen(true)}
+            onManageMedia={(tab?: 'photos' | 'videos' | 'edit') => {
+                if (tab) setActiveMediaTab(tab);
+                setIsMediaManagementOpen(true);
+            }}
         >
             <div className="mx-auto max-w-[1800px] px-2 sm:px-4 py-6 lg:py-10">
                 <div className="mb-8">
@@ -508,11 +509,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                 isOpen={isMediaManagementOpen}
                 onClose={() => setIsMediaManagementOpen(false)}
                 projects={initialProjects}
-            />
-
-            <ImageManagementDialog
-                isOpen={isImageManagementOpen}
-                onClose={() => setIsImageManagementOpen(false)}
+                defaultTab={activeMediaTab}
             />
 
             <SettingsDialogs
