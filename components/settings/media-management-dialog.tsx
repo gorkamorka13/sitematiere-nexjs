@@ -197,7 +197,7 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 lg:p-8 outline-none">
+        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-4 lg:p-8 outline-none pt-16 sm:pt-4">
             {/* Backdrop */}
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose} />
 
@@ -716,7 +716,7 @@ function VideosTab({
 
             {/* Video Player Preview Overlay */}
             {previewVideo && (
-                <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-300" onClick={() => setPreviewVideo(null)}>
+                <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-300" onClick={() => setPreviewVideo(null)}>
                     <div className="relative max-w-5xl w-full aspect-video bg-black rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300" onClick={e => e.stopPropagation()}>
                         <button
                             onClick={() => setPreviewVideo(null)}
@@ -1044,7 +1044,7 @@ function EditTab({ processor, projectId, onSuccess }: EditTabProps) {
 
             {/* Crop Overlay */}
             {processor.isCropping && processor.currentImage && (
-                <div className="absolute inset-0 z-[1300] bg-black/80 backdrop-blur-sm rounded-3xl overflow-hidden animate-in fade-in duration-300">
+                <div className="absolute inset-0 z-[120] bg-black/80 backdrop-blur-sm rounded-3xl overflow-hidden animate-in fade-in duration-300">
                     <CropTool
                         imageSrc={processor.currentImage.src}
                         onApply={processor.applyCrop}

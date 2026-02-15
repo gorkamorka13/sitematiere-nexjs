@@ -98,7 +98,7 @@ export function PhotoGallery({ selectedProject, dynamicImages = [], videos = [],
     }
 
     const galleryContent = (
-        <div className={isFullScreen ? "fixed inset-0 z-[999] bg-white dark:bg-gray-950 p-4 animate-in fade-in zoom-in-95 duration-200" : "relative h-full"}>
+        <div className={isFullScreen ? "fixed inset-0 z-[1000] bg-white dark:bg-gray-950 p-4 pt-20 lg:pt-4 animate-in fade-in zoom-in-95 duration-200" : "relative h-full"}>
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col h-full transition-all duration-300">
                 {/* Header with Tabs */}
                 <div className="border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50 px-4 py-2 flex items-center justify-between z-10 transition-colors">
