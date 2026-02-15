@@ -231,7 +231,7 @@ export default function SettingsDialogs({ isAdmin, isOpen, onClose }: SettingsDi
                     className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors shadow-sm"
                   >
                     <Plus className="w-4 h-4" />
-                    Ajouter un membre
+                    Ajouter un utilisateur
                   </button>
                 )}
                 <button

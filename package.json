@@ -1,6 +1,6 @@
 {
   "name": "sitematiere-nexjs",
-  "version": "0.1.68",
+  "version": "0.1.72",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -15,7 +15,7 @@
     "migrate:r2": "tsx scripts/migrate-local-to-r2.ts",
     "migrate:r2:update-db": "tsx scripts/migrate-local-to-r2.ts --update-db",
     "migrate:remaining": "tsx scripts/migrate-remaining.ts",
-    "test": "npx tsc --noEmit && npm run lint && next build"
+    "test": "npx rimraf .next && npx tsc --noEmit && npm run lint && next build"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
