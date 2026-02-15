@@ -197,7 +197,7 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-4 lg:p-8 outline-none pt-16 sm:pt-4">
+        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-4 lg:p-8 outline-none pt-16 sm:pt-4 lg:pl-72">
             {/* Backdrop */}
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose} />
 
