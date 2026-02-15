@@ -21,7 +21,8 @@ export async function testR2Connection(): Promise<{ success: boolean; message: s
       Bucket: R2_BUCKET_NAME,
       MaxKeys: 1,
     });
-    const listResult = await r2Client.send(listCommand);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const listResult = await (r2Client as any).send(listCommand);
     console.log('✅ Connexion lecture OK -', listResult.KeyCount || 0, 'fichiers trouvés');
 
     // Test 3: Upload fichier test (test écriture)
@@ -34,7 +35,8 @@ export async function testR2Connection(): Promise<{ success: boolean; message: s
       Body: testContent,
       ContentType: 'text/plain',
     });
-    await r2Client.send(putCommand);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (r2Client as any).send(putCommand);
     console.log('✅ Upload test OK - Key:', testKey);
 
     // Test 4: Supprimer fichier test (test suppression)
@@ -42,7 +44,8 @@ export async function testR2Connection(): Promise<{ success: boolean; message: s
       Bucket: R2_BUCKET_NAME,
       Key: testKey,
     });
-    await r2Client.send(deleteCommand);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (r2Client as any).send(deleteCommand);
     console.log('✅ Suppression test OK');
 
     return {

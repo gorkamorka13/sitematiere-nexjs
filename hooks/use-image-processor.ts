@@ -232,7 +232,6 @@ export const useImageProcessor = (): UseImageProcessorReturn => {
 
   const undo = useCallback(() => {
     if (history.length > 0 && currentImage) {
-      const lastItem = history[0];
       const newHistory = history.slice(1);
 
       setRedoStack(prev => [currentImage, ...prev]);
