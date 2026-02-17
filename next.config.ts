@@ -58,10 +58,13 @@ const config = () => {
       if (isServer) {
         config.module = config.module || {};
         config.module.rules = config.module.rules || [];
-        config.module.rules.push({
-          test: /wasm-edge-light-loader\.mjs$/,
-          use: 'ignore-loader',
-        });
+        // Only ignore Prisma's WASM loader on Windows local dev to avoid "Unexpected character" error
+        if (!process.env.CF_PAGES && process.platform === 'win32') {
+          config.module.rules.push({
+            test: /wasm-edge-light-loader\.mjs$/,
+            use: 'ignore-loader',
+          });
+        }
 
         config.experiments = {
           ...config.experiments,
