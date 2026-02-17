@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma";
 import { sanitizeFileName } from "@/lib/files/validation";
 
 
-// export const runtime = 'edge'; // Commenté pour le dev local
+export const runtime = 'edge';
 
 
 export async function PATCH(

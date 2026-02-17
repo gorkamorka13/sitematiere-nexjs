@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
+
+export const runtime = 'edge';
 import prisma from '@/lib/prisma';
 
 export async function GET() {
   try {
     // Simple health check query
     await prisma.$queryRaw`SELECT 1`;
-    
+
     return NextResponse.json({
       status: 'ok',
       health: { success: true, message: "Connection OK" },

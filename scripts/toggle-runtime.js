@@ -28,11 +28,10 @@ const files = [
     'app/api/create-user/route.ts',
     'app/api/debug/route.ts',
     'app/api/debug/auth/route.ts',
+    'app/api/debug/health/route.ts',
     'app/api/projects/route.ts',
     'app/api/proxy/route.ts',
     'app/(auth)/login/page.tsx',
-    'app/image-processor/page.tsx',
-    'app/slideshow/page.tsx',
     'app/slideshow/view/[projectId]/page.tsx',
     'app/export-db/page.tsx'
 ];

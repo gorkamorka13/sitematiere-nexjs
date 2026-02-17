@@ -18,7 +18,7 @@ interface DebugInfo {
   };
 }
 
-// export const runtime = 'edge'; // Commenté pour le dev local
+export const runtime = 'edge';
 
 export async function GET() {
   const debugInfo: DebugInfo = {
