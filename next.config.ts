@@ -34,6 +34,8 @@ const config = () => {
       NEXT_PUBLIC_R2_PUBLIC_URL: process.env.NEXT_PUBLIC_R2_PUBLIC_URL || "",
     },
     images: {
+      // Désactive l'optimisation d'image pour Cloudflare Workers (l'API _next/image ne fonctionne pas sur Workers)
+      unoptimized: true,
       remotePatterns: [
         {
           protocol: 'https',
