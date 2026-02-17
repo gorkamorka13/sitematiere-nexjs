@@ -1,40 +1,42 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaNeon } from '@prisma/adapter-neon';
 
-let prisma: PrismaClient;
+const createEdgeClient = () => {
+  if (!process.env.DATABASE_URL) {
+    throw new Error('DATABASE_URL is not set for Edge runtime');
+  }
+  const adapter = new PrismaNeon({ connectionString: process.env.DATABASE_URL });
+  return new PrismaClient({ adapter });
+};
 
-console.log(`[Prisma_Init] Runtime: ${process.env.NEXT_RUNTIME}, CF_PAGES: ${process.env.CF_PAGES}`);
+// Use a Proxy to handle the Edge vs Node.js runtime differences transparently
+const prisma = new Proxy({} as PrismaClient, {
+  get(target, prop) {
+    // Determine runtime
+    const isEdge = process.env.NEXT_RUNTIME === 'edge' || process.env.CF_PAGES === '1';
 
-if (process.env.NEXT_RUNTIME === 'edge' || process.env.CF_PAGES === '1') {
-  // Edge runtime - use Neon adapter
-  console.log('[Prisma_Init] Initializing Edge runtime client with Neon adapter');
-  try {
-    if (!process.env.DATABASE_URL) {
-      console.error('[Prisma_Init] CRITICAL: DATABASE_URL is missing in Edge runtime');
-      throw new Error('DATABASE_URL is not set for Edge runtime');
+    let client: PrismaClient;
+
+    if (isEdge) {
+      // In Edge/Cloudflare, we MUST create a fresh client to ensure the I/O context
+      // is correct for the current request, avoiding "Cannot perform I/O on behalf
+      // of a different request".
+      client = createEdgeClient();
+    } else {
+      // In Node.js, we use a global singleton to avoid exhausting connections
+      const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined };
+      if (!globalForPrisma.prisma) {
+        globalForPrisma.prisma = new PrismaClient();
+      }
+      client = globalForPrisma.prisma;
     }
 
-    const connectionString = process.env.DATABASE_URL;
-    console.log('[Prisma_Init] Creating PrismaNeon adapter...');
-    const adapter = new PrismaNeon({ connectionString });
-
-    console.log('[Prisma_Init] Creating PrismaClient instance...');
-    prisma = new PrismaClient({ adapter });
-    console.log('[Prisma_Init] PrismaClient instance created successfully');
-  } catch (error) {
-    console.error('[Prisma_Init] FAILED to initialize Prisma client:', error);
-    throw error;
+    const value = client[prop as keyof PrismaClient];
+    if (typeof value === 'function') {
+      return (value as Function).bind(client);
+    }
+    return value;
   }
-} else {
-  // Node.js runtime
-  console.log('[Prisma_Init] Initializing Node.js runtime client');
-  const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined };
-
-  if (!globalForPrisma.prisma) {
-    globalForPrisma.prisma = new PrismaClient();
-  }
-
-  prisma = globalForPrisma.prisma;
-}
+});
 
 export default prisma;
