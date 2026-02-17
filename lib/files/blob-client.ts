@@ -3,10 +3,13 @@ import 'server-only';
 import { uploadToR2, deleteFromR2 } from '../storage/r2-operations';
 import sharp from 'sharp';
 import { FileType } from '@prisma/client';
-import ffmpeg from 'fluent-ffmpeg';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+
+const execAsync = promisify(exec);
 
 export interface UploadResult {
   url: string;
@@ -53,7 +56,7 @@ export async function generateThumbnail(fileBuffer: Buffer): Promise<Buffer> {
 }
 
 /**
- * Generate a thumbnail for a video using fluent-ffmpeg
+ * Generate a thumbnail for a video using ffmpeg
  * Note: Requires ffmpeg to be installed on the system
  */
 export async function generateVideoThumbnail(fileBuffer: Buffer): Promise<Buffer> {
@@ -65,17 +68,9 @@ export async function generateVideoThumbnail(fileBuffer: Buffer): Promise<Buffer
     // Write buffer to temp file because ffmpeg needs a file path
     fs.writeFileSync(inputPath, fileBuffer);
 
-    await new Promise((resolve, reject) => {
-      ffmpeg(inputPath)
-        .screenshots({
-          timestamps: ['1'], // Capture at 1 second
-          filename: path.basename(outputPath),
-          folder: tempDir,
-          size: '200x200'
-        })
-        .on('end', resolve)
-        .on('error', reject);
-    });
+    // Use ffmpeg directly via child_process
+    const ffmpegCommand = `ffmpeg -i "${inputPath}" -ss 00:00:01 -vframes 1 -s 200x200 "${outputPath}"`;
+    await execAsync(ffmpegCommand);
 
     // Read the generated thumbnail
     const thumbnailBuffer = fs.readFileSync(outputPath);
