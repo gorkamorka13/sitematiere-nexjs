@@ -2,7 +2,7 @@
 
 import AppLayout from "@/components/AppLayout";
 import { SlideshowViewer } from "@/components/slideshow/SlideshowViewer";
-import { UserRole } from "@/lib/enums";
+import { UserRole } from "@/lib/auth-types";
 
 interface SlideshowImage {
   id: string;

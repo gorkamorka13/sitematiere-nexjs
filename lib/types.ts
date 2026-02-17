@@ -1,4 +1,4 @@
-import { UserRole } from "./enums";
+import { UserRole } from "./auth-types";
 import { JWT } from "next-auth/jwt";
 import { Session } from "next-auth";
 

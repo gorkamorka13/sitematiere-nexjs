@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+import { auth, checkRole, UserRole } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { getSignedUploadUrl, getFileUrl } from "@/lib/storage/r2-operations";
 
@@ -79,7 +79,7 @@ export async function getProjectVideos(projectId: string) {
 export async function addProjectVideo(projectId: string, url: string, title?: string) {
   const session = await auth();
 
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!checkRole(session, [UserRole.ADMIN])) {
     return { success: false, error: "Action non autorisée. Seuls les administrateurs peuvent gérer les vidéos." };
   }
 
@@ -130,7 +130,7 @@ export async function addProjectVideo(projectId: string, url: string, title?: st
 export async function deleteProjectVideo(videoId: string) {
   const session = await auth();
 
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!checkRole(session, [UserRole.ADMIN])) {
     return { success: false, error: "Action non autorisée. Seuls les administrateurs peuvent gérer les vidéos." };
   }
 
@@ -157,7 +157,7 @@ export async function deleteProjectVideo(videoId: string) {
 export async function reorderProjectVideos(projectId: string, orderedVideoIds: string[]) {
   const session = await auth();
 
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!checkRole(session, [UserRole.ADMIN])) {
     return { success: false, error: "Action non autorisée." };
   }
 
@@ -188,7 +188,7 @@ export async function reorderProjectVideos(projectId: string, orderedVideoIds: s
 export async function publishProjectVideos(projectId: string) {
   const session = await auth();
 
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!checkRole(session, [UserRole.ADMIN])) {
     return { success: false, error: "Action non autorisée." };
   }
 
@@ -214,7 +214,7 @@ export async function publishProjectVideos(projectId: string) {
 export async function unpublishProjectVideos(projectId: string) {
   const session = await auth();
 
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!checkRole(session, [UserRole.ADMIN])) {
     return { success: false, error: "Action non autorisée." };
   }
 
@@ -240,7 +240,7 @@ export async function unpublishProjectVideos(projectId: string) {
 export async function toggleVideoPublishStatus(videoId: string) {
   const session = await auth();
 
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!checkRole(session, [UserRole.ADMIN])) {
     return { success: false, error: "Action non autorisée." };
   }
 
@@ -280,7 +280,7 @@ export async function toggleVideoPublishStatus(videoId: string) {
 export async function getSignedVideoUploadAction(projectId: string, fileName: string, contentType: string) {
   const session = await auth();
 
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!checkRole(session, [UserRole.ADMIN])) {
     return { success: false, error: "Action non autorisée." };
   }
 

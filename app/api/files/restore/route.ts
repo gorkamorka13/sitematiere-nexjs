@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { auth, checkRole, UserRole } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 // export const runtime = 'edge'; // Commenté pour le dev local
@@ -7,7 +7,7 @@ import prisma from "@/lib/prisma";
 export async function POST(request: Request) {
   const session = await auth();
 
-  if (!session?.user || (session.user as { role?: string }).role !== "ADMIN") {
+  if (!checkRole(session, [UserRole.ADMIN])) {
     return NextResponse.json({ error: "Access denied" }, { status: 403 });
   }
 

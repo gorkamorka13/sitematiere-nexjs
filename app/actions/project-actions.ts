@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+import { auth, checkRole, UserRole } from "@/lib/auth";
 import { ProjectUpdateSchema, ProjectUpdateInput, ProjectCreateSchema, ProjectCreateInput } from "@/lib/validations";
 import { revalidatePath } from "next/cache";
 import { deleteFromR2, extractKeyFromUrl } from "@/lib/storage/r2-operations";
@@ -10,12 +10,7 @@ export async function updateProject(formData: ProjectUpdateInput) {
   const session = await auth();
 
   // Vérification de l'authentification et du rôle
-  if (!session) {
-    throw new Error("Vous devez être connecté pour effectuer cette action.");
-  }
-
-  const userRole = (session.user as { role?: string })?.role;
-  if (userRole !== "ADMIN" && userRole !== "USER") {
+  if (!checkRole(session, [UserRole.ADMIN, UserRole.USER])) {
     throw new Error("Action non autorisée. Seuls les administrateurs et utilisateurs autorisés peuvent modifier les projets.");
   }
 
@@ -151,7 +146,7 @@ export async function updateProject(formData: ProjectUpdateInput) {
 export async function createProject(formData: ProjectCreateInput) {
   const session = await auth();
 
-  if (!session || (session.user as { role?: string })?.role !== "ADMIN") {
+  if (!checkRole(session, [UserRole.ADMIN])) {
     throw new Error("Action non autorisée. Seuls les administrateurs peuvent créer des projets.");
   }
 
@@ -241,7 +236,7 @@ export async function createProject(formData: ProjectCreateInput) {
 export async function deleteProject(projectId: string, confirmName: string) {
   const session = await auth();
 
-  if (!session || (session.user as { role?: string })?.role !== "ADMIN") {
+  if (!checkRole(session, [UserRole.ADMIN])) {
     throw new Error("Action non autorisée. Seuls les administrateurs peuvent supprimer des projets.");
   }
 

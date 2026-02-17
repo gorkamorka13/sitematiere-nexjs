@@ -2,7 +2,6 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 import DashboardClient from "./dashboard-client";
-import { UserRole } from "@/lib/enums";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -33,7 +32,7 @@ export default async function DashboardPage() {
       user={{
         name: session.user?.name,
         username: session.user?.username,
-        role: session.user?.role as unknown as UserRole,
+        role: session.user.role,
         color: session.user?.color
       }}
     />

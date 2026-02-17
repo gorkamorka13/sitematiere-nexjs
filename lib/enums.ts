@@ -1,8 +1,3 @@
-export enum UserRole {
-  USER = "USER",
-  ADMIN = "ADMIN",
-  VISITOR = "VISITOR",
-}
 
 export enum ProjectType {
   PRS = "PRS",

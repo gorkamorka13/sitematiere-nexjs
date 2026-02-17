@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Users, X, UserCircle, Shield, Eye, EyeOff, Save, Trash2, Edit2, Plus, Palette, ChevronLeft, Database } from "lucide-react";
-import { UserRole } from "@/lib/enums";
+import { UserRole } from "@/lib/auth-types";
 import UserBadge from "./user-badge";
 
 interface User {
@@ -50,7 +50,7 @@ export default function SettingsDialogs({ isAdmin, isOpen, onClose }: SettingsDi
     username: "",
     name: "",
     password: "",
-    role: UserRole.USER,
+    role: UserRole.USER as UserRole,
     color: "#6366f1",
   });
 

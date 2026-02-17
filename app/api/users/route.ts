@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { auth, checkRole, UserRole } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { hash } from "bcrypt-ts";
 import { z } from "zod";
-import { UserRole } from "@prisma/client";
 
 // export const runtime = 'edge'; // Commenté pour le dev local
 
@@ -26,10 +25,7 @@ const updateUserSchema = z.object({
 
 async function checkAdminAccess() {
   const session = await auth();
-  if (!session?.user || (session.user as { role?: string }).role !== "ADMIN") {
-    return false;
-  }
-  return true;
+  return checkRole(session, [UserRole.ADMIN]);
 }
 
 // GET /api/users - Liste tous les utilisateurs (admin uniquement)
@@ -252,7 +248,7 @@ export async function DELETE(request: NextRequest) {
 
     // Empêcher la suppression de son propre compte
     const session = await auth();
-    if ((session?.user as { id?: string })?.id === id) {
+    if (session?.user?.id === id) {
       return NextResponse.json(
         { error: "Vous ne pouvez pas supprimer votre propre compte" },
         { status: 400 }

@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+import { auth, checkRole, UserRole } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 
@@ -91,7 +91,7 @@ export async function getSlideshowImages(projectId: string, publishedOnly: boole
 export async function addSlideshowImage(projectId: string, imageId: string) {
   const session = await auth();
 
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!checkRole(session, [UserRole.ADMIN])) {
     return { success: false, error: "Action non autorisée. Seuls les administrateurs peuvent gérer les slideshows." };
   }
 
@@ -158,7 +158,7 @@ export async function addSlideshowImage(projectId: string, imageId: string) {
 export async function addImageToSlideshow(projectId: string, fileId: string) {
   const session = await auth();
 
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!checkRole(session, [UserRole.ADMIN])) {
     return { success: false, error: "Action non autorisée. Seuls les administrateurs peuvent gérer les slideshows." };
   }
 
@@ -202,7 +202,7 @@ export async function addImageToSlideshow(projectId: string, fileId: string) {
 export async function removeSlideshowImage(slideshowImageId: string) {
   const session = await auth();
 
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!checkRole(session, [UserRole.ADMIN])) {
     return { success: false, error: "Action non autorisée. Seuls les administrateurs peuvent gérer les slideshows." };
   }
 
@@ -238,7 +238,7 @@ export async function removeSlideshowImage(slideshowImageId: string) {
 export async function reorderSlideshowImages(projectId: string, orderedImageIds: string[]) {
   const session = await auth();
 
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!checkRole(session, [UserRole.ADMIN])) {
     return { success: false, error: "Action non autorisée. Seuls les administrateurs peuvent gérer les slideshows." };
   }
 
@@ -269,7 +269,7 @@ export async function reorderSlideshowImages(projectId: string, orderedImageIds:
 export async function publishSlideshow(projectId: string) {
   const session = await auth();
 
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!checkRole(session, [UserRole.ADMIN])) {
     return { success: false, error: "Action non autorisée. Seuls les administrateurs peuvent publier les slideshows." };
   }
 
@@ -296,7 +296,7 @@ export async function publishSlideshow(projectId: string) {
 export async function unpublishSlideshow(projectId: string) {
   const session = await auth();
 
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!checkRole(session, [UserRole.ADMIN])) {
     return { success: false, error: "Action non autorisée. Seuls les administrateurs peuvent gérer les slideshows." };
   }
 

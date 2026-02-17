@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
 import SlideshowViewerClient from "@/app/slideshow/view/[projectId]/slideshow-viewer-client";
-import { UserRole } from "@/lib/enums";
+import { UserRole } from "@/lib/auth-types";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;

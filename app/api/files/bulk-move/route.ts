@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { auth, checkRole, UserRole } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 // export const runtime = 'edge'; // Commenté pour le dev local
 
 export async function PATCH(request: Request) {
     const session = await auth();
-    if (!session?.user || (session.user as { role?: string }).role !== "ADMIN") {
+    if (!checkRole(session, [UserRole.ADMIN])) {
         return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
@@ -28,7 +28,7 @@ export async function PATCH(request: Request) {
         }
 
         // Update all files in one transaction or one updateMany (if applicable)
-        // updateMany doesn't support relation-based filtering easily if we had any, 
+        // updateMany doesn't support relation-based filtering easily if we had any,
         // but here we just update by IDs.
         const result = await prisma.file.updateMany({
             where: {

@@ -2,8 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { naturalSort } from "@/lib/sort-utils";
-import { auth } from "@/lib/auth";
-import { UserRole } from "@/lib/enums";
+import { auth, UserRole } from "@/lib/auth";
 
 export async function getProjectMedia(projectName: string) {
   // Normalisation du nom de projet pour correspondre aux dossiers

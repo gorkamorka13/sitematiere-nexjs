@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { auth, checkRole, UserRole } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { deleteFile } from "@/lib/files/blob-edge";
 import { extractKeyFromUrl } from "@/lib/storage/r2-operations";
@@ -11,7 +11,7 @@ import { extractKeyFromUrl } from "@/lib/storage/r2-operations";
 export async function DELETE(request: Request) {
   const session = await auth();
 
-  if (!session?.user || (session.user as { role?: string }).role !== "ADMIN") {
+  if (!checkRole(session, [UserRole.ADMIN])) {
     return NextResponse.json({ error: "Access denied" }, { status: 403 });
   }
 

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { auth, checkRole, UserRole } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 // export const runtime = 'edge'; // Commenté pour le dev local
@@ -12,8 +12,7 @@ export async function GET() {
   }
 
   // Vérifier si l'utilisateur est ADMIN
-  const userRole = (session.user as { role?: string })?.role;
-  const isAdmin = userRole === "ADMIN";
+  const isAdmin = checkRole(session, [UserRole.ADMIN]);
 
   try {
     const projects = await prisma.project.findMany({
@@ -28,8 +27,8 @@ export async function GET() {
     });
 
     // Filtrer les projets système pour les non-administrateurs
-    const filteredProjects = isAdmin 
-      ? projects 
+    const filteredProjects = isAdmin
+      ? projects
       : projects.filter(project => project.country !== 'Système');
 
     return NextResponse.json(filteredProjects);

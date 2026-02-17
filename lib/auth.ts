@@ -4,20 +4,10 @@ import Credentials from "next-auth/providers/credentials";
 import prisma from "@/lib/prisma";
 import { compareSync } from "bcrypt-ts";
 import { z } from "zod";
-import { User, UserRole } from "@prisma/client";
+import { User } from "@prisma/client";
+import { UserRole, checkRole } from "./auth-types";
 
-// Étendre les types NextAuth
-declare module "next-auth" {
-    interface Session {
-        user: {
-            id: string;
-            role: UserRole;
-            username: string;
-            name: string | null;
-            color: string | null;
-        };
-    }
-}
+export { UserRole, checkRole };
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
     adapter: PrismaAdapter(prisma),

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { auth, checkRole, UserRole } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { sanitizeFileName } from "@/lib/files/validation";
 
@@ -12,7 +12,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
-  if (!session?.user || (session.user as { role?: string }).role !== "ADMIN") {
+  if (!checkRole(session, [UserRole.ADMIN])) {
     return NextResponse.json({ error: "Access denied" }, { status: 403 });
   }
 

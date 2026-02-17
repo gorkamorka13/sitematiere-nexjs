@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { r2Client, R2_BUCKET_NAME } from "@/lib/storage/r2-client";
-import { auth } from "@/lib/auth";
-import { UserRole } from "@/lib/enums";
+import { auth, UserRole } from "@/lib/auth";
 
 // export const runtime = 'edge'; // Commenté pour le dev local
 

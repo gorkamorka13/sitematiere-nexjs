@@ -1,6 +1,5 @@
 import prisma from "@/lib/prisma";
-import { auth } from "@/lib/auth";
-import { UserRole } from "@/lib/enums";
+import { auth, UserRole } from "@/lib/auth";
 import Link from "next/link";
 import { Database, FileJson, FileText, ArrowLeft, Download, ShieldCheck } from "lucide-react";
 
