@@ -4,7 +4,7 @@ import { r2Client, R2_BUCKET_NAME } from "@/lib/storage/r2-client";
 import { auth } from "@/lib/auth";
 import { UserRole } from "@/lib/enums";
 
-export const runtime = 'edge';
+// export const runtime = 'edge'; // Commenté pour le dev local
 
 
 export async function GET(

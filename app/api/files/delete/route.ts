@@ -5,7 +5,7 @@ import { deleteFile } from "@/lib/files/blob-edge";
 import { extractKeyFromUrl } from "@/lib/storage/r2-operations";
 
 // Cloudflare Pages requires Edge Runtime for API routes
-export const runtime = 'edge';
+// export const runtime = 'edge'; // Commenté pour le dev local
 
 
 export async function DELETE(request: Request) {

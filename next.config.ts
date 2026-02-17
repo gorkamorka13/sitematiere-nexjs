@@ -53,9 +53,25 @@ const config = () => {
       ],
     },
     serverExternalPackages: ["@aws-sdk/client-s3", "@aws-sdk/s3-request-presigner", "@smithy/util-stream"],
-  };
+    webpack: (config, { isServer }) => {
+      // Ignore Prisma WASM files in edge runtime
+      if (isServer) {
+        config.module = config.module || {};
+        config.module.rules = config.module.rules || [];
+        config.module.rules.push({
+          test: /wasm-edge-light-loader\.mjs$/,
+          use: 'ignore-loader',
+        });
 
-  // Seed logic moved to a separate script or managed via prisma seed
+        config.experiments = {
+          ...config.experiments,
+          asyncWebAssembly: true,
+          layers: true,
+        };
+      }
+      return config;
+    },
+  };
 
   return nextConfig;
 };

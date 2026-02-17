@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma";
 import { FileType, Prisma } from "@prisma/client";
 import { naturalSort } from "@/lib/sort-utils";
 
-export const runtime = 'edge';
+// export const runtime = 'edge'; // Commenté pour le dev local
 
 
 export async function GET(request: Request) {
