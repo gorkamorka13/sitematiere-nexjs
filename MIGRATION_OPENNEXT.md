@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This document outlines the migration plan for moving the bridge construction management system from the deprecated `@cloudflare/next-on-pages` (v1.13.16) to the modern `@opennextjs/cloudflare` adapter.
+This document outlines the migration plan for moving the bridge construction management system from the deprecated `@cloudflare/next-on-pages` (v1.13.16) to the modern `@opennextjs/cloudflare` adapter..
 
 **Key Changes:**
 - **Deployment Target**: Cloudflare Pages → Cloudflare Workers

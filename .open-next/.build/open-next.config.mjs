@@ -25,6 +25,7 @@ var config = {
     }
   }
 };
+config.minify = false;
 var open_next_config_default = config;
 export {
   open_next_config_default as default
