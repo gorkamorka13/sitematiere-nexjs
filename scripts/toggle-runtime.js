@@ -34,11 +34,7 @@ const files = [
     'app/image-processor/page.tsx',
     'app/slideshow/page.tsx',
     'app/slideshow/view/[projectId]/page.tsx',
-    'app/export-db/page.tsx',
-    'app/actions/slideshow-actions.ts',
-    'app/actions/video-actions.ts',
-    'app/actions/project-media.ts',
-    'app/actions/project-actions.ts'
+    'app/export-db/page.tsx'
 ];
 
 files.forEach(relativePath => {
