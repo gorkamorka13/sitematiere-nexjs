@@ -25,8 +25,7 @@ export async function GET(
     });
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const response = await (r2Client as any).send(command);
+      const response = await r2Client.send(command);
 
       const contentType = response.ContentType || "";
       const isPdf = contentType.toLowerCase() === "application/pdf";

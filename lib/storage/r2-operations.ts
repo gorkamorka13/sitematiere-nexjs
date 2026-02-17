@@ -12,8 +12,7 @@ export async function uploadToR2(file: File, key: string): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
   const uint8Array = new Uint8Array(arrayBuffer);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (r2Client as any).send(new PutObjectCommand({
+  await r2Client.send(new PutObjectCommand({
     Bucket: R2_BUCKET_NAME,
     Key: key,
     Body: uint8Array,
@@ -43,8 +42,7 @@ export function getFileUrl(key: string): string {
  * @param key - Storage key of the file to delete
  */
 export async function deleteFromR2(key: string): Promise<void> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (r2Client as any).send(new DeleteObjectCommand({
+  await r2Client.send(new DeleteObjectCommand({
     Bucket: R2_BUCKET_NAME,
     Key: key,
   }));

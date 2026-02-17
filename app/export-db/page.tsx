@@ -73,8 +73,7 @@ export default async function ExportDatabasePage({
     // 2. GENERATE CSV (Projects simple)
     const projectCsvHeader = "id,name,country,latitude,longitude,type,status,projectCode,createdAt\n";
     const projectCsvRows = projects.map(p => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const escape = (val: any) => `"${String(val || '').replace(/"/g, '""')}"`;
+      const escape = (val: unknown) => `"${String(val || '').replace(/"/g, '""')}"`;
       return [
         p.id, p.name, p.country, p.latitude, p.longitude, p.type, p.status, p.projectCode, p.createdAt.toISOString()
       ].map(escape).join(',');
@@ -85,8 +84,7 @@ export default async function ExportDatabasePage({
     let sql = `-- Matiere DB Export Backup\n-- Generated: ${new Date().toISOString()}\n\n`;
 
     // Use a generic helper for SQL escaping
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const q = (val: any) => val === null || val === undefined ? 'NULL' : `'${String(val).replace(/'/g, "''")}'`;
+    const q = (val: unknown) => val === null || val === undefined ? 'NULL' : `'${String(val).replace(/'/g, "''")}'`;
 
     sql += "-- USERS\n";
     users.forEach(u => {
