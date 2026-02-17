@@ -30,8 +30,8 @@ const config = () => {
       NEXT_PUBLIC_APP_VERSION: version,
       NEXT_PUBLIC_GIT_COMMIT: gitCommit,
       NEXT_PUBLIC_BUILD_DATE: new Date().toLocaleDateString("fr-FR"),
-      NEXT_PUBLIC_CREDIT: "Michel ESPARSA",
-      NEXT_PUBLIC_R2_PUBLIC_URL: process.env.R2_PUBLIC_URL || "https://pub-78c42489fd854dc3a6975810aa00edf2.r2.dev",
+      NEXT_PUBLIC_CREDIT: process.env.NEXT_PUBLIC_CREDIT || "Michel ESPARSA",
+      NEXT_PUBLIC_R2_PUBLIC_URL: process.env.NEXT_PUBLIC_R2_PUBLIC_URL || "",
     },
     images: {
       remotePatterns: [
@@ -40,11 +40,11 @@ const config = () => {
           hostname: 'sitematiere-nexjs.pages.dev',
           pathname: '**',
         },
-        {
-          protocol: 'https',
-          hostname: 'pub-78c42489fd854dc3a6975810aa00edf2.r2.dev',
+        ...(process.env.NEXT_PUBLIC_R2_HOSTNAME ? [{
+          protocol: 'https' as const,
+          hostname: process.env.NEXT_PUBLIC_R2_HOSTNAME,
           pathname: '**',
-        },
+        }] : []),
         {
           protocol: 'https',
           hostname: 'res.cloudinary.com',
