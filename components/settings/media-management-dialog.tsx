@@ -91,7 +91,6 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
         hasUnpublishedChanges: hasVideoChanges,
         toast: videoToast,
         setToast: setVideoToast,
-        loadVideos,
         addVideo,
         removeVideo,
         reorderVideos,
@@ -125,16 +124,6 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
         }
     }, [videoToast, setToast, setVideoToast]);
 
-    // Load media when project changes
-    useEffect(() => {
-        if (selectedProjectId) {
-            if (activeTab === 'photos') {
-                loadSlideshowImages();
-            } else if (activeTab === 'videos') {
-                loadVideos();
-            }
-        }
-    }, [selectedProjectId, activeTab, loadSlideshowImages, loadVideos]);
 
     // Filter logic
     const countries = useMemo(() => {

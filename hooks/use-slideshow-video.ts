@@ -36,7 +36,7 @@ export function useSlideshowVideo(projectId: string | null) {
   const [hasUnpublishedChanges, setHasUnpublishedChanges] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
-  const loadVideos = useCallback(async () => {
+  const loadVideos = useCallback(async (isCancelled?: () => boolean) => {
     if (!projectId) {
       setVideos([]);
       return;
@@ -44,9 +44,12 @@ export function useSlideshowVideo(projectId: string | null) {
 
     console.log('[useSlideshowVideo] Loading videos for project:', projectId);
     setLoading(true);
-    setVideos([]); // Clear previous state to prevent mismatch
+
     try {
       const result = await getProjectVideos(projectId);
+
+      if (isCancelled && isCancelled()) return;
+
       if (result.success && result.videos) {
         // Cast result to SlideshowVideo (ensuring types match)
         const loadedVideos = result.videos as SlideshowVideo[];
@@ -58,21 +61,34 @@ export function useSlideshowVideo(projectId: string | null) {
       } else {
         if (result.error) {
           console.error('[useSlideshowVideo] Error result:', result.error);
-          setToast({ message: "Erreur lors du chargement des vidéos", type: 'error' });
+          setToast({ message: result.error || "Erreur lors du chargement des vidéos", type: 'error' });
         }
       }
     } catch (error) {
+      if (isCancelled && isCancelled()) return;
       console.error('[useSlideshowVideo] Error loading videos:', error);
       setToast({ message: "Erreur technique lors du chargement des vidéos", type: 'error' });
     } finally {
-      setLoading(false);
+      if (!isCancelled || !isCancelled()) {
+        setLoading(false);
+      }
     }
   }, [projectId]);
 
   // Load videos when projectId changes
   useEffect(() => {
-    loadVideos();
-  }, [loadVideos]);
+    let cancelled = false;
+    const isCancelled = () => cancelled;
+
+    // Clear previous videos to avoid showing stale data
+    setVideos([]);
+
+    loadVideos(isCancelled);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId, loadVideos]);
 
   const addVideo = async (url: string, title?: string) => {
     if (!projectId) return false;

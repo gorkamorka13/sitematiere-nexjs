@@ -30,18 +30,21 @@ export async function getSlideshowImages(projectId: string, publishedOnly: boole
     // Serialize dates for Cloudflare compatibility
     const serializedImages = slideshowImages.map(si => ({
       ...si,
-      createdAt: si.createdAt.toISOString(),
-      updatedAt: si.updatedAt.toISOString(),
-      image: {
+      createdAt: si.createdAt ? si.createdAt.toISOString() : new Date().toISOString(),
+      updatedAt: si.updatedAt ? si.updatedAt.toISOString() : new Date().toISOString(),
+      image: si.image ? {
         ...si.image,
-        createdAt: si.image.createdAt.toISOString(),
-      },
-    }));
+        createdAt: si.image.createdAt ? si.image.createdAt.toISOString() : new Date().toISOString(),
+      } : null,
+    })).filter(img => img.image !== null); // Filter out images that might be missing
 
     return { success: true, images: serializedImages };
   } catch (error) {
     console.error("Error fetching slideshow images:", error);
-    return { success: false, error: "Erreur lors de la récupération des images du slideshow." };
+    return {
+      success: false,
+      error: error instanceof Error ? `Erreur: ${error.message}` : "Erreur lors de la récupération des images du slideshow."
+    };
   }
 }
 

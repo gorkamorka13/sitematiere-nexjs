@@ -36,18 +36,19 @@ export function useSlideshow(projectId: string | null) {
   const [hasUnpublishedChanges, setHasUnpublishedChanges] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
-  const loadSlideshowImages = useCallback(async () => {
+  const loadSlideshowImages = useCallback(async (isCancelled?: () => boolean) => {
     if (!projectId) {
       setSlideshowImages([]);
       return;
     }
 
-    // Don't set loading true if we are just switching projects quickly to avoid flashing
-    // But since we are fetching data, we should probably show loading state.
     setLoading(true);
     try {
       // Pass false to get all images (draft + published)
       const result = await getSlideshowImages(projectId, false);
+
+      if (isCancelled && isCancelled()) return;
+
       if (result.success && result.images) {
         const images = result.images as SlideshowImage[];
         setSlideshowImages(images);
@@ -57,21 +58,34 @@ export function useSlideshow(projectId: string | null) {
         // Only show error if it's a real error, not just "no images"
         if (result.error) {
           console.error('[useSlideshow] Error result:', result.error);
-          setToast({ message: "Erreur lors du chargement du slideshow", type: 'error' });
+          setToast({ message: result.error || "Erreur lors du chargement du slideshow", type: 'error' });
         }
       }
     } catch (error) {
+      if (isCancelled && isCancelled()) return;
       console.error('[useSlideshow] Error loading slideshow:', error);
       setToast({ message: "Erreur technique lors du chargement", type: 'error' });
     } finally {
-      setLoading(false);
+      if (!isCancelled || !isCancelled()) {
+        setLoading(false);
+      }
     }
   }, [projectId]);
 
   // Load images when projectId changes
   useEffect(() => {
-    loadSlideshowImages();
-  }, [loadSlideshowImages]);
+    let cancelled = false;
+    const isCancelled = () => cancelled;
+
+    // Clear previous images to avoid showing stale data from another project
+    setSlideshowImages([]);
+
+    loadSlideshowImages(isCancelled);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId, loadSlideshowImages]);
 
   const addImage = async (imageUrl: string, filename: string, fileId: string) => {
     if (!projectId) return false;

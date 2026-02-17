@@ -18,14 +18,17 @@ export async function getProjectVideos(projectId: string) {
     // Serialize dates to ISO strings for Cloudflare compatibility
     const serializedVideos = videos.map(video => ({
       ...video,
-      createdAt: video.createdAt.toISOString(),
-      updatedAt: video.updatedAt.toISOString(),
+      createdAt: video.createdAt ? video.createdAt.toISOString() : new Date().toISOString(),
+      updatedAt: video.updatedAt ? video.updatedAt.toISOString() : new Date().toISOString(),
     }));
 
     return { success: true, videos: serializedVideos };
   } catch (error) {
     console.error("Error fetching videos:", error);
-    return { success: false, error: "Erreur lors de la récupération des vidéos." };
+    return {
+      success: false,
+      error: error instanceof Error ? `Erreur: ${error.message}` : "Erreur lors de la récupération des vidéos."
+    };
   }
 }
 
