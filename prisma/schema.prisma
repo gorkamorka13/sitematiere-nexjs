@@ -85,14 +85,17 @@ model SlideshowImage {
 }
 
 model Video {
-  id        String   @id @default(cuid())
-  url       String
-  title     String?
-  projectId String
-  createdAt DateTime @default(now())
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  id          String   @id @default(cuid())
+  url         String
+  title       String?
+  projectId   String
+  createdAt   DateTime @default(now())
+  isPublished Boolean  @default(false)
+  order       Int      @default(0)
+  updatedAt   DateTime @default(now())
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
-  @@index([projectId])
+  @@index([projectId, order])
   @@map("videos")
 }
 
@@ -161,8 +164,8 @@ enum DocumentType {
   PLAN
   FLAG
   CLIENT_LOGO
-  PIN
   OTHER
+  PIN
 }
 
 enum FileType {

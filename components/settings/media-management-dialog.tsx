@@ -49,16 +49,8 @@ import { SlideshowPreviewModal } from '@/components/slideshow/SlideshowPreviewMo
 import { DatabaseImagePicker } from '@/components/image-processor/DatabaseImagePicker';
 import { Toast } from '@/components/ui/toast';
 import { useSlideshow, SlideshowImage } from '@/hooks/use-slideshow';
-import { addProjectVideo, deleteProjectVideo, getProjectVideos, getSignedVideoUploadAction } from '@/app/actions/video-actions';
-
-// Serialized version of Video for Cloudflare compatibility
-type SerializedVideo = {
-    id: string;
-    url: string;
-    title: string | null;
-    projectId: string;
-    createdAt: string; // ISO string instead of Date
-};
+import { useSlideshowVideo } from '@/hooks/use-slideshow-video';
+import { VideosTab } from './VideosTab';
 
 interface Project {
     id: string;
@@ -97,9 +89,24 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
         publish
     } = useSlideshow();
 
-    // Video state
-    const [videos, setVideos] = useState<SerializedVideo[]>([]);
-    const [loadingVideos, setLoadingVideos] = useState(false);
+    // Video state hook
+    const {
+        selectedProjectId: videoProjectId,
+        setSelectedProjectId: setVideoProjectId,
+        videos,
+        loading: loadingVideos,
+        publishing: publishingVideos,
+        hasUnpublishedChanges: hasVideoChanges,
+        toast: videoToast,
+        setToast: setVideoToast,
+        loadVideos,
+        addVideo,
+        removeVideo,
+        reorderVideos,
+        publish: publishVideos,
+        unpublish: unpublishVideos,
+        togglePublish: toggleVideoPublish
+    } = useSlideshowVideo();
 
     // Filter state
     const [searchQuery, setSearchQuery] = useState('');
@@ -112,36 +119,15 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
         }
     }, [isOpen, defaultTab]);
 
-    // Sync internal project ID with hook
+    // Sync internal project ID with hooks
     useEffect(() => {
         if (selectedProjectId !== hookProjectId) {
             setHookProjectId(selectedProjectId || '');
         }
-    }, [selectedProjectId, hookProjectId, setHookProjectId]);
-
-    const fetchVideos = useCallback(async () => {
-        if (!selectedProjectId) return;
-        setLoadingVideos(true);
-        const result = await getProjectVideos(selectedProjectId);
-        if (result.success && result.videos) {
-            setVideos(result.videos);
+        if (selectedProjectId !== videoProjectId) {
+            setVideoProjectId(selectedProjectId || '');
         }
-        setLoadingVideos(false);
-    }, [selectedProjectId]);
-
-
-
-    const handleDeleteVideo = async (videoId: string) => {
-        if (!confirm('Supprimer cette vidéo ?')) return;
-
-        const result = await deleteProjectVideo(videoId);
-        if (result.success) {
-            fetchVideos();
-            setToast({ message: 'Vidéo supprimée', type: 'success' });
-        } else {
-            setToast({ message: result.error || 'Erreur', type: 'error' });
-        }
-    };
+    }, [selectedProjectId, hookProjectId, setHookProjectId, videoProjectId, setVideoProjectId]);
 
     const handleRetouch = useCallback(async (imageUrl: string, filename: string) => {
         setToast({ message: 'Chargement de l\'image dans l\'éditeur...', type: 'success' });
@@ -149,16 +135,24 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
         setActiveTab('edit');
     }, [processor, setToast]);
 
+    // Consolidate toasts
+    useEffect(() => {
+        if (videoToast) {
+            setToast(videoToast);
+            setVideoToast(null);
+        }
+    }, [videoToast, setToast, setVideoToast]);
+
     // Load media when project changes
     useEffect(() => {
         if (selectedProjectId) {
             if (activeTab === 'photos') {
                 loadSlideshowImages();
-            } else {
-                fetchVideos();
+            } else if (activeTab === 'videos') {
+                loadVideos();
             }
         }
-    }, [selectedProjectId, activeTab, loadSlideshowImages, fetchVideos]);
+    }, [selectedProjectId, activeTab, loadSlideshowImages, loadVideos]);
 
     // Filter logic
     const countries = useMemo(() => {
@@ -336,10 +330,16 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
                                         <VideosTab
                                             videos={videos}
                                             loading={loadingVideos}
-                                            onDelete={handleDeleteVideo}
-                                            projectId={selectedProjectId}
-                                            onRefresh={fetchVideos}
+                                            publishing={publishingVideos}
+                                            hasChanges={hasVideoChanges}
+                                            onPublish={publishVideos}
+                                            onUnpublish={unpublishVideos}
+                                            onRemove={removeVideo}
+                                            onReorder={reorderVideos}
+                                            onAdd={addVideo}
+                                            onTogglePublish={toggleVideoPublish}
                                             setToast={setToast}
+                                            projectId={selectedProjectId}
                                         />
                                     ) : (
                                         <EditTab
@@ -533,251 +533,7 @@ function SlideshowTab({
     );
 }
 
-interface VideosTabProps {
-    videos: SerializedVideo[];
-    loading: boolean;
-    onDelete: (id: string) => Promise<void>;
-    projectId: string;
-    onRefresh: () => void;
-    setToast: (toast: { message: string; type: 'success' | 'error' } | null) => void;
-}
 
-function VideosTab({
-    videos,
-    loading,
-    onDelete,
-    projectId,
-    onRefresh,
-    setToast
-}: VideosTabProps) {
-    const [previewVideo, setPreviewVideo] = useState<SerializedVideo | null>(null);
-
-    return (
-        <div className="space-y-8">
-            <div className="grid grid-cols-1 gap-6">
-                {/* Upload Video File */}
-                <div className="bg-gray-50 dark:bg-gray-800/50 rounded-3xl p-6 border border-gray-100 dark:border-gray-800">
-                    <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <Upload className="w-3.5 h-3.5" />
-                        TÉLÉVERSER UN FICHIER VIDÉO
-                    </h4>
-                    <VideoDropzone
-                        projectId={projectId}
-                        onSuccess={() => {
-                            onRefresh();
-                            setToast({ message: 'Vidéo téléversée avec succès', type: 'success' });
-                        }}
-                        onError={(err: string) => setToast({ message: err, type: 'error' })}
-                    />
-                </div>
-            </div>
-
-            {/* Videos List */}
-            <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">LISTE DES VIDÉOS ({videos.length})</h4>
-                </div>
-
-                {loading ? (
-                    <div className="py-12 flex flex-col items-center justify-center text-gray-400">
-                        <Loader2 className="w-8 h-8 animate-spin mb-4 text-indigo-500" />
-                        <p className="text-xs">Chargement des vidéos...</p>
-                    </div>
-                ) : videos.length === 0 ? (
-                    <div className="py-16 text-center text-gray-400">
-                        <VideoIcon className="w-12 h-12 mb-4 mx-auto opacity-10" />
-                        <p className="text-sm">Aucune vidéo liée à ce projet</p>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {videos.map((vid: SerializedVideo) => (
-                            <div
-                                key={vid.id}
-                                className="group flex items-center justify-between p-4 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl hover:border-indigo-200 dark:hover:border-indigo-800 transition-all hover:shadow-md"
-                            >
-                                <div className="flex items-center gap-4 min-w-0">
-                                    <div className="w-12 h-12 bg-red-50 dark:bg-red-900/20 rounded-xl flex items-center justify-center shrink-0">
-                                        {vid.url.includes('youtube') ? (
-                                            <Youtube className="w-6 h-6 text-red-600" />
-                                        ) : (
-                                            <VideoIcon className="w-6 h-6 text-red-600" />
-                                        )}
-                                    </div>
-                                    <div className="min-w-0">
-                                        <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{vid.title}</p>
-                                        <a
-                                            href={vid.url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-[10px] text-gray-400 hover:text-indigo-600 truncate block transition-colors"
-                                        >
-                                            {vid.url}
-                                        </a>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={() => setPreviewVideo(vid)}
-                                        className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-all"
-                                        title="Lire la vidéo"
-                                    >
-                                        <PlayCircle className="w-5 h-5" />
-                                    </button>
-                                    <button
-                                        onClick={() => onDelete(vid.id)}
-                                        className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
-                                        title="Supprimer la vidéo"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            <HelpNote />
-
-            {/* Video Player Preview Overlay */}
-            {previewVideo && (
-                <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-300" onClick={() => setPreviewVideo(null)}>
-                    <div className="relative max-w-5xl w-full aspect-video bg-black rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300" onClick={e => e.stopPropagation()}>
-                        <button
-                            onClick={() => setPreviewVideo(null)}
-                            className="absolute top-4 right-4 z-10 p-2 bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors"
-                        >
-                            <X className="w-6 h-6" />
-                        </button>
-                        <div className="absolute top-4 left-6 z-10 px-4 py-2 bg-black/40 backdrop-blur-md rounded-xl">
-                            <h3 className="text-white font-bold text-sm">{previewVideo?.title}</h3>
-                        </div>
-                        <video
-                            src={previewVideo?.url}
-                            controls
-                            autoPlay
-                            className="w-full h-full"
-                        >
-                            Votre navigateur ne supporte pas la lecture de vidéos.
-                        </video>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-}
-
-// Subcomponent: VideoDropzone
-interface VideoDropzoneProps {
-    projectId: string;
-    onSuccess: () => void;
-    onError: (err: string) => void;
-}
-
-function VideoDropzone({ projectId, onSuccess, onError }: VideoDropzoneProps) {
-    const [uploading, setUploading] = useState(false);
-    const [progress, setProgress] = useState(0);
-
-    const onDrop = useCallback(async (acceptedFiles: File[]) => {
-        if (acceptedFiles.length === 0) return;
-
-        const file = acceptedFiles[0];
-        setUploading(true);
-        setProgress(0);
-
-        try {
-            // 1. Get signed URL
-            const result = await getSignedVideoUploadAction(projectId, file.name, file.type);
-
-            if (!result.success || !result.signedUrl || !result.publicUrl) {
-                throw new Error(result.error || "Impossible de préparer l'envoi");
-            }
-
-            // 2. Upload to R2 directly with XHR to track progress
-            await new Promise((resolve, reject) => {
-                const xhr = new XMLHttpRequest();
-                xhr.open('PUT', result.signedUrl!);
-                xhr.setRequestHeader('Content-Type', file.type);
-
-                xhr.upload.onprogress = (event) => {
-                    if (event.lengthComputable) {
-                        const percentComplete = Math.round((event.loaded / event.total) * 100);
-                        setProgress(percentComplete);
-                    }
-                };
-
-                xhr.onload = () => {
-                    if (xhr.status === 200) resolve(true);
-                    else reject(new Error(`Erreur lors de l'envoi (${xhr.status})`));
-                };
-
-                xhr.onerror = () => reject(new Error("Erreur réseau lors de l'envoi"));
-                xhr.send(file);
-            });
-
-            // 3. Register in database
-            const saveResult = await addProjectVideo(projectId, result.publicUrl, file.name.replace(/\.[^/.]+$/, ""));
-
-            if (!saveResult.success) {
-                throw new Error(saveResult.error || "Erreur lors de l'enregistrement en base de données");
-            }
-
-            onSuccess();
-        } catch (err: unknown) {
-            console.error("Upload error:", err);
-            onError(err instanceof Error ? err.message : "Une erreur est survenue lors de l'envoi");
-        } finally {
-            setUploading(false);
-            setProgress(0);
-        }
-    }, [projectId, onSuccess, onError]);
-
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
-        onDrop,
-        accept: {
-            'video/*': ['.mp4', '.mov', '.avi', '.webm', '.m4v']
-        },
-        maxFiles: 1,
-        disabled: uploading
-    });
-
-    return (
-        <div
-            {...getRootProps()}
-            className={`relative flex flex-col items-center justify-center h-40 border-2 border-dashed rounded-2xl transition-all cursor-pointer ${isDragActive ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' :
-                uploading ? 'border-gray-200 bg-gray-50/50 cursor-not-allowed' :
-                    'border-gray-200 dark:border-gray-700 hover:border-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-800/50'
-                }`}
-        >
-            <input {...getInputProps()} />
-
-            {uploading ? (
-                <div className="flex flex-col items-center gap-3">
-                    <div className="relative w-12 h-12 flex items-center justify-center">
-                        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
-                        <span className="absolute text-[10px] font-bold text-indigo-600">{progress}%</span>
-                    </div>
-                    <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">ENVOI EN COURS...</p>
-                    <div className="w-48 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div className="h-full bg-indigo-500 transition-all duration-300" style={{ width: `${progress}%` }} />
-                    </div>
-                </div>
-            ) : (
-                <div className="flex flex-col items-center gap-2 text-center px-4">
-                    <div className="p-2 bg-white dark:bg-gray-900 rounded-lg shadow-sm">
-                        <VideoIcon className={`w-5 h-5 ${isDragActive ? 'text-indigo-500' : 'text-gray-400'}`} />
-                    </div>
-                    <div>
-                        <p className="text-xs font-bold text-gray-700 dark:text-gray-300">
-                            {isDragActive ? 'Déposez la vidéo ici' : 'Glissez une vidéo ou cliquez'}
-                        </p>
-                        <p className="text-[10px] text-gray-400 uppercase tracking-tighter mt-1">MP4, MOV, AVI, WEBM (Max 500MB)</p>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-}
 
 interface EditTabProps {
     processor: ReturnType<typeof useImageProcessor>;
