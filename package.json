@@ -81,6 +81,7 @@
   "overrides": {
     "next": "$next",
     "tar": "^7.0.0",
-    "path-to-regexp": "^8.0.0"
+    "path-to-regexp": "^8.0.0",
+    "glob": "^11.0.0"
   }
 }
