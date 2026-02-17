@@ -33,7 +33,11 @@ const files = [
     'app/api/proxy/route.ts',
     'app/(auth)/login/page.tsx',
     'app/slideshow/view/[projectId]/page.tsx',
-    'app/export-db/page.tsx'
+    'app/export-db/page.tsx',
+    'app/actions/project-media.ts',
+    'app/actions/project-actions.ts',
+    'app/actions/slideshow-actions.ts',
+    'app/actions/video-actions.ts'
 ];
 
 files.forEach(relativePath => {
