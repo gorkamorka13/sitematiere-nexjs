@@ -1,5 +1,6 @@
 import { S3Client } from "@aws-sdk/client-s3";
 import { FetchHttpHandler } from "@smithy/fetch-http-handler";
+import { R2_PUBLIC_URL as FALLBACK_URL } from "@/lib/constants";
 
 export const r2Client = new S3Client({
   region: "auto",
@@ -12,4 +13,4 @@ export const r2Client = new S3Client({
 });
 
 export const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME || "sitematiere-files";
-export const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL;
+export const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || FALLBACK_URL;

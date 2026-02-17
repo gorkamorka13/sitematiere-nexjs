@@ -1,3 +1,5 @@
+import { R2_PUBLIC_URL } from "@/lib/constants";
+
 /**
  * Normalizes image URLs to ensure they point to the correct storage location
  * Handles both R2 public URLs and legacy local paths
@@ -12,7 +14,6 @@ export function normalizeImageUrl(url: string): string {
 
     // If it's a local path (starts with / or doesn't have protocol)
     // Convert to R2 public URL
-    const R2_PUBLIC_URL = process.env.NEXT_PUBLIC_R2_PUBLIC_URL || 'https://pub-78c42489fd854dc3a6975810aa00edf2.r2.dev';
 
     // Remove leading slash if present
     const cleanPath = url.startsWith('/') ? url.substring(1) : url;

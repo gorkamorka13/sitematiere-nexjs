@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { X, Save, MapPin, AlignLeft, FolderOpen, AlertCircle, CheckCircle2, Globe, Search, Undo2, Redo2, Plus, Trash2, Edit, UploadCloud, Image as ImageIcon } from "lucide-react";
 import NextImage from "next/image";
 import type { Project, Document as ProjectDocument } from "@prisma/client";
-import { ProjectType, ProjectStatus } from "@/lib/enums";
+import { ProjectType, ProjectStatus, DocumentType } from "@/lib/enums";
 import { UserRole } from "@/lib/auth-types";
 import { updateProject, createProject, deleteProject } from "@/app/actions/project-actions";
 import EditableMapWrapper from "@/components/ui/editable-map-wrapper";
@@ -296,9 +296,9 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
     if (selectedProjectId) {
       const project = projects.find(p => p.id === selectedProjectId) as Project & { documents: ProjectDocument[] };
       if (project) {
-        const flagDoc = project.documents?.find((d) => d.type === "FLAG");
-        const logoDoc = project.documents?.find((d) => d.type === "CLIENT_LOGO" || d.name.toLowerCase().includes('logo'));
-        const pinDoc = project.documents?.find((d) => d.type === "PIN");
+        const flagDoc = project.documents?.find((d) => d.type === DocumentType.FLAG);
+        const logoDoc = project.documents?.find((d) => d.type === DocumentType.CLIENT_LOGO || d.name.toLowerCase().includes('logo'));
+        const pinDoc = project.documents?.find((d) => d.type === DocumentType.PIN);
 
         setFormData({
           latitude: project.latitude ?? 0,

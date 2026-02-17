@@ -126,8 +126,8 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
     const { flagDoc, logoDoc, pinDoc } = useMemo(() => {
         const docs = (selectedProject as ProjectWithDocuments | null)?.documents || [];
         return {
-            flagDoc: docs.find((d) => d.type === "FLAG"),
-            logoDoc: docs.find((d) => d.type === "CLIENT_LOGO" || d.name.replace(/_/g, ' ').toLowerCase().includes('logo')),
+            flagDoc: docs.find((d) => d.type === DocumentType.FLAG),
+            logoDoc: docs.find((d) => d.type === DocumentType.CLIENT_LOGO || d.name.replace(/_/g, ' ').toLowerCase().includes('logo')),
             pinDoc: docs.find((d) => d.type === DocumentType.PIN)
         };
     }, [selectedProject]);

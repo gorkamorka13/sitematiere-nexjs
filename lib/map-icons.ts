@@ -1,4 +1,5 @@
 import L from "leaflet";
+import { R2_PUBLIC_URL } from "@/lib/constants";
 
 /**
  * Recupere l'icone Leaflet correspondante au statut du projet
@@ -6,7 +7,7 @@ import L from "leaflet";
  */
 export const getIcon = (status: string | null | undefined, customPinUrl?: string | null) => {
   let iconUrl = customPinUrl;
-  const r2PublicUrl = process.env.NEXT_PUBLIC_R2_PUBLIC_URL || "https://pub-78c42489fd854dc3a6975810aa00edf2.r2.dev";
+  const r2PublicUrl = R2_PUBLIC_URL;
 
   if (!iconUrl) {
     // Utiliser les pins du système selon le statut

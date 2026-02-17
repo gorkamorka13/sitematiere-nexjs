@@ -6,6 +6,8 @@ import { ProjectUpdateSchema, ProjectUpdateInput, ProjectCreateSchema, ProjectCr
 import { revalidatePath } from "next/cache";
 import { deleteFromR2, extractKeyFromUrl } from "@/lib/storage/r2-operations";
 import { logger } from "@/lib/logger";
+import { DocumentType } from "@/lib/enums";
+import { R2_PUBLIC_URL } from "@/lib/constants";
 
 export async function updateProject(formData: ProjectUpdateInput) {
   const session = await auth();
@@ -19,122 +21,121 @@ export async function updateProject(formData: ProjectUpdateInput) {
   const validatedData = ProjectUpdateSchema.parse(formData);
 
   try {
-    // Mise à jour du projet
-    await prisma.project.update({
-      where: { id: validatedData.id },
-      data: {
-        latitude: validatedData.latitude,
-        longitude: validatedData.longitude,
-        description: validatedData.description,
-        prospection: validatedData.prospection,
-        studies: validatedData.studies,
-        fabrication: validatedData.fabrication,
-        transport: validatedData.transport,
-        construction: validatedData.construction,
-        status: validatedData.status,
-      },
-    });
-
-    // Mise à jour automatique du document "PIN" basé sur le statut
-    if (validatedData.status) {
-      const R2_PUBLIC_URL = process.env.NEXT_PUBLIC_R2_PUBLIC_URL || "https://pub-78c42489fd854dc3a6975810aa00edf2.r2.dev";
-      let pinUrl = "";
-
-      switch (validatedData.status) {
-        case 'DONE':
-          pinUrl = `${R2_PUBLIC_URL}/pins/realise.png`;
-          break;
-        case 'CURRENT':
-          pinUrl = `${R2_PUBLIC_URL}/pins/en_cours.png`;
-          break;
-        case 'PROSPECT':
-        default:
-          pinUrl = `${R2_PUBLIC_URL}/pins/prospection.png`;
-          break;
-      }
-
-      const existingPin = await prisma.document.findFirst({
-        where: { projectId: validatedData.id, type: "PIN" }
+    await prisma.$transaction(async (tx) => {
+      // Mise à jour du projet
+      await tx.project.update({
+        where: { id: validatedData.id },
+        data: {
+          latitude: validatedData.latitude,
+          longitude: validatedData.longitude,
+          description: validatedData.description,
+          prospection: validatedData.prospection,
+          studies: validatedData.studies,
+          fabrication: validatedData.fabrication,
+          transport: validatedData.transport,
+          construction: validatedData.construction,
+          status: validatedData.status,
+        },
       });
 
-      if (existingPin) {
-        await prisma.document.update({
-          where: { id: existingPin.id },
-          data: { url: pinUrl, name: "Pin Carte (Auto)" }
+      // Mise à jour automatique du document "PIN" basé sur le statut
+      if (validatedData.status) {
+        let pinUrl = "";
+
+        switch (validatedData.status) {
+          case 'DONE':
+            pinUrl = `${R2_PUBLIC_URL}/pins/realise.png`;
+            break;
+          case 'CURRENT':
+            pinUrl = `${R2_PUBLIC_URL}/pins/en_cours.png`;
+            break;
+          case 'PROSPECT':
+          default:
+            pinUrl = `${R2_PUBLIC_URL}/pins/prospection.png`;
+            break;
+        }
+
+        const existingPin = await tx.document.findFirst({
+          where: { projectId: validatedData.id, type: DocumentType.PIN }
         });
-      } else {
-        await prisma.document.create({
-          data: {
-            projectId: validatedData.id,
-            type: "PIN",
-            url: pinUrl,
-            name: "Pin Carte (Auto)",
+
+        if (existingPin) {
+          await tx.document.update({
+            where: { id: existingPin.id },
+            data: { url: pinUrl, name: "Pin Carte (Auto)" }
+          });
+        } else {
+          await tx.document.create({
+            data: {
+              projectId: validatedData.id,
+              type: DocumentType.PIN,
+              url: pinUrl,
+              name: "Pin Carte (Auto)",
+            }
+          });
+        }
+      }
+
+      // Mise à jour ou création du document "FLAG"
+      if (validatedData.flagName !== undefined) {
+        const existingFlag = await tx.document.findFirst({
+          where: { projectId: validatedData.id, type: DocumentType.FLAG }
+        });
+
+        if (validatedData.flagName !== "") {
+          if (existingFlag) {
+            await tx.document.update({
+              where: { id: existingFlag.id },
+              data: { url: validatedData.flagName }
+            });
+          } else {
+            await tx.document.create({
+              data: {
+                projectId: validatedData.id,
+                type: DocumentType.FLAG,
+                url: validatedData.flagName,
+                name: "Drapeau",
+              }
+            });
           }
-        });
-      }
-    }
-
-    // Mise à jour ou création du document "FLAG"
-    if (validatedData.flagName !== undefined) {
-      const existingFlag = await prisma.document.findFirst({
-        where: { projectId: validatedData.id, type: "FLAG" }
-      });
-
-      if (validatedData.flagName !== "") {
-        if (existingFlag) {
-          await prisma.document.update({
-            where: { id: existingFlag.id },
-            data: { url: validatedData.flagName }
-          });
-        } else {
-          await prisma.document.create({
-            data: {
-              projectId: validatedData.id,
-              type: "FLAG",
-              url: validatedData.flagName,
-              name: "Drapeau",
-            }
+        } else if (existingFlag) {
+          // Supprimer l'association si le champ est vidé
+          await tx.document.delete({
+            where: { id: existingFlag.id }
           });
         }
-      } else if (existingFlag) {
-        // Supprimer l'association si le champ est vidé
-        await prisma.document.delete({
-          where: { id: existingFlag.id }
-        });
       }
-    }
 
-    // Mise à jour ou création du document "CLIENT_LOGO"
-    if (validatedData.clientLogoName !== undefined) {
-      const existingLogo = await prisma.document.findFirst({
-        where: { projectId: validatedData.id, type: "CLIENT_LOGO" }
-      });
+      // Mise à jour ou création du document "CLIENT_LOGO"
+      if (validatedData.clientLogoName !== undefined) {
+        const existingLogo = await tx.document.findFirst({
+          where: { projectId: validatedData.id, type: DocumentType.CLIENT_LOGO }
+        });
 
-      if (validatedData.clientLogoName !== "") {
-        if (existingLogo) {
-          await prisma.document.update({
-            where: { id: existingLogo.id },
-            data: { url: validatedData.clientLogoName }
-          });
-        } else {
-          await prisma.document.create({
-            data: {
-              projectId: validatedData.id,
-              type: "CLIENT_LOGO",
-              url: validatedData.clientLogoName,
-              name: "Logo Client",
-            }
+        if (validatedData.clientLogoName !== "") {
+          if (existingLogo) {
+            await tx.document.update({
+              where: { id: existingLogo.id },
+              data: { url: validatedData.clientLogoName }
+            });
+          } else {
+            await tx.document.create({
+              data: {
+                projectId: validatedData.id,
+                type: DocumentType.CLIENT_LOGO,
+                url: validatedData.clientLogoName,
+                name: "Logo Client",
+              }
+            });
+          }
+        } else if (existingLogo) {
+          // Supprimer l'association si le champ est vidé
+          await tx.document.delete({
+            where: { id: existingLogo.id }
           });
         }
-      } else if (existingLogo) {
-        // Supprimer l'association si le champ est vidé
-        await prisma.document.delete({
-          where: { id: existingLogo.id }
-        });
       }
-    }
-
-
+    });
 
     revalidatePath("/");
     return { success: true };
@@ -154,80 +155,83 @@ export async function createProject(formData: ProjectCreateInput) {
   const validatedData = ProjectCreateSchema.parse(formData);
 
   try {
-    const project = await prisma.project.create({
-      data: {
-        name: validatedData.name,
-        country: validatedData.country,
-        latitude: validatedData.latitude,
-        longitude: validatedData.longitude,
-        type: validatedData.type,
-        status: validatedData.status,
-        description: validatedData.description,
-        projectCode: validatedData.projectCode,
-        prospection: validatedData.prospection,
-        studies: validatedData.studies,
-        fabrication: validatedData.fabrication,
-        transport: validatedData.transport,
-        construction: validatedData.construction,
-        ownerId: session.user.id as string,
-      },
-    });
+    const result = await prisma.$transaction(async (tx) => {
+      const project = await tx.project.create({
+        data: {
+          name: validatedData.name,
+          country: validatedData.country,
+          latitude: validatedData.latitude,
+          longitude: validatedData.longitude,
+          type: validatedData.type,
+          status: validatedData.status,
+          description: validatedData.description,
+          projectCode: validatedData.projectCode,
+          prospection: validatedData.prospection,
+          studies: validatedData.studies,
+          fabrication: validatedData.fabrication,
+          transport: validatedData.transport,
+          construction: validatedData.construction,
+          ownerId: session.user.id as string,
+        },
+      });
 
-    // Créer le document "FLAG" si fourni
-    if (validatedData.flagName && validatedData.flagName !== "") {
-      await prisma.document.create({
+      // Créer le document "FLAG" si fourni
+      if (validatedData.flagName && validatedData.flagName !== "") {
+        await tx.document.create({
+          data: {
+            projectId: project.id,
+            type: DocumentType.FLAG,
+            url: validatedData.flagName,
+            name: "Drapeau",
+          }
+        });
+      }
+
+      // Créer le document "CLIENT_LOGO" si fourni
+      if (validatedData.clientLogoName && validatedData.clientLogoName !== "") {
+        await tx.document.create({
+          data: {
+            projectId: project.id,
+            type: DocumentType.CLIENT_LOGO,
+            url: validatedData.clientLogoName,
+            name: "Logo Client",
+          }
+        });
+      }
+
+      // Créer le document "PIN" - utiliser le pin personnalisé si fourni, sinon assigner selon le statut
+      let pinUrl = validatedData.pinName;
+      if (!pinUrl || pinUrl === "") {
+        // Assigner un pin par défaut selon le statut
+        switch (validatedData.status) {
+          case 'DONE':
+            pinUrl = `${R2_PUBLIC_URL}/pins/realise.png`;
+            break;
+          case 'CURRENT':
+            pinUrl = `${R2_PUBLIC_URL}/pins/en_cours.png`;
+            break;
+          case 'PROSPECT':
+          default:
+            pinUrl = `${R2_PUBLIC_URL}/pins/prospection.png`;
+            break;
+        }
+      }
+
+      await tx.document.create({
         data: {
           projectId: project.id,
-          type: "FLAG",
-          url: validatedData.flagName,
-          name: "Drapeau",
+          type: DocumentType.PIN,
+          url: pinUrl,
+          name: "Pin Carte",
         }
       });
-    }
 
-    // Créer le document "CLIENT_LOGO" si fourni
-    if (validatedData.clientLogoName && validatedData.clientLogoName !== "") {
-      await prisma.document.create({
-        data: {
-          projectId: project.id,
-          type: "CLIENT_LOGO",
-          url: validatedData.clientLogoName,
-          name: "Logo Client",
-        }
-      });
-    }
-
-    // Créer le document "PIN" - utiliser le pin personnalisé si fourni, sinon assigner selon le statut
-    let pinUrl = validatedData.pinName;
-    if (!pinUrl || pinUrl === "") {
-      const R2_PUBLIC_URL = process.env.NEXT_PUBLIC_R2_PUBLIC_URL || "https://pub-78c42489fd854dc3a6975810aa00edf2.r2.dev";
-      // Assigner un pin par défaut selon le statut
-      switch (validatedData.status) {
-        case 'DONE':
-          pinUrl = `${R2_PUBLIC_URL}/pins/realise.png`;
-          break;
-        case 'CURRENT':
-          pinUrl = `${R2_PUBLIC_URL}/pins/en_cours.png`;
-          break;
-        case 'PROSPECT':
-        default:
-          pinUrl = `${R2_PUBLIC_URL}/pins/prospection.png`;
-          break;
-      }
-    }
-
-    await prisma.document.create({
-      data: {
-        projectId: project.id,
-        type: "PIN",
-        url: pinUrl,
-        name: "Pin Carte",
-      }
+      return project;
     });
 
     revalidatePath("/");
 
-    return { success: true, projectId: project.id };
+    return { success: true, projectId: result.id };
   } catch (error) {
     logger.error("Erreur lors de la création du projet:", error);
     return { success: false, error: "Erreur lors de la création en base de données." };
