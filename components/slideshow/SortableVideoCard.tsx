@@ -2,7 +2,7 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Trash2, CheckCircle2, Clock, Video, Eye, EyeOff } from 'lucide-react';
+import { GripVertical, Trash2, CheckCircle2, Clock, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface SortableVideoCardProps {

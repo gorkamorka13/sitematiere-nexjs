@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   getProjectVideos,
@@ -23,13 +23,11 @@ export interface SlideshowVideo {
   updatedAt: string; // Serialized
 }
 
-interface UseSlideshowVideoProps {
-  initialProjectId?: string;
-}
 
-export function useSlideshowVideo({ initialProjectId = '' }: UseSlideshowVideoProps = {}) {
+
+export function useSlideshowVideo(projectId: string | null) {
   const router = useRouter();
-  const [selectedProjectId, setSelectedProjectId] = useState<string>(initialProjectId);
+  // const [selectedProjectId, setSelectedProjectId] = useState<string>(initialProjectId); // Removed
   const [videos, setVideos] = useState<SlideshowVideo[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -39,50 +37,61 @@ export function useSlideshowVideo({ initialProjectId = '' }: UseSlideshowVideoPr
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
   const loadVideos = useCallback(async () => {
-    if (!selectedProjectId) {
+    if (!projectId) {
       setVideos([]);
       return;
     }
 
-    console.log('[useSlideshowVideo] Loading videos for project:', selectedProjectId);
+    console.log('[useSlideshowVideo] Loading videos for project:', projectId);
     setLoading(true);
     try {
-      const result = await getProjectVideos(selectedProjectId);
+      const result = await getProjectVideos(projectId);
       if (result.success && result.videos) {
         // Cast result to SlideshowVideo (ensuring types match)
-        const loadedVideos = result.videos as unknown as SlideshowVideo[];
+        const loadedVideos = result.videos as SlideshowVideo[];
         setVideos(loadedVideos);
 
         // Check if there are any unpublished videos (drafts)
-        const hasUnpublished = loadedVideos.some(v => !v.isPublished);
+        const hasUnpublished = loadedVideos.some((v: SlideshowVideo) => !v.isPublished);
         setHasUnpublishedChanges(hasUnpublished);
+      } else {
+        if (result.error) {
+          console.error('[useSlideshowVideo] Error result:', result.error);
+          setToast({ message: "Erreur lors du chargement des vidéos", type: 'error' });
+        }
       }
     } catch (error) {
       console.error('[useSlideshowVideo] Error loading videos:', error);
-      setToast({ message: "Erreur lors du chargement des vidéos", type: 'error' });
+      setToast({ message: "Erreur technique lors du chargement des vidéos", type: 'error' });
     } finally {
       setLoading(false);
     }
-  }, [selectedProjectId]);
+  }, [projectId]);
+
+  // Load videos when projectId changes
+  useEffect(() => {
+    loadVideos();
+  }, [loadVideos]);
 
   const addVideo = async (url: string, title?: string) => {
-    if (!selectedProjectId) return false;
+    if (!projectId) return false;
 
     setLoading(true);
     try {
-      const result = await addProjectVideo(selectedProjectId, url, title);
+      const result = await addProjectVideo(projectId, url, title);
+
       if (result.success && result.video) {
         setHasUnpublishedChanges(true);
         await loadVideos(); // Reload to get correct order and state
-        router.refresh();
+        router.refresh(); // Refresh server components if needed
         return true;
       } else {
-        setToast({ message: result.error || 'Erreur lors de l\'ajout', type: 'error' });
+        setToast({ message: result.error || 'Erreur lors de l\'ajout de la vidéo', type: 'error' });
         return false;
       }
     } catch (error) {
       console.error('[useSlideshowVideo] Error adding video:', error);
-      setToast({ message: 'Erreur lors de l\'ajout de la vidéo', type: 'error' });
+      setToast({ message: 'Erreur technique lors de l\'ajout', type: 'error' });
       return false;
     } finally {
       setLoading(false);
@@ -93,6 +102,7 @@ export function useSlideshowVideo({ initialProjectId = '' }: UseSlideshowVideoPr
     setDeletingId(videoId);
     try {
       const result = await deleteProjectVideo(videoId);
+
       if (result.success) {
         setVideos(prev => {
           const updated = prev.filter(v => v.id !== videoId);
@@ -115,7 +125,7 @@ export function useSlideshowVideo({ initialProjectId = '' }: UseSlideshowVideoPr
   };
 
   const reorderVideos = async (oldIndex: number, newIndex: number) => {
-    if (!selectedProjectId) return;
+    if (!projectId) return;
 
     const newItems = arrayMove(videos, oldIndex, newIndex);
     setVideos(newItems);
@@ -126,7 +136,7 @@ export function useSlideshowVideo({ initialProjectId = '' }: UseSlideshowVideoPr
     setSaving(true);
     try {
       const orderedIds = newItems.map(item => item.id);
-      const result = await reorderProjectVideos(selectedProjectId, orderedIds);
+      const result = await reorderProjectVideos(projectId, orderedIds);
 
       if (!result.success) {
         setToast({ message: result.error || 'Erreur sauvegarde ordre', type: 'error' });
@@ -144,11 +154,11 @@ export function useSlideshowVideo({ initialProjectId = '' }: UseSlideshowVideoPr
   };
 
   const publish = async () => {
-    if (!selectedProjectId) return;
+    if (!projectId) return;
 
     setPublishing(true);
     try {
-      const result = await publishProjectVideos(selectedProjectId);
+      const result = await publishProjectVideos(projectId);
       if (result.success) {
         setToast({ message: 'Vidéos publiées avec succès !', type: 'success' });
         setHasUnpublishedChanges(false);
@@ -166,13 +176,13 @@ export function useSlideshowVideo({ initialProjectId = '' }: UseSlideshowVideoPr
   };
 
   const unpublish = async () => {
-    if (!selectedProjectId) return;
+    if (!projectId) return;
 
     setPublishing(true);
     try {
-      const result = await unpublishProjectVideos(selectedProjectId);
+      const result = await unpublishProjectVideos(projectId);
       if (result.success) {
-        setToast({ message: 'Vidéos dépubliées (brouillon).', type: 'success' });
+        setToast({ message: 'Vidéos dépubliées (brouillon) !', type: 'success' });
         setHasUnpublishedChanges(true); // All are now drafts
         setVideos(prev => prev.map(v => ({ ...v, isPublished: false })));
         router.refresh();
@@ -181,47 +191,37 @@ export function useSlideshowVideo({ initialProjectId = '' }: UseSlideshowVideoPr
       }
     } catch (error) {
       console.error('[useSlideshowVideo] Error unpublishing:', error);
-      setToast({ message: 'Erreur lors de la dépublication', type: 'error' });
+      setToast({ message: 'Erreur dépublication', type: 'error' });
     } finally {
       setPublishing(false);
     }
   };
 
   const togglePublish = async (videoId: string) => {
-    // Optimistic update
-    setVideos(prev => prev.map(v =>
-      v.id === videoId ? { ...v, isPublished: !v.isPublished } : v
-    ));
-
     try {
       const result = await toggleVideoPublishStatus(videoId);
-      if (!result.success) {
-        // Revert on error
+      if (result.success && result.video) {
         setVideos(prev => prev.map(v =>
-          v.id === videoId ? { ...v, isPublished: !v.isPublished } : v
-        ));
-        setToast({ message: result.error || 'Erreur modification statut', type: 'error' });
-      } else {
-        // Update with server confirmed data
-        setVideos(prev => prev.map(v =>
-          v.id === videoId && result.video ? { ...v, isPublished: result.video.isPublished as boolean } : v
+          v.id === videoId ? { ...v, isPublished: result.video.isPublished } : v
         ));
 
         // Recalculate global unpublished state
-        setHasUnpublishedChanges(videos.some(v => !v.isPublished));
+        const updatedVideos = videos.map(v =>
+          v.id === videoId ? { ...v, isPublished: result.video.isPublished } : v
+        );
+        setHasUnpublishedChanges(updatedVideos.some(v => !v.isPublished));
+
+        router.refresh();
+      } else {
+        setToast({ message: result.error || 'Erreur modification statut', type: 'error' });
       }
     } catch (error) {
       console.error("Error toggling publish:", error);
-      // Revert
-      setVideos(prev => prev.map(v =>
-        v.id === videoId ? { ...v, isPublished: !v.isPublished } : v
-      ));
+      setToast({ message: 'Erreur lors de la modification du statut', type: 'error' });
     }
   };
 
   return {
-    selectedProjectId,
-    setSelectedProjectId,
     videos,
     loading,
     saving,

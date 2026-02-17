@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, X, Search, Video } from 'lucide-react';
+import { X, Video, Loader2 } from 'lucide-react';
 import { FileGrid } from '@/components/files/file-grid';
 import { FileSearch } from '@/components/files/file-search';
 import { FileData } from '@/components/files/file-explorer';

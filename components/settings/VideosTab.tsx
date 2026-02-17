@@ -17,7 +17,7 @@ import {
     sortableKeyboardCoordinates,
     verticalListSortingStrategy
 } from '@dnd-kit/sortable';
-import { Loader2, Video as VideoIcon, Upload, Trash2, Eye, Database } from 'lucide-react';
+import { Loader2, Video as VideoIcon, Upload, Database } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SortableVideoCard } from '@/components/slideshow/SortableVideoCard';
 import { VideoDropzone } from './VideoDropzone';

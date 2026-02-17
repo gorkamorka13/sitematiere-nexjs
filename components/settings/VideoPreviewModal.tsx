@@ -28,7 +28,6 @@ export function VideoPreviewModal({ video, onClose }: VideoPreviewModalProps) {
                 <div className="absolute top-4 left-6 z-10 px-4 py-2 bg-black/40 backdrop-blur-md rounded-xl">
                     <h3 className="text-white font-bold text-sm">{video.title}</h3>
                 </div>
-                {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
                 <video
                     src={video.url}
                     controls

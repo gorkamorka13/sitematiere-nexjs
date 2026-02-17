@@ -10,17 +10,13 @@ import {
     Loader2,
     Upload,
     Eye,
-    Trash2,
     Globe,
     ArrowRight,
-    Youtube,
-    AlertCircle,
-    PlayCircle,
     Wand2,
     Monitor,
     Zap
 } from 'lucide-react';
-import { useDropzone } from 'react-dropzone';
+// import { useDropzone } from 'react-dropzone'; // Removed unused
 import { Button } from '@/components/ui/button';
 import { useImageProcessor } from '@/hooks/use-image-processor';
 import { DropZone } from '@/components/image-processor/DropZone';
@@ -74,8 +70,6 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
 
     // Slideshow state
     const {
-        selectedProjectId: hookProjectId,
-        setSelectedProjectId: setHookProjectId,
         slideshowImages,
         loading: loadingSlideshow,
         publishing,
@@ -87,12 +81,10 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
         removeImage,
         reorderImages,
         publish
-    } = useSlideshow();
+    } = useSlideshow(selectedProjectId);
 
     // Video state hook
     const {
-        selectedProjectId: videoProjectId,
-        setSelectedProjectId: setVideoProjectId,
         videos,
         loading: loadingVideos,
         publishing: publishingVideos,
@@ -106,7 +98,7 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
         publish: publishVideos,
         unpublish: unpublishVideos,
         togglePublish: toggleVideoPublish
-    } = useSlideshowVideo();
+    } = useSlideshowVideo(selectedProjectId);
 
     // Filter state
     const [searchQuery, setSearchQuery] = useState('');
@@ -118,16 +110,6 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
             setActiveTab(defaultTab);
         }
     }, [isOpen, defaultTab]);
-
-    // Sync internal project ID with hooks
-    useEffect(() => {
-        if (selectedProjectId !== hookProjectId) {
-            setHookProjectId(selectedProjectId || '');
-        }
-        if (selectedProjectId !== videoProjectId) {
-            setVideoProjectId(selectedProjectId || '');
-        }
-    }, [selectedProjectId, hookProjectId, setHookProjectId, videoProjectId, setVideoProjectId]);
 
     const handleRetouch = useCallback(async (imageUrl: string, filename: string) => {
         setToast({ message: 'Chargement de l\'image dans l\'éditeur...', type: 'success' });
@@ -746,16 +728,4 @@ function EditTab({ processor, projectId, onSuccess }: EditTabProps) {
     );
 }
 
-function HelpNote() {
-    return (
-        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800 flex items-start gap-4">
-            <AlertCircle className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-            <div className="space-y-1">
-                <p className="text-xs font-bold text-blue-900 dark:text-blue-200 uppercase tracking-wider">Conseil d&apos;intégration</p>
-                <p className="text-[11px] text-blue-700 dark:text-blue-300 leading-relaxed">
-                    Pour un affichage optimal, privilégiez les liens YouTube (format long ou Short) ou des liens directs vers des fichiers .mp4. Les vidéos seront automatiquement lues dans la galerie média du Dashboard.
-                </p>
-            </div>
-        </div>
-    );
-}
+
