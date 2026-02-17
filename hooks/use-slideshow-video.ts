@@ -44,6 +44,7 @@ export function useSlideshowVideo(projectId: string | null) {
 
     console.log('[useSlideshowVideo] Loading videos for project:', projectId);
     setLoading(true);
+    setVideos([]); // Clear previous state to prevent mismatch
     try {
       const result = await getProjectVideos(projectId);
       if (result.success && result.videos) {
