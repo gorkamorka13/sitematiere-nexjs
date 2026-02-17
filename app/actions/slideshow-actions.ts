@@ -27,7 +27,18 @@ export async function getSlideshowImages(projectId: string, publishedOnly: boole
       },
     });
 
-    return { success: true, images: slideshowImages };
+    // Serialize dates for Cloudflare compatibility
+    const serializedImages = slideshowImages.map(si => ({
+      ...si,
+      createdAt: si.createdAt.toISOString(),
+      updatedAt: si.updatedAt.toISOString(),
+      image: {
+        ...si.image,
+        createdAt: si.image.createdAt.toISOString(),
+      },
+    }));
+
+    return { success: true, images: serializedImages };
   } catch (error) {
     console.error("Error fetching slideshow images:", error);
     return { success: false, error: "Erreur lors de la récupération des images du slideshow." };
@@ -83,7 +94,18 @@ export async function addSlideshowImage(projectId: string, imageId: string) {
     revalidatePath("/");
     revalidatePath(`/slideshow/view/${projectId}`);
 
-    return { success: true, slideshowImage };
+    // Serialize dates for Cloudflare compatibility
+    const serializedSlideshowImage = {
+      ...slideshowImage,
+      createdAt: slideshowImage.createdAt.toISOString(),
+      updatedAt: slideshowImage.updatedAt.toISOString(),
+      image: {
+        ...slideshowImage.image,
+        createdAt: slideshowImage.image.createdAt.toISOString(),
+      },
+    };
+
+    return { success: true, slideshowImage: serializedSlideshowImage };
   } catch (error) {
     console.error("Error adding slideshow image:", error);
     return { success: false, error: "Erreur lors de l'ajout de l'image au slideshow." };

@@ -15,10 +15,13 @@ export interface SlideshowImage {
   imageId: string;
   order: number;
   isPublished: boolean;
+  createdAt: string; // Serialized for Cloudflare
+  updatedAt: string; // Serialized for Cloudflare
   image: {
     id: string;
     url: string;
     alt: string | null;
+    createdAt: string; // Serialized for Cloudflare
   };
 }
 
