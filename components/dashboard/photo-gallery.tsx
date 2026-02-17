@@ -254,9 +254,9 @@ export function PhotoGallery({ selectedProject, dynamicImages = [], videos = [],
                                 controls
                                 autoPlay
                                 className="w-full h-full"
-                                src={selectedVideo.url}
+                                src={normalizeImageUrl(selectedVideo.url)}
                             >
-                                <source src={selectedVideo.url} type="video/mp4" />
+                                <source src={normalizeImageUrl(selectedVideo.url)} type="video/mp4" />
                                 Votre navigateur ne supporte pas la lecture de vidéos.
                             </video>
                         </div>

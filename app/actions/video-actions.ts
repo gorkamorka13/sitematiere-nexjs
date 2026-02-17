@@ -1,5 +1,7 @@
 "use server";
 
+// export const runtime = 'edge'; // Commenté pour le dev local
+
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
@@ -9,22 +11,51 @@ import { getSignedUploadUrl, getFileUrl } from "@/lib/storage/r2-operations";
  * Get all videos for a project, ordered by 'order' field
  */
 export async function getProjectVideos(projectId: string) {
+  console.log(`[getProjectVideos] Fetching videos for projectId: ${projectId}`);
   try {
+    if (!projectId) {
+      console.error("[getProjectVideos] projectId is missing");
+      return { success: false, error: "ID du projet manquant." };
+    }
+
     const videos = await prisma.video.findMany({
       where: { projectId },
       orderBy: { order: 'asc' }, // Changed from createdAt: 'desc' to support custom ordering
     });
 
+    console.log(`[getProjectVideos] Found ${videos.length} videos`);
+
     // Serialize dates to ISO strings for Cloudflare compatibility
-    const serializedVideos = videos.map(video => ({
-      ...video,
-      createdAt: video.createdAt ? video.createdAt.toISOString() : new Date().toISOString(),
-      updatedAt: video.updatedAt ? video.updatedAt.toISOString() : new Date().toISOString(),
-    }));
+    const serializedVideos = videos.map(v => {
+      try {
+        return {
+          id: v.id,
+          url: v.url ? v.url.trim().replace(/\n/g, '') : '',
+          title: v.title,
+          projectId: v.projectId,
+          order: v.order,
+          isPublished: v.isPublished,
+          createdAt: v.createdAt ? v.createdAt.toISOString() : new Date().toISOString(),
+          updatedAt: v.updatedAt ? v.updatedAt.toISOString() : new Date().toISOString(),
+        };
+      } catch (e) {
+        console.error(`[getProjectVideos] Serialization error for video ${v.id}:`, e);
+        return {
+          id: v.id,
+          url: v.url ? v.url.trim().replace(/\n/g, '') : '',
+          title: v.title,
+          projectId: v.projectId,
+          order: v.order,
+          isPublished: v.isPublished,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+      }
+    });
 
     return { success: true, videos: serializedVideos };
   } catch (error) {
-    console.error("Error fetching videos:", error);
+    console.error("[getProjectVideos] Exception caught:", error);
     return {
       success: false,
       error: error instanceof Error ? `Erreur: ${error.message}` : "Erreur lors de la récupération des vidéos."

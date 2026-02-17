@@ -1,5 +1,7 @@
 "use server";
 
+// export const runtime = 'edge'; // Commented for local dev
+
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
@@ -11,7 +13,13 @@ import { Prisma } from "@prisma/client";
  * @param publishedOnly - If true, only return published images
  */
 export async function getSlideshowImages(projectId: string, publishedOnly: boolean = false) {
+  console.log(`[getSlideshowImages] Fetching for projectId: ${projectId}, publishedOnly: ${publishedOnly}`);
   try {
+    if (!projectId) {
+      console.error("[getSlideshowImages] projectId is missing");
+      return { success: false, error: "ID du projet manquant." };
+    }
+
     const where: Prisma.SlideshowImageWhereInput = { projectId };
     if (publishedOnly) {
       where.isPublished = true;
@@ -27,20 +35,51 @@ export async function getSlideshowImages(projectId: string, publishedOnly: boole
       },
     });
 
+    console.log(`[getSlideshowImages] Found ${slideshowImages.length} images`);
+
     // Serialize dates for Cloudflare compatibility
-    const serializedImages = slideshowImages.map(si => ({
-      ...si,
-      createdAt: si.createdAt ? si.createdAt.toISOString() : new Date().toISOString(),
-      updatedAt: si.updatedAt ? si.updatedAt.toISOString() : new Date().toISOString(),
-      image: si.image ? {
-        ...si.image,
-        createdAt: si.image.createdAt ? si.image.createdAt.toISOString() : new Date().toISOString(),
-      } : null,
-    })).filter(img => img.image !== null); // Filter out images that might be missing
+    const serializedImages = slideshowImages.map(si => {
+      try {
+        return {
+          id: si.id,
+          projectId: si.projectId,
+          imageId: si.imageId,
+          order: si.order,
+          isPublished: si.isPublished,
+          createdAt: si.createdAt ? si.createdAt.toISOString() : new Date().toISOString(),
+          updatedAt: si.updatedAt ? si.updatedAt.toISOString() : new Date().toISOString(),
+          image: si.image ? {
+            id: si.image.id,
+            url: si.image.url ? si.image.url.trim().replace(/\n/g, '') : '',
+            alt: si.image.alt,
+            projectId: si.image.projectId,
+            createdAt: si.image.createdAt ? si.image.createdAt.toISOString() : new Date().toISOString(),
+          } : null,
+        };
+      } catch (e) {
+        console.error(`[getSlideshowImages] Serialization error for image ${si.id}:`, e);
+        return {
+          id: si.id,
+          projectId: si.projectId,
+          imageId: si.imageId,
+          order: si.order,
+          isPublished: si.isPublished,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          image: si.image ? {
+            id: si.image.id,
+            url: si.image.url ? si.image.url.trim().replace(/\n/g, '') : '',
+            alt: si.image.alt,
+            projectId: si.image.projectId,
+            createdAt: new Date().toISOString(),
+          } : null,
+        };
+      }
+    }).filter(img => img.image !== null);
 
     return { success: true, images: serializedImages };
   } catch (error) {
-    console.error("Error fetching slideshow images:", error);
+    console.error("[getSlideshowImages] Exception caught:", error);
     return {
       success: false,
       error: error instanceof Error ? `Erreur: ${error.message}` : "Erreur lors de la récupération des images du slideshow."

@@ -47,6 +47,7 @@ export function useSlideshowVideo(projectId: string | null) {
 
     try {
       const result = await getProjectVideos(projectId);
+      console.log('[useSlideshowVideo] result for project:', projectId, result);
 
       if (isCancelled && isCancelled()) return;
 
