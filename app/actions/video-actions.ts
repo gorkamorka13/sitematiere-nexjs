@@ -13,7 +13,14 @@ export async function getProjectVideos(projectId: string) {
       where: { projectId },
       orderBy: { createdAt: 'desc' },
     });
-    return { success: true, videos };
+
+    // Serialize dates to ISO strings for Cloudflare compatibility
+    const serializedVideos = videos.map(video => ({
+      ...video,
+      createdAt: video.createdAt.toISOString(),
+    }));
+
+    return { success: true, videos: serializedVideos };
   } catch (error) {
     console.error("Error fetching videos:", error);
     return { success: false, error: "Erreur lors de la récupération des vidéos." };
@@ -46,7 +53,13 @@ export async function addProjectVideo(projectId: string, url: string, title?: st
     revalidatePath("/");
     revalidatePath("/dashboard");
 
-    return { success: true, video };
+    // Serialize dates to ISO strings for Cloudflare compatibility
+    const serializedVideo = {
+      ...video,
+      createdAt: video.createdAt.toISOString(),
+    };
+
+    return { success: true, video: serializedVideo };
   } catch (error) {
     console.error("Error adding video:", error);
     return { success: false, error: "Erreur lors de l'ajout de la vidéo." };

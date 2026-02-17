@@ -50,8 +50,15 @@ import { DatabaseImagePicker } from '@/components/image-processor/DatabaseImageP
 import { Toast } from '@/components/ui/toast';
 import { useSlideshow, SlideshowImage } from '@/hooks/use-slideshow';
 import { addProjectVideo, deleteProjectVideo, getProjectVideos, getSignedVideoUploadAction } from '@/app/actions/video-actions';
-import type { Video as ProjectVideo } from '@prisma/client';
 
+// Serialized version of Video for Cloudflare compatibility
+type SerializedVideo = {
+    id: string;
+    url: string;
+    title: string | null;
+    projectId: string;
+    createdAt: string; // ISO string instead of Date
+};
 
 interface Project {
     id: string;
@@ -91,7 +98,7 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
     } = useSlideshow();
 
     // Video state
-    const [videos, setVideos] = useState<ProjectVideo[]>([]);
+    const [videos, setVideos] = useState<SerializedVideo[]>([]);
     const [loadingVideos, setLoadingVideos] = useState(false);
 
     // Filter state
@@ -527,7 +534,7 @@ function SlideshowTab({
 }
 
 interface VideosTabProps {
-    videos: ProjectVideo[];
+    videos: SerializedVideo[];
     loading: boolean;
     onDelete: (id: string) => Promise<void>;
     projectId: string;
@@ -543,7 +550,7 @@ function VideosTab({
     onRefresh,
     setToast
 }: VideosTabProps) {
-    const [previewVideo, setPreviewVideo] = useState<ProjectVideo | null>(null);
+    const [previewVideo, setPreviewVideo] = useState<SerializedVideo | null>(null);
 
     return (
         <div className="space-y-8">
@@ -583,7 +590,7 @@ function VideosTab({
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {videos.map((vid: ProjectVideo) => (
+                        {videos.map((vid: SerializedVideo) => (
                             <div
                                 key={vid.id}
                                 className="group flex items-center justify-between p-4 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl hover:border-indigo-200 dark:hover:border-indigo-800 transition-all hover:shadow-md"
