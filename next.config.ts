@@ -40,11 +40,25 @@ const config = () => {
           hostname: 'sitematiere-nexjs.pages.dev',
           pathname: '**',
         },
-        ...(process.env.NEXT_PUBLIC_R2_HOSTNAME ? [{
-          protocol: 'https' as const,
-          hostname: process.env.NEXT_PUBLIC_R2_HOSTNAME,
-          pathname: '**',
-        }] : []),
+        ...(() => {
+          // Robustly handle R2 hostname from either variable
+          const r2Url = process.env.NEXT_PUBLIC_R2_PUBLIC_URL;
+          let hostname = process.env.NEXT_PUBLIC_R2_HOSTNAME;
+
+          if (!hostname && r2Url) {
+            try {
+              hostname = new URL(r2Url).hostname;
+            } catch {
+              // Ignore invalid URLs
+            }
+          }
+
+          return hostname ? [{
+            protocol: 'https' as const,
+            hostname,
+            pathname: '**',
+          }] : [];
+        })(),
         {
           protocol: 'https',
           hostname: 'res.cloudinary.com',
