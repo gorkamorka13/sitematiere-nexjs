@@ -3,7 +3,6 @@ import { auth, checkRole, UserRole } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 
-// export const runtime = 'edge'; // Commenté pour le dev local
 
 export async function GET() {
   const session = await auth();

@@ -7,7 +7,6 @@ import { logger } from "@/lib/logger";
 // Duplicate import removed
 
 // Cloudflare Pages requires Edge Runtime for API routes
-// export const runtime = 'edge'; // Commenté pour le dev local
 
 
 export async function POST(request: Request) {

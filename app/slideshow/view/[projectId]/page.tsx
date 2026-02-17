@@ -6,7 +6,6 @@ import { UserRole } from "@/lib/auth-types";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
-// export const runtime = 'edge'; // Commenté pour le dev local
 
 interface PageProps {
   params: Promise<{ projectId: string }>;

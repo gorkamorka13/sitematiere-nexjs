@@ -1,5 +1,4 @@
 // Route API Auth - NE PAS utiliser Edge Runtime car Prisma n'est pas compatible (pour le dev local)
-// export const runtime = 'edge'; // Commenté pour le dev local
 
 import { NextRequest } from "next/server";
 import { handlers } from "@/lib/auth";

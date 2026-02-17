@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 
-// export const runtime = 'edge'; // Commenté pour le dev local
 import prisma from '@/lib/prisma';
 
 export async function GET() {

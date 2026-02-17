@@ -5,7 +5,6 @@ import { hash } from "bcrypt-ts";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
 
-// export const runtime = 'edge'; // Commenté pour le dev local
 
 const userSchema = z.object({
   username: z.string().min(1),

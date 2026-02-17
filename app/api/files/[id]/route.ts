@@ -5,7 +5,6 @@ import { sanitizeFileName } from "@/lib/files/validation";
 import { logger } from "@/lib/logger";
 
 
-// export const runtime = 'edge'; // Commenté pour le dev local
 
 
 export async function PATCH(

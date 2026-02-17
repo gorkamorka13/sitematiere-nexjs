@@ -67,27 +67,6 @@ const config = () => {
       ],
     },
     serverExternalPackages: ["@aws-sdk/client-s3", "@aws-sdk/s3-request-presigner", "@smithy/util-stream"],
-    webpack: (config, { isServer }) => {
-      // Ignore Prisma WASM files in edge runtime
-      if (isServer) {
-        config.module = config.module || {};
-        config.module.rules = config.module.rules || [];
-        // Only ignore Prisma's WASM loader on Windows local dev to avoid "Unexpected character" error
-        if (!process.env.CF_PAGES && process.platform === 'win32') {
-          config.module.rules.push({
-            test: /wasm-edge-light-loader\.mjs$/,
-            use: 'ignore-loader',
-          });
-        }
-
-        config.experiments = {
-          ...config.experiments,
-          asyncWebAssembly: true,
-          layers: true,
-        };
-      }
-      return config;
-    },
   };
 
   return nextConfig;

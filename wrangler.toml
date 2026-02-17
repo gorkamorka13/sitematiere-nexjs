@@ -1,4 +1,28 @@
-name = "your-project-name"
-compatibility_date = "2024-09-23" # Use today's date or your preferred date
+name = "sitematiere"
+main = ".open-next/worker.js"
+compatibility_date = "2025-09-15"
 compatibility_flags = ["nodejs_compat"]
-pages_build_output_dir = ".vercel/output/static"
+
+[site]
+bucket = ".open-next/assets"
+
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+# Environment variables (non-sensitive, available at build time and runtime)
+[vars]
+NEXT_PUBLIC_APP_VERSION = "0.1.77"
+NEXT_PUBLIC_CREDIT = "Michel ESPARSA"
+NEXT_PUBLIC_R2_PUBLIC_URL = "https://pub-78c42489fd854dc3a6975810aa00edf2.r2.dev"
+NEXT_PUBLIC_R2_HOSTNAME = "pub-78c42489fd854dc3a6975810aa00edf2.r2.dev"
+
+# Note: Sensitive environment variables should be set via wrangler secret put:
+# - DATABASE_URL ✓
+# - NEXTAUTH_SECRET ✓
+# - R2_ACCESS_KEY_ID ✓
+# - R2_SECRET_ACCESS_KEY ✓
+# - R2_ENDPOINT ✓
+# - R2_BUCKET_NAME ✓
+
+NEXTAUTH_URL = "https://sitematiere.michel-esparsa.workers.dev"
