@@ -33,7 +33,7 @@ const prisma = new Proxy({} as PrismaClient, {
 
     const value = client[prop as keyof PrismaClient];
     if (typeof value === 'function') {
-      return (value as (...args: any[]) => any).bind(client);
+      return (value as (...args: unknown[]) => unknown).bind(client);
     }
     return value;
   }
