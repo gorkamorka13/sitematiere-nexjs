@@ -13,6 +13,7 @@ import { FileUploadZone } from "../files/file-upload-zone";
 import { FileUploadProgress, FileUploadState } from "../files/file-upload-progress";
 import { DatabaseImagePicker } from "../image-processor/DatabaseImagePicker";
 import { Toast } from "@/components/ui/toast";
+import { getStatusLabel } from "@/lib/utils";
 
 interface ProjectManagementDialogProps {
   projects: Project[];
@@ -678,6 +679,8 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                       latitude={formData.latitude}
                       longitude={formData.longitude}
                       onPositionChange={handleMapPositionChange}
+                      status={formData.status}
+                      customPinUrl={formData.pinName}
                     />
                   </div>
                   <p className="mt-2 text-xs text-gray-500 dark:text-gray-400 italic">
@@ -844,23 +847,46 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
               </div>
 
               {/* Statut du Projet */}
-              <div>
+              <div className="space-y-4">
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Statut du Projet</label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value as ProjectStatus })}
-                  disabled={!selectedProjectId}
-                  className="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white"
-                >
-                  {Object.values(ProjectStatus).map(s => (
-                    <option key={s} value={s}>
-                      {s === 'CURRENT' ? '🔴 ' : s === 'DONE' ? '🟢 ' : '🔵 '}
-                      {s === 'CURRENT' ? 'En cours' : s === 'DONE' ? 'Réalisé' : 'Prospection'}
-                    </option>
-                  ))}
-                </select>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <div className="flex-1 w-full">
+                    <select
+                      value={formData.status}
+                      onChange={(e) => setFormData({ ...formData, status: e.target.value as ProjectStatus })}
+                      disabled={!selectedProjectId}
+                      className="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white"
+                    >
+                      {Object.values(ProjectStatus).map(s => (
+                        <option key={s} value={s}>
+                          {getStatusLabel(s)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Aperçu du Pin Réel */}
+                  {selectedProjectId && (
+                    <div className="flex items-center gap-3 px-4 py-2 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-700 shrink-0">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Pin Actuel :</span>
+                      <div className="relative w-8 h-8 rounded-lg overflow-hidden bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center p-1 shadow-sm">
+                        <NextImage
+                          src={formData.pinName && (formData.pinName.startsWith('http') || formData.pinName.startsWith('/'))
+                            ? formData.pinName
+                            : (formData.status === 'DONE' ? 'https://pub-78c42489fd854dc3a6975810aa00edf2.r2.dev/pins/realise.png'
+                               : formData.status === 'CURRENT' ? 'https://pub-78c42489fd854dc3a6975810aa00edf2.r2.dev/pins/en_cours.png'
+                               : 'https://pub-78c42489fd854dc3a6975810aa00edf2.r2.dev/pins/prospection.png')}
+                          alt="Pin"
+                          width={24}
+                          height={24}
+                          className="object-contain"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
                 <p className="mt-2 text-xs text-gray-500 italic">
-                  Le pin sur la carte sera automatiquement mis à jour selon le statut choisi.
+                  Le pin sur la carte sera automatiquement mis à jour selon le statut choisi (sauf si un pin personnalisé est sélectionné).
                 </p>
               </div>
 
@@ -1049,21 +1075,35 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                     ))}
                   </select>
                 </div>
-                <div>
+                <div className="md:col-span-1">
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Statut *</label>
-                  <select
-                    value={createFormData.status}
-                    onChange={(e) => setCreateFormData({ ...createFormData, status: e.target.value as unknown as ProjectStatus })}
-                    className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white"
-                    required
-                  >
-                    {Object.values(ProjectStatus).map(s => (
-                      <option key={s} value={s}>
-                        {s === 'CURRENT' ? '🔴 ' : s === 'DONE' ? '🟢 ' : '🔵 '}
-                        {s}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="flex items-center gap-3">
+                    <select
+                      value={createFormData.status}
+                      onChange={(e) => setCreateFormData({ ...createFormData, status: e.target.value as unknown as ProjectStatus })}
+                      className="flex-1 px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white"
+                      required
+                    >
+                      {Object.values(ProjectStatus).map(s => (
+                        <option key={s} value={s}>
+                          {getStatusLabel(s)}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 flex items-center justify-center p-1.5 shrink-0">
+                      <NextImage
+                        src={createFormData.pinName && (createFormData.pinName.startsWith('http') || createFormData.pinName.startsWith('/'))
+                          ? createFormData.pinName
+                          : (createFormData.status === 'DONE' ? 'https://pub-78c42489fd854dc3a6975810aa00edf2.r2.dev/pins/realise.png'
+                            : createFormData.status === 'CURRENT' ? 'https://pub-78c42489fd854dc3a6975810aa00edf2.r2.dev/pins/en_cours.png'
+                            : 'https://pub-78c42489fd854dc3a6975810aa00edf2.r2.dev/pins/prospection.png')}
+                        alt="Pin"
+                        width={28}
+                        height={28}
+                        className="object-contain"
+                      />
+                    </div>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Code Projet</label>
@@ -1087,6 +1127,8 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                     latitude={createFormData.latitude}
                     longitude={createFormData.longitude}
                     onPositionChange={handleMapPositionChange}
+                    status={createFormData.status}
+                    customPinUrl={createFormData.pinName}
                   />
                 </div>
               </div>

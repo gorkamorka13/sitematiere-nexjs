@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import React, { useEffect, useState, useRef } from "react";
+import { getIcon } from "@/lib/map-icons";
 
 // Fix for default Leaflet marker icons in Next.js
 interface IconDefaultPrototype extends L.Icon.Default {
@@ -16,22 +17,25 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-// Use default Leaflet icon (blue marker)
-const editableIcon = new L.Icon.Default();
-
 type EditableMapProps = {
   latitude: number;
   longitude: number;
   onPositionChange: (lat: number, lng: number, isFinal?: boolean) => void;
+  status?: string;
+  customPinUrl?: string;
 };
 
 // Component to handle marker dragging
 function DraggableMarker({
   position,
-  onPositionChange
+  onPositionChange,
+  status,
+  customPinUrl
 }: {
   position: [number, number];
   onPositionChange: (lat: number, lng: number, isFinal?: boolean) => void;
+  status?: string;
+  customPinUrl?: string;
 }) {
   const markerRef = useRef<L.Marker>(null);
 
@@ -58,7 +62,7 @@ function DraggableMarker({
       eventHandlers={eventHandlers}
       position={position}
       ref={markerRef}
-      icon={editableIcon}
+      icon={getIcon(status, customPinUrl)}
     />
   );
 }
@@ -81,7 +85,7 @@ function MapViewController({ center, zoomRef }: { center: [number, number]; zoom
   return null;
 }
 
-export default function EditableMap({ latitude, longitude, onPositionChange }: EditableMapProps) {
+export default function EditableMap({ latitude, longitude, onPositionChange, status, customPinUrl }: EditableMapProps) {
   const [markerPos, setMarkerPos] = useState<[number, number]>([latitude, longitude]);
   const [viewCenter, setViewCenter] = useState<[number, number]>([latitude, longitude]);
   const isDraggingInternal = useRef(false);
@@ -122,6 +126,8 @@ export default function EditableMap({ latitude, longitude, onPositionChange }: E
       <DraggableMarker
         position={markerPos}
         onPositionChange={handlePositionChange}
+        status={status}
+        customPinUrl={customPinUrl}
       />
     </MapContainer>
   );

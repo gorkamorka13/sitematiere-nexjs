@@ -18,10 +18,20 @@ type Props = {
   latitude: number;
   longitude: number;
   onPositionChange: (lat: number, lng: number) => void;
+  status?: string;
+  customPinUrl?: string;
 };
 
-export default function EditableMapWrapper({ latitude, longitude, onPositionChange }: Props) {
+export default function EditableMapWrapper({ latitude, longitude, onPositionChange, status, customPinUrl }: Props) {
   // Ne pas utiliser de key basée sur les coordonnées pour éviter de recréer la carte
   // et ainsi préserver le niveau de zoom choisi par l'utilisateur
-  return <EditableMap latitude={latitude} longitude={longitude} onPositionChange={onPositionChange} />;
+  return (
+    <EditableMap
+      latitude={latitude}
+      longitude={longitude}
+      onPositionChange={onPositionChange}
+      status={status}
+      customPinUrl={customPinUrl}
+    />
+  );
 }

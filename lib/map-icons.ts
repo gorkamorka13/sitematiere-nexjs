@@ -10,11 +10,11 @@ export const getIcon = (status: string | null | undefined, customPinUrl?: string
 
   if (!iconUrl) {
     // Utiliser les pins du système selon le statut
-    iconUrl = "/pins/realise.png";
-    if (status === 'CURRENT') {
+    iconUrl = "/pins/prospection.png";
+    if (status === 'DONE') {
+      iconUrl = "/pins/realise.png";
+    } else if (status === 'CURRENT') {
       iconUrl = "/pins/en_cours.png";
-    } else if (status === 'PROSPECT') {
-      iconUrl = "/pins/prospection.png";
     }
   }
 
