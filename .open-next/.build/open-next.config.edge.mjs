@@ -10,7 +10,7 @@ var config = {
       queue: "dummy"
     }
   },
-  edgeExternals: ["node:crypto"],
+  edgeExternals: ["node:crypto", "critters", "@opentelemetry/api"],
   middleware: {
     external: true,
     override: {

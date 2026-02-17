@@ -1,71 +1,87 @@
 {
   "components\\files\\file-preview-modal.tsx -> ./pdf-viewer": {
-    "id": "components\\files\\file-preview-modal.tsx -> ./pdf-viewer",
+    "id": 44119,
     "files": [
-      "static/chunks/_app-pages-browser_components_files_pdf-viewer_tsx.js"
+      "static/chunks/685f7497.65171cba33e0a4e7.js",
+      "static/chunks/2097.407972fffefdd957.js",
+      "static/chunks/4119.3f5e60cf361bcd61.js"
     ]
   },
   "components\\projects\\project-export-dialog.tsx -> @/components/ui/project-map": {
-    "id": "components\\projects\\project-export-dialog.tsx -> @/components/ui/project-map",
+    "id": 40399,
     "files": [
-      "static/css/_app-pages-browser_components_ui_project-map_tsx.css",
-      "static/chunks/_app-pages-browser_components_ui_project-map_tsx.js"
+      "static/css/1de76be520b4de19.css",
+      "static/chunks/d0deef33.59194872e4111dca.js",
+      "static/chunks/2780.0ca58d02edd29b85.js"
     ]
   },
   "components\\projects\\project-export-dialog.tsx -> @/components/ui/projects-map": {
-    "id": "components\\projects\\project-export-dialog.tsx -> @/components/ui/projects-map",
+    "id": 95383,
     "files": [
-      "static/css/_app-pages-browser_components_ui_projects-map_tsx.css",
-      "static/chunks/_app-pages-browser_components_ui_projects-map_tsx.js"
+      "static/css/1de76be520b4de19.css",
+      "static/chunks/d0deef33.59194872e4111dca.js",
+      "static/chunks/5383.853109d24c1ade09.js"
     ]
   },
   "components\\settings\\media-management-dialog.tsx -> @/app/actions/slideshow-actions": {
-    "id": "components\\settings\\media-management-dialog.tsx -> @/app/actions/slideshow-actions",
-    "files": []
+    "id": 17659,
+    "files": [
+      "static/chunks/7659.96e4d2555cd87e25.js"
+    ]
   },
   "components\\ui\\editable-map-wrapper.tsx -> ./editable-map": {
-    "id": "components\\ui\\editable-map-wrapper.tsx -> ./editable-map",
+    "id": 38906,
     "files": [
-      "static/css/_app-pages-browser_components_ui_editable-map_tsx.css",
-      "static/chunks/_app-pages-browser_components_ui_editable-map_tsx.js"
+      "static/css/1de76be520b4de19.css",
+      "static/chunks/d0deef33.59194872e4111dca.js",
+      "static/chunks/8906.b29e114eb22bb5a2.js"
     ]
   },
   "components\\ui\\project-map-wrapper.tsx -> ./project-map": {
-    "id": "components\\ui\\project-map-wrapper.tsx -> ./project-map",
+    "id": 40399,
     "files": [
-      "static/css/_app-pages-browser_components_ui_project-map_tsx.css",
-      "static/chunks/_app-pages-browser_components_ui_project-map_tsx.js"
+      "static/css/1de76be520b4de19.css",
+      "static/chunks/d0deef33.59194872e4111dca.js",
+      "static/chunks/399.fdad5e9b638ac60f.js"
     ]
   },
   "components\\ui\\projects-map-wrapper.tsx -> ./projects-map": {
-    "id": "components\\ui\\projects-map-wrapper.tsx -> ./projects-map",
+    "id": 95383,
     "files": [
-      "static/css/_app-pages-browser_components_ui_projects-map_tsx.css",
-      "static/chunks/_app-pages-browser_components_ui_projects-map_tsx.js"
+      "static/css/1de76be520b4de19.css",
+      "static/chunks/d0deef33.59194872e4111dca.js",
+      "static/chunks/5383.853109d24c1ade09.js"
     ]
   },
   "node_modules\\jspdf\\dist\\jspdf.es.min.js -> canvg": {
-    "id": "node_modules\\jspdf\\dist\\jspdf.es.min.js -> canvg",
+    "id": 11482,
     "files": [
-      "static/chunks/_app-pages-browser_node_modules_canvg_lib_index_es_js.js"
+      "static/chunks/bc98253f.d6fc8a0138855acd.js",
+      "static/chunks/4199.13e89070158550d2.js"
     ]
   },
   "node_modules\\jspdf\\dist\\jspdf.es.min.js -> dompurify": {
-    "id": "node_modules\\jspdf\\dist\\jspdf.es.min.js -> dompurify",
+    "id": 82931,
     "files": [
-      "static/chunks/_app-pages-browser_node_modules_dompurify_dist_purify_es_mjs.js"
+      "static/chunks/2931.4d2aa13ad3794b66.js"
     ]
   },
   "node_modules\\jspdf\\dist\\jspdf.es.min.js -> html2canvas": {
-    "id": "node_modules\\jspdf\\dist\\jspdf.es.min.js -> html2canvas",
+    "id": 54264,
     "files": [
-      "static/chunks/_app-pages-browser_node_modules_html2canvas_dist_html2canvas_js.js"
+      "static/chunks/ad2866b8.e13a3cf75ccf0eb8.js"
     ]
   },
-  "node_modules\\next\\dist\\client\\dev\\hot-reloader\\app\\use-websocket.js -> @vercel/turbopack-ecmascript-runtime/browser/dev/hmr-client/hmr-client.ts": {
-    "id": "node_modules\\next\\dist\\client\\dev\\hot-reloader\\app\\use-websocket.js -> @vercel/turbopack-ecmascript-runtime/browser/dev/hmr-client/hmr-client.ts",
+  "node_modules\\next\\dist\\client\\index.js -> ../pages/_app": {
+    "id": 45139,
     "files": [
-      "static/chunks/_app-pages-browser_node_modules_next_dist_client_dev_noop-turbopack-hmr_js.js"
+      "static/chunks/5139.e4ff9cc3669129ed.js"
+    ]
+  },
+  "node_modules\\next\\dist\\client\\index.js -> ../pages/_error": {
+    "id": 31646,
+    "files": [
+      "static/chunks/1646.a93085a0445ba909.js"
     ]
   }
 }
