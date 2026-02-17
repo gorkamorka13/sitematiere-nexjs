@@ -10,6 +10,7 @@ import {
 } from '@/app/actions/slideshow-actions';
 import { arrayMove } from '@dnd-kit/sortable';
 import { ToastType } from '@/components/ui/toast';
+import { logger } from '@/lib/logger';
 
 export interface SlideshowImage {
   id: string;
@@ -57,13 +58,13 @@ export function useSlideshow(projectId: string | null) {
       } else {
         // Only show error if it's a real error, not just "no images"
         if (result.error) {
-          console.error('[useSlideshow] Error result:', result.error);
+          logger.error('[useSlideshow] Error result:', result.error);
           setToast({ message: result.error || "Erreur lors du chargement du slideshow", type: 'error' });
         }
       }
     } catch (error) {
       if (isCancelled && isCancelled()) return;
-      console.error('[useSlideshow] Error loading slideshow:', error);
+      logger.error('[useSlideshow] Error loading slideshow:', error);
       setToast({ message: "Erreur technique lors du chargement", type: 'error' });
     } finally {
       if (!isCancelled || !isCancelled()) {
@@ -103,7 +104,7 @@ export function useSlideshow(projectId: string | null) {
         return false;
       }
     } catch (error) {
-      console.error('[useSlideshow] Error adding image:', error);
+      logger.error('[useSlideshow] Error adding image:', error);
       setToast({ message: 'Erreur lors de l\'ajout de l\'image', type: 'error' });
       return false;
     } finally {
@@ -128,7 +129,7 @@ export function useSlideshow(projectId: string | null) {
         return false;
       }
     } catch (error) {
-      console.error('[useSlideshow] Error removing image:', error);
+      logger.error('[useSlideshow] Error removing image:', error);
       setToast({ message: 'Erreur lors de la suppression', type: 'error' });
       return false;
     } finally {
@@ -155,7 +156,7 @@ export function useSlideshow(projectId: string | null) {
         router.refresh();
       }
     } catch (error) {
-      console.error('[useSlideshow] Error saving order:', error);
+      logger.error('[useSlideshow] Error saving order:', error);
       setToast({ message: 'Erreur lors de la sauvegarde de l\'ordre', type: 'error' });
     } finally {
       setSaving(false);
@@ -177,7 +178,7 @@ export function useSlideshow(projectId: string | null) {
         setToast({ message: result.error || 'Erreur publication', type: 'error' });
       }
     } catch (error) {
-      console.error('[useSlideshow] Error publishing:', error);
+      logger.error('[useSlideshow] Error publishing:', error);
       setToast({ message: 'Erreur lors de la publication', type: 'error' });
     } finally {
       setPublishing(false);

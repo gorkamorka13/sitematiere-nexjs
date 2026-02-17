@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth, checkRole, UserRole } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { sanitizeFileName } from "@/lib/files/validation";
+import { logger } from "@/lib/logger";
 
 
 // export const runtime = 'edge'; // Commenté pour le dev local
@@ -63,7 +64,7 @@ export async function PATCH(
 
     return NextResponse.json(updatedFile);
   } catch (error) {
-    console.error("Rename error:", error);
+    logger.error("Rename error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

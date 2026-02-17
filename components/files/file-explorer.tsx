@@ -11,6 +11,7 @@ import { FileMoveDialog } from "./file-move-dialog";
 import { FileDeleteDialog } from "./file-delete-dialog";
 import { FileType } from "@/lib/enums";
 import { Toast, ToastType } from "@/components/ui/toast";
+import { useLogger } from "@/lib/logger";
 
 import { useDebounce } from "@/hooks/use-debounce";
 
@@ -46,6 +47,7 @@ export function FileExplorer() {
     const [refreshTrigger, setRefreshTrigger] = useState(0);
     const [sortConfig, setSortConfig] = useState<{ key: 'name' | 'fileType' | 'size' | 'createdAt'; direction: 'asc' | 'desc' } | null>({ key: 'name', direction: 'asc' });
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
+    const logger = useLogger('FileExplorer');
 
     // Auto-select country when project is selected
     useEffect(() => {
@@ -107,11 +109,11 @@ export function FileExplorer() {
             setAllFiles(data.files || []);
 
         } catch (error) {
-            console.error("Error fetching files:", error);
+            logger.error("Error fetching files:", error);
         } finally {
             setLoading(false);
         }
-    }, [fileTypeFilter, projectFilter, countryFilter, debouncedSearchQuery]);
+    }, [fileTypeFilter, projectFilter, countryFilter, debouncedSearchQuery, logger]);
 
     useEffect(() => {
         fetchFiles();
@@ -173,7 +175,7 @@ export function FileExplorer() {
             setToast({ message: "Fichier renommé avec succès", type: "success" });
             setRefreshTrigger(prev => prev + 1);
         } catch (error) {
-            console.error("Rename error:", error);
+            logger.error("Rename error:", error);
             setToast({ message: "Erreur lors du renommage", type: "error" });
         } finally {
             setRenamingFile(null);
@@ -200,7 +202,7 @@ export function FileExplorer() {
             setMoveFileIds(null);
             setSelectedIds(new Set());
         } catch (error) {
-            console.error("Move error:", error);
+            logger.error("Move error:", error);
             setToast({
                 message: error instanceof Error ? error.message : "Erreur lors du déplacement",
                 type: "error"
@@ -225,7 +227,7 @@ export function FileExplorer() {
             setRefreshTrigger(prev => prev + 1);
             setDeleteFileIds(null);
         } catch (error) {
-            console.error("Delete error:", error);
+            logger.error("Delete error:", error);
             setToast({ message: "Erreur lors de la suppression", type: "error" });
         }
     };

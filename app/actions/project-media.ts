@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma";
 import { naturalSort } from "@/lib/sort-utils";
 import { auth, UserRole } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 export async function getProjectMedia(projectName: string) {
   // Normalisation du nom de projet pour correspondre aux dossiers
@@ -82,7 +83,7 @@ export async function getProjectMedia(projectName: string) {
     // Tous les fichiers doivent désormais être stockés en base de données (table File)
 
   } catch (error) {
-    console.error(`Error fetching media for ${projectName}:`, error);
+    logger.error(`Error fetching media for ${projectName}:`, error);
   }
 
   return result;

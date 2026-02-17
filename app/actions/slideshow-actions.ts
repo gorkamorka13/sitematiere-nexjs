@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { auth, checkRole, UserRole } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
+import { logger } from "@/lib/logger";
 
 /**
  * Get slideshow images for a project
@@ -11,10 +12,10 @@ import { Prisma } from "@prisma/client";
  * @param publishedOnly - If true, only return published images
  */
 export async function getSlideshowImages(projectId: string, publishedOnly: boolean = false) {
-  console.log(`[getSlideshowImages] Fetching for projectId: ${projectId}, publishedOnly: ${publishedOnly}`);
+  logger.debug(`[getSlideshowImages] Fetching for projectId: ${projectId}, publishedOnly: ${publishedOnly}`);
   try {
     if (!projectId) {
-      console.error("[getSlideshowImages] projectId is missing");
+      logger.error("[getSlideshowImages] projectId is missing");
       return { success: false, error: "ID du projet manquant." };
     }
 
@@ -33,7 +34,7 @@ export async function getSlideshowImages(projectId: string, publishedOnly: boole
       },
     });
 
-    console.log(`[getSlideshowImages] Found ${slideshowImages.length} images`);
+    logger.debug(`[getSlideshowImages] Found ${slideshowImages.length} images`);
 
     // Serialize dates for Cloudflare compatibility
     const serializedImages = slideshowImages.map(si => {
@@ -55,7 +56,7 @@ export async function getSlideshowImages(projectId: string, publishedOnly: boole
           } : null,
         };
       } catch (e) {
-        console.error(`[getSlideshowImages] Serialization error for image ${si.id}:`, e);
+        logger.error(`[getSlideshowImages] Serialization error for image ${si.id}:`, e);
         return {
           id: si.id,
           projectId: si.projectId,
@@ -77,7 +78,7 @@ export async function getSlideshowImages(projectId: string, publishedOnly: boole
 
     return { success: true, images: serializedImages };
   } catch (error) {
-    console.error("[getSlideshowImages] Exception caught:", error);
+    logger.error("[getSlideshowImages] Exception caught:", error);
     return {
       success: false,
       error: error instanceof Error ? `Erreur: ${error.message}` : "Erreur lors de la récupération des images du slideshow."
@@ -147,7 +148,7 @@ export async function addSlideshowImage(projectId: string, imageId: string) {
 
     return { success: true, slideshowImage: serializedSlideshowImage };
   } catch (error) {
-    console.error("Error adding slideshow image:", error);
+    logger.error("Error adding slideshow image:", error);
     return { success: false, error: "Erreur lors de l'ajout de l'image au slideshow." };
   }
 }
@@ -191,7 +192,7 @@ export async function addImageToSlideshow(projectId: string, fileId: string) {
     // 3. Add to slideshow via existing logic
     return await addSlideshowImage(projectId, image.id);
   } catch (error) {
-    console.error("Error adding image to slideshow:", error);
+    logger.error("Error adding image to slideshow:", error);
     return { success: false, error: "Erreur lors de l'ajout de l'image au slideshow." };
   }
 }
@@ -225,7 +226,7 @@ export async function removeSlideshowImage(slideshowImageId: string) {
 
     return { success: true };
   } catch (error) {
-    console.error("Error removing slideshow image:", error);
+    logger.error("Error removing slideshow image:", error);
     return { success: false, error: "Erreur lors de la suppression de l'image du slideshow." };
   }
 }
@@ -258,7 +259,7 @@ export async function reorderSlideshowImages(projectId: string, orderedImageIds:
 
     return { success: true };
   } catch (error) {
-    console.error("Error reordering slideshow images:", error);
+    logger.error("Error reordering slideshow images:", error);
     return { success: false, error: "Erreur lors de la réorganisation des images." };
   }
 }
@@ -285,7 +286,7 @@ export async function publishSlideshow(projectId: string) {
 
     return { success: true };
   } catch (error) {
-    console.error("Error publishing slideshow:", error);
+    logger.error("Error publishing slideshow:", error);
     return { success: false, error: "Erreur lors de la publication du slideshow." };
   }
 }
@@ -311,7 +312,7 @@ export async function unpublishSlideshow(projectId: string) {
 
     return { success: true };
   } catch (error) {
-    console.error("Error unpublishing slideshow:", error);
+    logger.error("Error unpublishing slideshow:", error);
     return { success: false, error: "Erreur lors de la dépublication du slideshow." };
   }
 }

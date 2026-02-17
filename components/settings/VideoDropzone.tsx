@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Loader2, Video as VideoIcon } from 'lucide-react';
 import { getSignedVideoUploadAction } from '@/app/actions/video-actions';
+import { useLogger } from '@/lib/logger';
 
 interface VideoDropzoneProps {
     projectId: string;
@@ -15,6 +16,7 @@ export function VideoDropzone({ projectId, onUpload, onError }: VideoDropzonePro
     const [uploading, setUploading] = useState(false);
     const [progress, setProgress] = useState(0);
     const [status, setStatus] = useState<'idle' | 'preparing' | 'uploading' | 'saving'>('idle');
+    const logger = useLogger('VideoDropzone');
 
     const onDrop = useCallback(async (acceptedFiles: File[]) => {
         if (acceptedFiles.length === 0) return;
@@ -60,7 +62,7 @@ export function VideoDropzone({ projectId, onUpload, onError }: VideoDropzonePro
             await onUpload(result.publicUrl, file.name.replace(/\.[^/.]+$/, ""));
 
         } catch (err: unknown) {
-            console.error("Upload error:", err);
+            logger.error("Upload error:", err);
             onError(err instanceof Error ? err.message : "Une erreur est survenue lors de l'envoi");
             setProgress(0);
         } finally {
@@ -68,7 +70,7 @@ export function VideoDropzone({ projectId, onUpload, onError }: VideoDropzonePro
             setStatus('idle');
             setProgress(0);
         }
-    }, [projectId, onUpload, onError]);
+    }, [projectId, onUpload, onError, logger]);
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,

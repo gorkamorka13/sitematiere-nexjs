@@ -5,6 +5,7 @@
 
 import { r2Client, R2_BUCKET_NAME } from '../storage/r2-client';
 import { PutObjectCommand, ListObjectsV2Command, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { logger } from '../logger';
 
 export async function testR2Connection(): Promise<{ success: boolean; message: string }> {
   try {
@@ -22,7 +23,7 @@ export async function testR2Connection(): Promise<{ success: boolean; message: s
       MaxKeys: 1,
     });
     const listResult = await r2Client.send(listCommand);
-    console.log('✅ Connexion lecture OK -', listResult.KeyCount || 0, 'fichiers trouvés');
+    logger.info('✅ Connexion lecture OK -', listResult.KeyCount || 0, 'fichiers trouvés');
 
     // Test 3: Upload fichier test (test écriture)
     const testContent = Buffer.from('Test connexion Cloudflare R2 - ' + new Date().toISOString());
@@ -35,7 +36,7 @@ export async function testR2Connection(): Promise<{ success: boolean; message: s
       ContentType: 'text/plain',
     });
     await r2Client.send(putCommand);
-    console.log('✅ Upload test OK - Key:', testKey);
+    logger.info('✅ Upload test OK - Key:', testKey);
 
     // Test 4: Supprimer fichier test (test suppression)
     const deleteCommand = new DeleteObjectCommand({
@@ -43,14 +44,14 @@ export async function testR2Connection(): Promise<{ success: boolean; message: s
       Key: testKey,
     });
     await r2Client.send(deleteCommand);
-    console.log('✅ Suppression test OK');
+    logger.info('✅ Suppression test OK');
 
     return {
       success: true,
       message: '✅ Connexion Cloudflare R2 opérationnelle (lecture/écriture/suppression)',
     };
   } catch (error) {
-    console.error('❌ Erreur connexion R2:', error);
+    logger.error('❌ Erreur connexion R2:', error);
     return {
       success: false,
       message: `❌ Erreur: ${error instanceof Error ? error.message : 'Erreur inconnue'}`,
@@ -61,7 +62,7 @@ export async function testR2Connection(): Promise<{ success: boolean; message: s
 // Exécuter test si appelé directement
 if (require.main === module) {
   testR2Connection().then((result) => {
-    console.log('\n' + result.message);
+    logger.info('\n' + result.message);
     process.exit(result.success ? 0 : 1);
   });
 }

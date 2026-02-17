@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma';
 import { hash } from 'bcrypt-ts';
+import { logger } from '@/lib/logger';
 
 export async function seedAdminUser() {
   try {
@@ -19,9 +20,9 @@ export async function seedAdminUser() {
           role: 'ADMIN'
         }
       });
-      console.log('Admin user created: admin@sitematiere.com / admin123');
+      logger.info('Admin user created: admin@sitematiere.com / admin123');
     }
   } catch (error) {
-    console.error('Error seeding admin user:', error);
+    logger.error('Error seeding admin user:', error);
   }
 }

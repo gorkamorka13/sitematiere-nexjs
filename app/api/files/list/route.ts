@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 import { FileType, Prisma } from "@prisma/client";
 import { naturalSort } from "@/lib/sort-utils";
 
@@ -99,7 +100,7 @@ export async function GET(request: Request) {
     });
 
   } catch (error) {
-    console.error("List files error:", error);
+    logger.error("List files error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

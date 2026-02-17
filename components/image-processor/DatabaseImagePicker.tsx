@@ -10,6 +10,7 @@ import { FilePreviewModal } from '@/components/files/file-preview-modal';
 import { FileContextMenu } from '@/components/files/file-context-menu';
 import { FileMoveDialog } from '@/components/files/file-move-dialog';
 import { FileDeleteDialog } from '@/components/files/file-delete-dialog';
+import { useLogger } from '@/lib/logger';
 
 interface DatabaseImagePickerProps {
     isOpen: boolean;
@@ -26,6 +27,7 @@ export function DatabaseImagePicker({ isOpen, onClose, onSelect, initialProjectF
     const [countryFilter, setCountryFilter] = useState('Tous');
     const [projectFilter, setProjectFilter] = useState(initialProjectFilter || 'ALL');
     const [selectedId, setSelectedId] = useState<string | null>(null);
+    const logger = useLogger('DatabaseImagePicker');
 
     // Context Menu & Action States
     const [renamingFile, setRenamingFile] = useState<FileData | null>(null);
@@ -43,15 +45,7 @@ export function DatabaseImagePicker({ isOpen, onClose, onSelect, initialProjectF
         setProjectFilter(initialProjectFilter || 'ALL');
     }, [initialProjectFilter]);
 
-    // Fetch files when modal opens
-    useEffect(() => {
-        if (isOpen) {
-            fetchFiles();
-            resetFilters();
-        }
-    }, [isOpen, resetFilters]);
-
-    const fetchFiles = async () => {
+    const fetchFiles = useCallback(async () => {
         setLoading(true);
         try {
             // Fetch more files to allow proper filtering
@@ -61,11 +55,19 @@ export function DatabaseImagePicker({ isOpen, onClose, onSelect, initialProjectF
                 setAllFiles(data.files || []);
             }
         } catch (error) {
-            console.error("Failed to fetch files", error);
+            logger.error("Failed to fetch files", error);
         } finally {
             setLoading(false);
         }
-    };
+    }, [logger]);
+
+    // Fetch files when modal opens
+    useEffect(() => {
+        if (isOpen) {
+            void fetchFiles();
+            resetFilters();
+        }
+    }, [isOpen, resetFilters, fetchFiles]);
 
     // Auto-select country when project is selected (logic from FileExplorer)
     useEffect(() => {
@@ -146,7 +148,7 @@ export function DatabaseImagePicker({ isOpen, onClose, onSelect, initialProjectF
 
             fetchFiles();
         } catch (error) {
-            console.error("Rename error:", error);
+            logger.error("Rename error:", error);
             alert("Erreur lors du renommage");
         } finally {
             setRenamingFile(null);
@@ -168,7 +170,7 @@ export function DatabaseImagePicker({ isOpen, onClose, onSelect, initialProjectF
             fetchFiles();
             setMoveFileIds(null);
         } catch (error) {
-            console.error("Move error:", error);
+            logger.error("Move error:", error);
             alert("Erreur lors du déplacement");
         }
     };
@@ -189,7 +191,7 @@ export function DatabaseImagePicker({ isOpen, onClose, onSelect, initialProjectF
             fetchFiles();
             setDeleteFileIds(null);
         } catch (error) {
-            console.error("Delete error:", error);
+            logger.error("Delete error:", error);
             alert("Erreur lors de la suppression");
         }
     };

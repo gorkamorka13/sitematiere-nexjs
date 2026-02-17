@@ -6,6 +6,7 @@ import { compareSync } from "bcrypt-ts";
 import { z } from "zod";
 import { User } from "@prisma/client";
 import { UserRole, checkRole } from "./auth-types";
+import { logger } from "@/lib/logger";
 
 export { UserRole, checkRole };
 
@@ -53,7 +54,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 password: { label: "Mot de passe", type: "password" },
             },
             async authorize(credentials) {
-                console.log("[Auth_Authorize] Attempting login for user/email:", credentials?.username);
+                logger.debug("[Auth_Authorize] Attempting login for user/email:", credentials?.username);
                 try {
                     const parsedCredentials = z
                         .object({ username: z.string(), password: z.string().min(6) })
@@ -63,7 +64,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                         const { username, password } = parsedCredentials.data;
 
                         // Allow login with either username OR email
-                        console.log("[Auth_Authorize] Querying database for user...");
+                        logger.debug("[Auth_Authorize] Querying database for user...");
                         const user = await prisma.user.findFirst({
                             where: {
                                 OR: [
@@ -74,37 +75,37 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                         });
 
                         if (!user) {
-                            console.warn("[Auth_Authorize] User not found in database:", username);
+                            logger.warn("[Auth_Authorize] User not found in database:", username);
                             return null;
                         }
 
                         if (!user.passwordHash) {
-                            console.warn("[Auth_Authorize] User has no password hash set:", username);
+                            logger.warn("[Auth_Authorize] User has no password hash set:", username);
                             return null;
                         }
 
-                        console.log("[Auth_Authorize] User found, verifying password hash...");
+                        logger.debug("[Auth_Authorize] User found, verifying password hash...");
                         const passwordsMatch = compareSync(password, user.passwordHash);
 
                         if (passwordsMatch) {
-                            console.log("[Auth_Authorize] Password match successful for:", username);
+                            logger.info("[Auth_Authorize] Password match successful for:", username);
                             return user;
                         } else {
-                            console.warn("[Auth_Authorize] Password mismatch for:", username);
+                            logger.warn("[Auth_Authorize] Password mismatch for:", username);
                         }
                     } else {
-                        console.warn("[Auth_Authorize] Invalid credentials format provided");
+                        logger.warn("[Auth_Authorize] Invalid credentials format provided");
                     }
                 } catch (error) {
-                    console.error("[Auth_Authorize] UNEXPECTED ERROR during authorization:", error);
+                    logger.error("[Auth_Authorize] UNEXPECTED ERROR during authorization:", error);
                     // Log more details if it's a Prisma error
                     const err = error as { name?: string; message?: string; code?: string; meta?: unknown };
-                    console.error("[Auth_Authorize] Error Details:", JSON.stringify({
+                    logger.error("[Auth_Authorize] Error Details:", {
                         name: err.name,
                         message: err.message,
                         code: err.code,
                         meta: err.meta
-                    }));
+                    });
                 }
 
                 return null;

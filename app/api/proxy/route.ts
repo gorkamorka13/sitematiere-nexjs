@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 // export const runtime = 'edge'; // Commenté pour le dev local
 
@@ -51,7 +52,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error("Proxy fetch error:", error);
+    logger.error("Proxy fetch error:", error);
     return NextResponse.json({ error: "Failed to proxy image" }, { status: 500 });
   }
 }

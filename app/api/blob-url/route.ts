@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 /**
  * API route to generate signed URLs for Cloudflare R2 assets
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
     const token = process.env.BLOB_READ_WRITE_TOKEN;
 
     if (!token) {
-      console.error('BLOB_READ_WRITE_TOKEN not configured');
+      logger.error('BLOB_READ_WRITE_TOKEN not configured');
       return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
     }
 
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ signedUrl });
 
   } catch (error) {
-    console.error('Error generating signed URL:', error);
+    logger.error('Error generating signed URL:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

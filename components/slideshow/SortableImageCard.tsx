@@ -6,6 +6,7 @@ import { GripVertical, Trash2, CheckCircle2, Clock, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { normalizeImageUrl } from '@/lib/utils/image-url';
+import { useLogger } from '@/lib/logger';
 
 interface SortableImageCardProps {
   id: string;
@@ -34,6 +35,7 @@ export function SortableImageCard({
     transition,
     isDragging,
   } = useSortable({ id });
+  const logger = useLogger('SortableImageCard');
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -131,22 +133,22 @@ export function SortableImageCard({
         <Button
           type="button"
           onMouseDown={(e) => {
-            console.log('[SortableImageCard] onMouseDown trash:', id);
+            logger.debug('onMouseDown trash:', id);
             e.stopPropagation();
           }}
           onClick={(e) => {
-            console.log('[SortableImageCard] onClick trash:', id);
+            logger.debug('onClick trash:', id);
             e.stopPropagation();
             e.preventDefault();
 
             // Toggle confirmation state locally
             const button = e.currentTarget;
             if (button.getAttribute('data-confirm') === 'true') {
-              console.log('[SortableImageCard] Second click - confirmed removal');
+              logger.info('Confirmed removal');
               button.setAttribute('data-confirm', 'false');
               onRemove();
             } else {
-              console.log('[SortableImageCard] First click - asking for confirmation');
+              logger.info('Asking for confirmation');
               button.setAttribute('data-confirm', 'true');
 
               // Reset after 4 seconds if not clicked again

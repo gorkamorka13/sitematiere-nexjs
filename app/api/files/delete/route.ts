@@ -3,6 +3,7 @@ import { auth, checkRole, UserRole } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { deleteFile } from "@/lib/files/blob-edge";
 import { extractKeyFromUrl } from "@/lib/storage/r2-operations";
+import { logger } from "@/lib/logger";
 
 // Cloudflare Pages requires Edge Runtime for API routes
 // export const runtime = 'edge'; // Commenté pour le dev local
@@ -24,7 +25,7 @@ export async function DELETE(request: Request) {
     }
 
     if (permanent) {
-      console.log(`[DELETE API] Starting permanent deletion for ${fileIds.length} files`);
+      logger.info(`[DELETE API] Starting permanent deletion for ${fileIds.length} files`);
 
       // 1. Get files details before deleting them
       const filesToDelete = await prisma.file.findMany({
@@ -39,11 +40,11 @@ export async function DELETE(request: Request) {
         try {
           const key = file.blobPath || extractKeyFromUrl(file.blobUrl);
           if (key) {
-            console.log(`[DELETE API] Deleting blob: ${key}`);
+            logger.debug(`[DELETE API] Deleting blob: ${key}`);
             await deleteFile(key);
           }
         } catch (error) {
-          console.error(`[DELETE API] Error deleting blob for file ${file.id}:`, error);
+          logger.error(`[DELETE API] Error deleting blob for file ${file.id}:`, error);
         }
 
         // 3. Delete thumbnail if exists
@@ -51,18 +52,18 @@ export async function DELETE(request: Request) {
           try {
             const thumbKey = extractKeyFromUrl(file.thumbnailUrl);
             if (thumbKey) {
-              console.log(`[DELETE API] Deleting thumbnail: ${thumbKey}`);
+              logger.debug(`[DELETE API] Deleting thumbnail: ${thumbKey}`);
               await deleteFile(thumbKey);
             }
           } catch (error) {
-            console.error(`[DELETE API] Error deleting thumbnail for file ${file.id}:`, error);
+            logger.error(`[DELETE API] Error deleting thumbnail for file ${file.id}:`, error);
           }
         }
       }
 
       // 4. Delete related entries in other tables (Image, Video, Document)
       // Since these maps to same URLs, we clean them up as well
-      console.log(`[DELETE API] Cleaning up related DB entries for ${urlsToDelete.length} URLs`);
+      logger.debug(`[DELETE API] Cleaning up related DB entries for ${urlsToDelete.length} URLs`);
 
       await Promise.all([
         prisma.image.deleteMany({ where: { url: { in: urlsToDelete } } }),
@@ -75,7 +76,7 @@ export async function DELETE(request: Request) {
         where: { id: { in: fileIds } }
       });
 
-      console.log(`[DELETE API] Permanent deletion complete`);
+      logger.info(`[DELETE API] Permanent deletion complete`);
       return NextResponse.json({
         success: true,
         permanent: true,
@@ -84,7 +85,7 @@ export async function DELETE(request: Request) {
 
     } else {
       // Soft delete
-      console.log(`[DELETE API] Performing soft delete for ${fileIds.length} files`);
+      logger.info(`[DELETE API] Performing soft delete for ${fileIds.length} files`);
       await prisma.file.updateMany({
         where: {
           id: { in: fileIds }
@@ -104,7 +105,7 @@ export async function DELETE(request: Request) {
     }
 
   } catch (error) {
-    console.error("Delete files error:", error);
+    logger.error("Delete files error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { r2Client, R2_BUCKET_NAME } from "@/lib/storage/r2-client";
 import { auth, UserRole } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 // export const runtime = 'edge'; // Commenté pour le dev local
 
@@ -68,7 +69,7 @@ export async function GET(
     }
 
   } catch (error) {
-    console.error("Error serving file:", error);
+    logger.error("Error serving file:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

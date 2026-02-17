@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Folder, Loader2 } from "lucide-react";
+import { useLogger } from "@/lib/logger";
 
 interface Project {
     id: string;
@@ -21,6 +22,7 @@ export function FileMoveDialog({ fileIds, currentProjectId, onClose, onMove }: F
     const [loading, setLoading] = useState(true);
     const [selectedProject, setSelectedProject] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
+    const logger = useLogger('FileMoveDialog');
 
     useEffect(() => {
         // Fetch projects
@@ -36,13 +38,13 @@ export function FileMoveDialog({ fileIds, currentProjectId, onClose, onMove }: F
                     setProjects(data);
                 }
             } catch (error) {
-                console.error("Failed to fetch projects", error);
+                logger.error("Failed to fetch projects", error);
             } finally {
                 setLoading(false);
             }
         }
         fetchProjects();
-    }, []);
+    }, [logger]);
 
     const handleSubmit = async () => {
         if (!selectedProject) return;

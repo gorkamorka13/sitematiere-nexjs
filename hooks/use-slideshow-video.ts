@@ -11,6 +11,7 @@ import {
 } from '@/app/actions/video-actions';
 import { arrayMove } from '@dnd-kit/sortable';
 import { ToastType } from '@/components/ui/toast';
+import { logger } from '@/lib/logger';
 
 export interface SlideshowVideo {
   id: string;
@@ -41,13 +42,12 @@ export function useSlideshowVideo(projectId: string | null) {
       setVideos([]);
       return;
     }
-
-    console.log('[useSlideshowVideo] Loading videos for project:', projectId);
+    logger.debug('[useSlideshowVideo] Loading videos for project:', projectId);
     setLoading(true);
 
     try {
       const result = await getProjectVideos(projectId);
-      console.log('[useSlideshowVideo] result for project:', projectId, result);
+      logger.debug('[useSlideshowVideo] result for project:', projectId, result);
 
       if (isCancelled && isCancelled()) return;
 
@@ -61,13 +61,13 @@ export function useSlideshowVideo(projectId: string | null) {
         setHasUnpublishedChanges(hasUnpublished);
       } else {
         if (result.error) {
-          console.error('[useSlideshowVideo] Server Action Error:', result.error);
+          logger.error('[useSlideshowVideo] Server Action Error:', result.error);
           setToast({ message: `Erreur serveur: ${result.error}`, type: 'error' });
         }
       }
     } catch (error: unknown) {
       if (isCancelled && isCancelled()) return;
-      console.error('[useSlideshowVideo] Technical Error Details:', error);
+      logger.error('[useSlideshowVideo] Technical Error Details:', error);
       const err = error as { message?: string };
       const technicalInfo = err?.message || (typeof error === 'string' ? error : 'Inconnue');
       setToast({
@@ -113,7 +113,7 @@ export function useSlideshowVideo(projectId: string | null) {
         return false;
       }
     } catch (error) {
-      console.error('[useSlideshowVideo] Error adding video:', error);
+      logger.error('[useSlideshowVideo] Error adding video:', error);
       setToast({ message: 'Erreur technique lors de l\'ajout', type: 'error' });
       return false;
     } finally {
@@ -139,7 +139,7 @@ export function useSlideshowVideo(projectId: string | null) {
         return false;
       }
     } catch (error) {
-      console.error('[useSlideshowVideo] Error removing video:', error);
+      logger.error('[useSlideshowVideo] Error removing video:', error);
       setToast({ message: 'Erreur lors de la suppression', type: 'error' });
       return false;
     } finally {
@@ -168,7 +168,7 @@ export function useSlideshowVideo(projectId: string | null) {
         router.refresh();
       }
     } catch (error) {
-      console.error('[useSlideshowVideo] Error saving order:', error);
+      logger.error('[useSlideshowVideo] Error saving order:', error);
       setToast({ message: 'Erreur lors de la sauvegarde de l\'ordre', type: 'error' });
       await loadVideos();
     } finally {
@@ -191,7 +191,7 @@ export function useSlideshowVideo(projectId: string | null) {
         setToast({ message: result.error || 'Erreur publication', type: 'error' });
       }
     } catch (error) {
-      console.error('[useSlideshowVideo] Error publishing:', error);
+      logger.error('[useSlideshowVideo] Error publishing:', error);
       setToast({ message: 'Erreur lors de la publication', type: 'error' });
     } finally {
       setPublishing(false);
@@ -213,7 +213,7 @@ export function useSlideshowVideo(projectId: string | null) {
         setToast({ message: result.error || 'Erreur dépublication', type: 'error' });
       }
     } catch (error) {
-      console.error('[useSlideshowVideo] Error unpublishing:', error);
+      logger.error('[useSlideshowVideo] Error unpublishing:', error);
       setToast({ message: 'Erreur dépublication', type: 'error' });
     } finally {
       setPublishing(false);
@@ -239,7 +239,7 @@ export function useSlideshowVideo(projectId: string | null) {
         setToast({ message: result.error || 'Erreur modification statut', type: 'error' });
       }
     } catch (error) {
-      console.error("Error toggling publish:", error);
+      logger.error("Error toggling publish:", error);
       setToast({ message: 'Erreur lors de la modification du statut', type: 'error' });
     }
   };

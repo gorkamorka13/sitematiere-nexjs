@@ -14,6 +14,7 @@ import {
   cropImage,
   calculateCompressionRatio
 } from '@/lib/image-utils';
+import { logger } from "@/lib/logger";
 
 interface UseImageProcessorReturn {
   originalImage: ImageData | null;
@@ -84,7 +85,7 @@ export const useImageProcessor = (): UseImageProcessorReturn => {
       setHistory([]);
       setRedoStack([]);
     } catch (error) {
-      console.error("Failed to load image", error);
+      logger.error("Failed to load image", error);
     } finally {
       setIsProcessing(false);
     }
@@ -100,7 +101,7 @@ export const useImageProcessor = (): UseImageProcessorReturn => {
       const file = new File([blob], filename, { type: blob.type });
       await loadImage(file);
     } catch (error) {
-      console.error("Failed to load image from URL", error);
+      logger.error("Failed to load image from URL", error);
     } finally {
       setIsProcessing(false);
     }
@@ -135,7 +136,7 @@ export const useImageProcessor = (): UseImageProcessorReturn => {
 
       setProcessedImage(newImage);
     } catch (error) {
-      console.error("Resize failed", error);
+      logger.error("Resize failed", error);
     } finally {
       setIsProcessing(false);
     }
@@ -188,7 +189,7 @@ export const useImageProcessor = (): UseImageProcessorReturn => {
       setProcessedImage(newImage);
       setIsCropping(false);
     } catch (error) {
-      console.error("Crop/Resize failed", error);
+      logger.error("Crop/Resize failed", error);
     } finally {
       setIsProcessing(false);
     }

@@ -7,6 +7,7 @@ import { FileGrid } from '@/components/files/file-grid';
 import { FileSearch } from '@/components/files/file-search';
 import { FileData } from '@/components/files/file-explorer';
 import { FilePreviewModal } from '@/components/files/file-preview-modal';
+import { useLogger } from '@/lib/logger';
 
 interface DatabaseVideoPickerProps {
     isOpen: boolean;
@@ -23,6 +24,7 @@ export function DatabaseVideoPicker({ isOpen, onClose, onSelect, initialProjectF
     const [projectFilter, setProjectFilter] = useState(initialProjectFilter || 'ALL');
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [previewFile, setPreviewFile] = useState<FileData | null>(null);
+    const logger = useLogger('DatabaseVideoPicker');
 
     const resetFilters = useCallback(() => {
         setSelectedId(null);
@@ -31,15 +33,7 @@ export function DatabaseVideoPicker({ isOpen, onClose, onSelect, initialProjectF
         setProjectFilter(initialProjectFilter || 'ALL');
     }, [initialProjectFilter]);
 
-    // Fetch files when modal opens
-    useEffect(() => {
-        if (isOpen) {
-            fetchFiles();
-            resetFilters();
-        }
-    }, [isOpen, resetFilters]);
-
-    const fetchFiles = async () => {
+    const fetchFiles = useCallback(async () => {
         setLoading(true);
         try {
             const res = await fetch('/api/files/list?limit=500');
@@ -48,11 +42,19 @@ export function DatabaseVideoPicker({ isOpen, onClose, onSelect, initialProjectF
                 setAllFiles(data.files || []);
             }
         } catch (error) {
-            console.error("Failed to fetch files", error);
+            logger.error("Failed to fetch files", error);
         } finally {
             setLoading(false);
         }
-    };
+    }, [logger]);
+
+    // Fetch files when modal opens
+    useEffect(() => {
+        if (isOpen) {
+            fetchFiles();
+            resetFilters();
+        }
+    }, [isOpen, resetFilters, fetchFiles]);
 
     // Auto-select country when project is selected
     useEffect(() => {

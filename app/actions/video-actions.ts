@@ -4,25 +4,26 @@ import prisma from "@/lib/prisma";
 import { auth, checkRole, UserRole } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { getSignedUploadUrl, getFileUrl } from "@/lib/storage/r2-operations";
+import { logger } from "@/lib/logger";
 
 /**
  * Get all videos for a project, ordered by 'order' field
  */
 export async function getProjectVideos(projectId: string) {
-  console.log(`[getProjectVideos] Fetching videos for projectId: ${projectId}`);
+  logger.debug(`[getProjectVideos] Fetching videos for projectId: ${projectId}`);
   try {
     if (!projectId) {
-      console.error("[getProjectVideos] projectId is missing");
+      logger.error("[getProjectVideos] projectId is missing");
       return { success: false, error: "ID du projet manquant." };
     }
 
-    console.log(`[getProjectVideos] Querying Prisma for projectId: ${projectId}`);
+    logger.debug(`[getProjectVideos] Querying Prisma for projectId: ${projectId}`);
     const videos = await prisma.video.findMany({
       where: { projectId },
       orderBy: { order: 'asc' },
     });
 
-    console.log(`[getProjectVideos] Successfully found ${videos.length} videos`);
+    logger.debug(`[getProjectVideos] Successfully found ${videos.length} videos`);
 
     // Serialize dates to ISO strings for Cloudflare compatibility
     const serializedVideos = videos.map(v => {
@@ -38,7 +39,7 @@ export async function getProjectVideos(projectId: string) {
           updatedAt: v.updatedAt ? v.updatedAt.toISOString() : new Date().toISOString(),
         };
       } catch (e) {
-        console.error(`[getProjectVideos] Serialization error for video ${v.id}:`, e);
+        logger.error(`[getProjectVideos] Serialization error for video ${v.id}:`, e);
         return {
           id: v.id,
           url: v.url ? v.url.trim().replace(/\n/g, '') : '',
@@ -54,7 +55,7 @@ export async function getProjectVideos(projectId: string) {
 
     return { success: true, videos: serializedVideos };
   } catch (error: unknown) {
-    console.error("[getProjectVideos] CRITICAL ERROR:", error);
+    logger.error("[getProjectVideos] CRITICAL ERROR:", error);
     const err = error as { name?: string; message?: string; code?: string; meta?: unknown };
     const errorDetails = {
       name: err?.name,
@@ -64,7 +65,7 @@ export async function getProjectVideos(projectId: string) {
       runtime: process.env.NEXT_RUNTIME,
       isCloudflare: !!process.env.CF_PAGES
     };
-    console.error("[getProjectVideos] Error Details:", JSON.stringify(errorDetails));
+    logger.error("[getProjectVideos] Error Details:", errorDetails);
 
     return {
       success: false,
@@ -119,7 +120,7 @@ export async function addProjectVideo(projectId: string, url: string, title?: st
 
     return { success: true, video: serializedVideo };
   } catch (error) {
-    console.error("Error adding video:", error);
+    logger.error("Error adding video:", error);
     return { success: false, error: "Erreur lors de l'ajout de la vidéo." };
   }
 }
@@ -144,7 +145,7 @@ export async function deleteProjectVideo(videoId: string) {
 
     return { success: true };
   } catch (error) {
-    console.error("Error deleting video:", error);
+    logger.error("Error deleting video:", error);
     return { success: false, error: "Erreur lors de la suppression de la vidéo." };
   }
 }
@@ -177,7 +178,7 @@ export async function reorderProjectVideos(projectId: string, orderedVideoIds: s
 
     return { success: true };
   } catch (error) {
-    console.error("Error reordering videos:", error);
+    logger.error("Error reordering videos:", error);
     return { success: false, error: "Erreur lors de la réorganisation des vidéos." };
   }
 }
@@ -203,7 +204,7 @@ export async function publishProjectVideos(projectId: string) {
 
     return { success: true };
   } catch (error) {
-    console.error("Error publishing videos:", error);
+    logger.error("Error publishing videos:", error);
     return { success: false, error: "Erreur lors de la publication des vidéos." };
   }
 }
@@ -229,7 +230,7 @@ export async function unpublishProjectVideos(projectId: string) {
 
     return { success: true };
   } catch (error) {
-    console.error("Error unpublishing videos:", error);
+    logger.error("Error unpublishing videos:", error);
     return { success: false, error: "Erreur lors de la dépublication des vidéos." };
   }
 }
@@ -269,7 +270,7 @@ export async function toggleVideoPublishStatus(videoId: string) {
 
     return { success: true, video: serializedVideo };
   } catch (error) {
-    console.error("Error toggling video publish status:", error);
+    logger.error("Error toggling video publish status:", error);
     return { success: false, error: "Erreur lors de la modification du statut." };
   }
 }
@@ -308,7 +309,7 @@ export async function getSignedVideoUploadAction(projectId: string, fileName: st
       r2Key
     };
   } catch (error) {
-    console.error("Error generating signed URL:", error);
+    logger.error("Error generating signed URL:", error);
     return { success: false, error: "Erreur lors de la préparation de l'envoi." };
   }
 }

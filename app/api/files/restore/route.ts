@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth, checkRole, UserRole } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 // export const runtime = 'edge'; // Commenté pour le dev local
 
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, count: fileIds.length });
 
   } catch (error) {
-    console.error("Restore files error:", error);
+    logger.error("Restore files error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

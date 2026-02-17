@@ -16,6 +16,7 @@ import ProjectManagementDialog from "@/components/settings/project-management-di
 import FileManagementDialog from "@/components/settings/file-management-dialog";
 import MediaManagementDialog from "@/components/settings/media-management-dialog";
 import SettingsDialogs from "@/components/settings/settings-dialogs";
+import { useLogger } from "@/lib/logger";
 
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import { ProjectProgress } from "@/components/dashboard/project-progress";
@@ -73,6 +74,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
     const [fitNonce, setFitNonce] = useState<number>(0);
     const [globalCenterNonce, setGlobalCenterNonce] = useState<number>(0);
     const [globalCenterPoint, setGlobalCenterPoint] = useState<[number, number] | null>(null);
+    const logger = useLogger('DashboardClient');
 
     const triggerFit = useCallback(() => setFitNonce(prev => prev + 1), []);
     const triggerGlobalCenter = useCallback((lat: number, lng: number) => {
@@ -155,12 +157,12 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
             const media = await getProjectMedia(projectName);
             setDynamicMedia(media);
         } catch (error) {
-            console.error("Error fetching media:", error);
+            logger.error("Error fetching media:", error);
             setDynamicMedia({ images: [], pdfs: [] });
         } finally {
             setIsLoadingMedia(false);
         }
-    }, []);
+    }, [logger]);
 
 
 

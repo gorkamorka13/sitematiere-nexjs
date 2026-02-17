@@ -12,6 +12,7 @@ import {
   Paperclip,
   X,
 } from "lucide-react";
+import { useLogger } from "@/lib/logger";
 import type { Project, Document as ProjectDocument, Video as ProjectVideo } from "@prisma/client";
 import jsPDF from "jspdf";
 import * as htmlToImage from "html-to-image";
@@ -59,6 +60,7 @@ export function ProjectExportDialog({
   // Use filtered projects if provided, otherwise fall back to all projects
   const projectsForMap = filteredProjects && filteredProjects.length > 0 ? filteredProjects : allProjects;
   const [isGenerating, setIsGenerating] = useState(false);
+  const logger = useLogger('ProjectExportDialog');
   const [exportStatus, setExportStatus] = useState<string>("");
   const [captureKey, setCaptureKey] = useState<"global" | "project" | null>(null);
   const portalRef = React.useRef<HTMLDivElement | null>(null);
@@ -136,12 +138,12 @@ export function ProjectExportDialog({
 
       const element = document.getElementById(elementId);
       if (!element) {
-        console.error(`[CAPTURE v2.2] Element ${elementId} not found after JIT wait`);
+        logger.error(`Element ${elementId} not found after JIT wait`);
         setCaptureKey(null);
         return null;
       }
 
-      console.log(`[CAPTURE v2.2] Starting capture for ${elementId}`);
+      logger.debug(`Starting capture for ${elementId}`);
 
       // Use html-to-image for better performance
       const dataUrl = await htmlToImage.toJpeg(element, {
@@ -159,13 +161,13 @@ export function ProjectExportDialog({
         }
       });
 
-      console.log(`[CAPTURE v2.2] SUCCESS: ${elementId}`);
+      logger.info(`SUCCESS: ${elementId}`);
 
       // Cleanup
       setCaptureKey(null);
       return dataUrl;
     } catch (error) {
-      console.error(`Error capturing map ${elementId}:`, error);
+      logger.error(`Error capturing map ${elementId}:`, error);
       setCaptureKey(null);
       return null;
     }
@@ -221,7 +223,7 @@ export function ProjectExportDialog({
           doc.addImage(logoData, "PNG", pageWidth - margin - 15, 10, 15, 15);
         }
       } catch (e) {
-        console.warn("Logo could not be loaded", e);
+        logger.warn("Logo could not be loaded", e);
       }
 
       doc.setTextColor(gray500[0], gray500[1], gray500[2]);
@@ -313,7 +315,7 @@ export function ProjectExportDialog({
           doc.addImage(imgData, "JPEG", margin, yPos, imgWidth, imgHeight);
           yPos += imgHeight + 20;
         } catch (e) {
-          console.warn("Could not load last photo for PDF", e);
+          logger.warn("Could not load last photo for PDF", e);
         }
       }
 
@@ -496,7 +498,7 @@ export function ProjectExportDialog({
                 doc.addImage(planImgData, "JPEG", margin + (contentWidth - pImgWidth) / 2, yPos, pImgWidth, pImgHeight);
                 yPos += pImgHeight + 12;
               } catch (e) {
-                console.warn("Could not load plan preview", e);
+                logger.warn("Could not load plan preview", e);
               }
             }
           }
@@ -580,7 +582,7 @@ export function ProjectExportDialog({
               }
             }
           } catch (e) {
-            console.warn(`Could not download document ${doc.id}:`, e);
+            logger.warn(`Could not download document ${doc.id}:`, e);
           }
         }
 
@@ -602,7 +604,7 @@ export function ProjectExportDialog({
 
       onClose();
     } catch (error) {
-      console.error("PDF Generation failed:", error);
+      logger.error("PDF Generation failed:", error);
       alert("Erreur lors de la génération du rapport professionnel.");
     } finally {
       setIsGenerating(false);

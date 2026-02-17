@@ -1,11 +1,12 @@
 "use client";
 
 import { FileStack, FileText, ImageIcon, FolderOpen, AlertCircle, X, Info, Video, Archive } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { FileStatistics } from "@/lib/types";
 import { FileUploadZone } from "../files/file-upload-zone";
 import { FileUploadProgress, FileUploadState } from "../files/file-upload-progress";
 import { FileExplorer } from "../files/file-explorer";
+import { useLogger } from "@/lib/logger";
 // import { formatBytes } from "@/lib/utils";
 
 interface FileManagementDialogProps {
@@ -19,6 +20,7 @@ type Tab = "dashboard" | "explorer" | "upload";
 export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileManagementDialogProps) {
     // const router = useRouter();
     const [activeTab, setActiveTab] = useState<Tab>("dashboard");
+    const logger = useLogger('FileManagementDialog');
 
     // Statistiques
     const [stats, setStats] = useState<FileStatistics | null>(null);
@@ -28,13 +30,7 @@ export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileM
     const [uploads, setUploads] = useState<FileUploadState[]>([]);
     // const [isUploading, setIsUploading] = useState(false);
 
-    useEffect(() => {
-        if (isOpen && isAdmin) {
-            fetchStatistics();
-        }
-    }, [isOpen, isAdmin]);
-
-    const fetchStatistics = async () => {
+    const fetchStatistics = useCallback(async () => {
         // setIsLoadingStats(true);
         try {
             const response = await fetch("/api/files/statistics");
@@ -43,11 +39,17 @@ export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileM
                 setStats(data);
             }
         } catch (error) {
-            console.error("Erreur lors du chargement des statistiques:", error);
+            logger.error("Erreur lors du chargement des statistiques:", error);
         } finally {
             // setIsLoadingStats(false);
         }
-    };
+    }, [logger]);
+
+    useEffect(() => {
+        if (isOpen && isAdmin) {
+            fetchStatistics();
+        }
+    }, [isOpen, isAdmin, fetchStatistics]);
 
     // Upload Logic
     const handleFilesSelected = async (files: File[]) => {

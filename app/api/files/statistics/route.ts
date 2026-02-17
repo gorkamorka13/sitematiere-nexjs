@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth, checkRole, UserRole } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 // export const runtime = 'edge'; // Commenté pour le dev local
 
@@ -60,7 +61,7 @@ export async function GET() {
 
     return NextResponse.json(statistics);
   } catch (error) {
-    console.error("Erreur lors du calcul des statistiques:", error);
+    logger.error("Erreur lors du calcul des statistiques:", error);
     // En cas d'erreur de la nouvelle table, on pourrait fallback sur l'ancienne logique
     // mais ici on préfère renvoyer une erreur car la bascule est demandée.
     return NextResponse.json(

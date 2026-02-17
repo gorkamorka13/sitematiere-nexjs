@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth, checkRole, UserRole } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 // export const runtime = 'edge'; // Commenté pour le dev local
 
@@ -45,7 +46,7 @@ export async function PATCH(request: Request) {
             message: `${result.count} fichier(s) déplacé(s) avec succès`
         });
     } catch (error) {
-        console.error("Bulk move error:", error);
+        logger.error("Bulk move error:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }

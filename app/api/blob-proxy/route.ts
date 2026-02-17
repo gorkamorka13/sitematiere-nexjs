@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 // export const runtime = 'edge'; // Commenté pour le dev local
 
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
 
   const token = process.env.BLOB_READ_WRITE_TOKEN;
   if (!token) {
-    console.error('BLOB_READ_WRITE_TOKEN not configured');
+    logger.error('BLOB_READ_WRITE_TOKEN not configured');
     return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
   }
 
@@ -29,8 +30,8 @@ export async function GET(request: NextRequest) {
     const response = await fetch(signedUrl);
 
     if (!response.ok) {
-      console.error(`Failed to fetch blob: ${response.status} ${response.statusText}`);
-      console.error(`URL attempted: ${blobUrl}`);
+      logger.error(`Failed to fetch blob: ${response.status} ${response.statusText}`);
+      logger.error(`URL attempted: ${blobUrl}`);
       return NextResponse.json(
         { error: 'Failed to fetch blob' },
         { status: response.status }
@@ -49,7 +50,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error proxying blob:', error);
+    logger.error('Error proxying blob:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

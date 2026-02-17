@@ -46,6 +46,7 @@ import { DatabaseImagePicker } from '@/components/image-processor/DatabaseImageP
 import { Toast } from '@/components/ui/toast';
 import { useSlideshow, SlideshowImage } from '@/hooks/use-slideshow';
 import { useSlideshowVideo } from '@/hooks/use-slideshow-video';
+import { useLogger } from '@/lib/logger';
 import { VideosTab } from './VideosTab';
 
 interface Project {
@@ -515,6 +516,7 @@ interface EditTabProps {
 function EditTab({ processor, projectId, onSuccess }: EditTabProps) {
     const [isSaving, setIsSaving] = useState(false);
     const [showDatabasePicker, setShowDatabasePicker] = useState(false);
+    const logger = useLogger('EditTab');
 
     const handleSaveToDatabase = useCallback(async () => {
         if (!processor.currentImage || !projectId) return;
@@ -558,12 +560,12 @@ function EditTab({ processor, projectId, onSuccess }: EditTabProps) {
                 throw new Error(result.error || "Erreur lors du téléversement");
             }
         } catch (error) {
-            console.error("Save error:", error);
+            logger.error("Save error:", error);
             alert(error instanceof Error ? error.message : "Une erreur est survenue");
         } finally {
             setIsSaving(false);
         }
-    }, [processor.currentImage, processor.originalImage, projectId, onSuccess]);
+    }, [processor.currentImage, processor.originalImage, projectId, onSuccess, logger]);
 
     // Override the global dispatchUploadEvent for the Controls component
     useEffect(() => {

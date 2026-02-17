@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth, checkRole, UserRole } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 // export const runtime = 'edge'; // Commenté pour le dev local
 
@@ -33,7 +34,7 @@ export async function GET() {
 
     return NextResponse.json(filteredProjects);
   } catch (error) {
-    console.error("Failed to fetch projects:", error);
+    logger.error("Failed to fetch projects:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

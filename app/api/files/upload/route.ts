@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { uploadFile, getFileTypeFromMime } from "@/lib/files/blob-edge";
 import { validateFileSize, validateFileType, sanitizeFileName } from "@/lib/files/validation";
+import { logger } from "@/lib/logger";
 // Duplicate import removed
 
 // Cloudflare Pages requires Edge Runtime for API routes
@@ -95,7 +96,7 @@ export async function POST(request: Request) {
             // For now, skip actual delete to be safe, but delete the DB record
             await prisma.file.delete({ where: { id: existingFile.id } });
           } catch (e) {
-            console.error("Failed to delete existing file record", e);
+            logger.error("Failed to delete existing file record", e);
           }
         }
 
@@ -128,7 +129,7 @@ export async function POST(request: Request) {
 
       } catch (error: unknown) {
         const err = error instanceof Error ? error : new Error(String(error));
-        console.error("[UPLOAD API] File processing error for", file.name, ":", err.message);
+        logger.error("[UPLOAD API] File processing error for", file.name, ":", err.message);
         errors.push({
           file: file.name,
           error: err.message
@@ -143,7 +144,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error: unknown) {
-    console.error("[UPLOAD API] Fatal error:", error);
+    logger.error("[UPLOAD API] Fatal error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

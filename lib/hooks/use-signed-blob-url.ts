@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { logger } from '@/lib/logger';
 
 /**
  * Hook to convert Cloudflare R2 URLs to signed URLs that can be accessed by the browser
@@ -27,12 +28,12 @@ export function useSignedBlobUrl(blobUrl: string | undefined): string {
         if (data.signedUrl) {
           setSignedUrl(data.signedUrl);
         } else {
-          console.error('Failed to get signed URL');
+          logger.error('Failed to get signed URL');
           setSignedUrl(blobUrl); // Fallback to original
         }
       })
       .catch(err => {
-        console.error('Error fetching signed URL:', err);
+        logger.error('Error fetching signed URL:', err);
         setSignedUrl(blobUrl); // Fallback to original
       });
   }, [blobUrl]);

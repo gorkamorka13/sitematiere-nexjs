@@ -3,6 +3,7 @@ import { auth, checkRole, UserRole } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { hash } from "bcrypt-ts";
 import { z } from "zod";
+import { logger } from "@/lib/logger";
 
 // export const runtime = 'edge'; // Commenté pour le dev local
 
@@ -53,7 +54,7 @@ export async function GET() {
 
     return NextResponse.json(users);
   } catch (error) {
-    console.error("Erreur lors de la récupération des utilisateurs:", error);
+    logger.error("Erreur lors de la récupération des utilisateurs:", error);
     return NextResponse.json(
       { error: "Erreur serveur" },
       { status: 500 }
@@ -114,7 +115,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    console.error("Erreur lors de la création de l'utilisateur:", error);
+    logger.error("Erreur lors de la création de l'utilisateur:", error);
     return NextResponse.json(
       { error: "Erreur serveur" },
       { status: 500 }
@@ -200,7 +201,7 @@ export async function PUT(request: NextRequest) {
         { status: 400 }
       );
     }
-    console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
+    logger.error("Erreur lors de la mise à jour de l'utilisateur:", error);
     return NextResponse.json(
       { error: "Erreur serveur" },
       { status: 500 }
@@ -261,7 +262,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Erreur lors de la suppression de l'utilisateur:", error);
+    logger.error("Erreur lors de la suppression de l'utilisateur:", error);
     return NextResponse.json(
       { error: "Erreur serveur" },
       { status: 500 }

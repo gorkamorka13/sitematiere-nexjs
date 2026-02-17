@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Folder, Loader2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useLogger } from '@/lib/logger';
 
 interface Project {
     id: string;
@@ -20,6 +21,7 @@ export function ProjectSelectDialog({ isOpen, onClose, onSelect }: ProjectSelect
     const [projects, setProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedId, setSelectedId] = useState<string | null>(null);
+    const logger = useLogger('ProjectSelectDialog');
 
     useEffect(() => {
         if (!isOpen) return;
@@ -33,13 +35,13 @@ export function ProjectSelectDialog({ isOpen, onClose, onSelect }: ProjectSelect
                     setProjects(data);
                 }
             } catch (error) {
-                console.error("Failed to fetch projects", error);
+                logger.error("Failed to fetch projects", error);
             } finally {
                 setLoading(false);
             }
         }
         fetchProjects();
-    }, [isOpen]);
+    }, [isOpen, logger]);
 
     if (!isOpen) return null;
 

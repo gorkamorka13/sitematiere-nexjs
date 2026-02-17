@@ -44,17 +44,19 @@ export const logger = {
   },
 };
 
+import { useMemo } from 'react';
+
 /**
  * Hook for component-level logging
  * Returns logger with component name prefix
  */
 export function useLogger(componentName: string) {
-  return {
+  return useMemo(() => ({
     debug: (...args: unknown[]) => logger.debug(`[${componentName}]`, ...args),
     info: (...args: unknown[]) => logger.info(`[${componentName}]`, ...args),
     warn: (...args: unknown[]) => logger.warn(`[${componentName}]`, ...args),
     error: (...args: unknown[]) => logger.error(`[${componentName}]`, ...args),
-  };
+  }), [componentName]);
 }
 
 export default logger;

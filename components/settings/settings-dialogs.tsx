@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Users, X, UserCircle, Shield, Eye, EyeOff, Save, Trash2, Edit2, Plus, Palette, ChevronLeft, Database } from "lucide-react";
 import { UserRole } from "@/lib/auth-types";
 import UserBadge from "./user-badge";
+import { useLogger } from "@/lib/logger";
 
 interface User {
   id: string;
@@ -53,6 +54,7 @@ export default function SettingsDialogs({ isAdmin, isOpen, onClose }: SettingsDi
     role: UserRole.USER as UserRole,
     color: "#6366f1",
   });
+  const logger = useLogger('SettingsDialogs');
 
   // Charger la liste des utilisateurs (admin uniquement)
   const fetchUsers = useCallback(async () => {
@@ -66,11 +68,11 @@ export default function SettingsDialogs({ isAdmin, isOpen, onClose }: SettingsDi
         setUsers(data);
       }
     } catch (error) {
-      console.error("Erreur lors du chargement des utilisateurs:", error);
+      logger.error("Erreur lors du chargement des utilisateurs:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [isAdmin]);
+  }, [isAdmin, logger]);
 
   useEffect(() => {
     if (isOpen) {
@@ -97,7 +99,7 @@ export default function SettingsDialogs({ isAdmin, isOpen, onClose }: SettingsDi
         alert(error.error || "Erreur lors de la création");
       }
     } catch (error) {
-      console.error("Erreur:", error);
+      logger.error("Erreur creation utilisateur:", error);
       alert("Erreur lors de la création de l'utilisateur");
     }
   };
@@ -126,7 +128,7 @@ export default function SettingsDialogs({ isAdmin, isOpen, onClose }: SettingsDi
         alert(error.error || "Erreur lors de la mise à jour");
       }
     } catch (error) {
-      console.error("Erreur:", error);
+      logger.error("Erreur mise à jour utilisateur:", error);
       alert("Erreur lors de la mise à jour de l'utilisateur");
     }
   };
@@ -146,7 +148,7 @@ export default function SettingsDialogs({ isAdmin, isOpen, onClose }: SettingsDi
         alert(error.error || "Erreur lors de la suppression");
       }
     } catch (error) {
-      console.error("Erreur:", error);
+      logger.error("Erreur suppression utilisateur:", error);
       alert("Erreur lors de la suppression de l'utilisateur");
     }
   };

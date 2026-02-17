@@ -5,6 +5,7 @@ import { auth, checkRole, UserRole } from "@/lib/auth";
 import { ProjectUpdateSchema, ProjectUpdateInput, ProjectCreateSchema, ProjectCreateInput } from "@/lib/validations";
 import { revalidatePath } from "next/cache";
 import { deleteFromR2, extractKeyFromUrl } from "@/lib/storage/r2-operations";
+import { logger } from "@/lib/logger";
 
 export async function updateProject(formData: ProjectUpdateInput) {
   const session = await auth();
@@ -138,7 +139,7 @@ export async function updateProject(formData: ProjectUpdateInput) {
     revalidatePath("/");
     return { success: true };
   } catch (error) {
-    console.error("Erreur lors de la mise à jour du projet:", error);
+    logger.error("Erreur lors de la mise à jour du projet:", error);
     return { success: false, error: "Erreur lors de la mise à jour en base de données." };
   }
 }
@@ -228,7 +229,7 @@ export async function createProject(formData: ProjectCreateInput) {
 
     return { success: true, projectId: project.id };
   } catch (error) {
-    console.error("Erreur lors de la création du projet:", error);
+    logger.error("Erreur lors de la création du projet:", error);
     return { success: false, error: "Erreur lors de la création en base de données." };
   }
 }
@@ -265,7 +266,7 @@ export async function deleteProject(projectId: string, confirmName: string) {
       await Promise.all(
         files.map((file) => {
           const key = file.blobPath || extractKeyFromUrl(file.blobUrl);
-          return deleteFromR2(key).catch((err) => console.error(`Erreur suppression R2 ${key}:`, err));
+          return deleteFromR2(key).catch((err) => logger.error(`Erreur suppression R2 ${key}:`, err));
         })
       );
     }
@@ -279,7 +280,7 @@ export async function deleteProject(projectId: string, confirmName: string) {
 
     return { success: true };
   } catch (error) {
-    console.error("Erreur lors de la suppression du projet:", error);
+    logger.error("Erreur lors de la suppression du projet:", error);
     return { success: false, error: "Erreur lors de la suppression." };
   }
 }
