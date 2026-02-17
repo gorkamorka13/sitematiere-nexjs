@@ -15,13 +15,13 @@
   "/api/files/serve/[...key]/route": "/api/files/serve/[...key]",
   "/api/files/statistics/route": "/api/files/statistics",
   "/api/files/upload/route": "/api/files/upload",
-  "/api/projects/route": "/api/projects",
   "/api/proxy/route": "/api/proxy",
+  "/api/projects/route": "/api/projects",
   "/api/users/route": "/api/users",
   "/api/debug/route": "/api/debug",
   "/(auth)/login/page": "/login",
   "/projects/[id]/page": "/projects/[id]",
   "/page": "/",
-  "/export-db/page": "/export-db",
-  "/slideshow/view/[projectId]/page": "/slideshow/view/[projectId]"
+  "/slideshow/view/[projectId]/page": "/slideshow/view/[projectId]",
+  "/export-db/page": "/export-db"
 }

@@ -3,7 +3,7 @@
   "config": {
     "env": {
       "NEXT_PUBLIC_APP_VERSION": "0.1.77",
-      "NEXT_PUBLIC_GIT_COMMIT": "a1f77fb",
+      "NEXT_PUBLIC_GIT_COMMIT": "57f20bf",
       "NEXT_PUBLIC_BUILD_DATE": "17/02/2026",
       "NEXT_PUBLIC_CREDIT": "Michel ESPARSA",
       "NEXT_PUBLIC_R2_PUBLIC_URL": "https://pub-78c42489fd854dc3a6975810aa00edf2.r2.dev"

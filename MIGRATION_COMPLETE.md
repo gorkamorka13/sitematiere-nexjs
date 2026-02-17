@@ -170,7 +170,7 @@ wrangler tail sitematiere
 - next.config.ts (cleaned)
 - package.json (updated scripts)
 - tsconfig.json (added excludes)
-- wrangler.toml (complete rewrite)
+- wrangler.toml (updated with [assets] feature)
 
 ### Created (6 files)
 - open-next.config.ts

@@ -15,13 +15,13 @@
   "/api/files/serve/[...key]/route": "app/api/files/serve/[...key]/route.js",
   "/api/files/statistics/route": "app/api/files/statistics/route.js",
   "/api/files/upload/route": "app/api/files/upload/route.js",
-  "/api/projects/route": "app/api/projects/route.js",
   "/api/proxy/route": "app/api/proxy/route.js",
+  "/api/projects/route": "app/api/projects/route.js",
   "/api/users/route": "app/api/users/route.js",
   "/api/debug/route": "app/api/debug/route.js",
   "/(auth)/login/page": "app/(auth)/login/page.js",
   "/projects/[id]/page": "app/projects/[id]/page.js",
   "/page": "app/page.js",
-  "/export-db/page": "app/export-db/page.js",
-  "/slideshow/view/[projectId]/page": "app/slideshow/view/[projectId]/page.js"
+  "/slideshow/view/[projectId]/page": "app/slideshow/view/[projectId]/page.js",
+  "/export-db/page": "app/export-db/page.js"
 }
