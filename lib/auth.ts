@@ -13,6 +13,7 @@ export { UserRole, checkRole };
 export const { handlers, auth, signIn, signOut } = NextAuth({
     adapter: PrismaAdapter(prisma),
     session: { strategy: "jwt" },
+    secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
     trustHost: true,
     cookies: {
         sessionToken: {
@@ -60,47 +61,46 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                         .object({ username: z.string(), password: z.string().min(6) })
                         .safeParse(credentials);
 
-                    if (parsedCredentials.success) {
-                        const { username, password } = parsedCredentials.data;
-
-                        // Allow login with either username OR email
-                        logger.debug("[Auth_Authorize] Querying database for user...");
-                        const user = await prisma.user.findFirst({
-                            where: {
-                                OR: [
-                                    { username: username },
-                                    { email: username }
-                                ]
-                            }
-                        });
-
-                        if (!user) {
-                            logger.warn("[Auth_Authorize] User not found in database:", username);
-                            return null;
-                        }
-
-                        if (!user.passwordHash) {
-                            logger.warn("[Auth_Authorize] User has no password hash set:", username);
-                            return null;
-                        }
-
-                        logger.debug("[Auth_Authorize] User found, verifying password hash...");
-                        const passwordsMatch = compareSync(password, user.passwordHash);
-
-                        if (passwordsMatch) {
-                            logger.info("[Auth_Authorize] Password match successful for:", username);
-                            return user;
-                        } else {
-                            logger.warn("[Auth_Authorize] Password mismatch for:", username);
-                        }
-                    } else {
+                    if (!parsedCredentials.success) {
                         logger.warn("[Auth_Authorize] Invalid credentials format provided");
+                        return null;
+                    }
+
+                    const { username, password } = parsedCredentials.data;
+
+                    logger.debug("[Auth_Authorize] Querying database for user:", username);
+                    const user = await prisma.user.findFirst({
+                        where: {
+                            OR: [
+                                { username: username },
+                                { email: username }
+                            ]
+                        }
+                    });
+
+                    if (!user) {
+                        logger.warn("[Auth_Authorize] USER NOT FOUND in database:", username);
+                        return null;
+                    }
+
+                    if (!user.passwordHash) {
+                        logger.error("[Auth_Authorize] CRITICAL: User has NO password hash set:", username);
+                        return null;
+                    }
+
+                    logger.debug("[Auth_Authorize] User found, verifying password hash...");
+                    const passwordsMatch = compareSync(password, user.passwordHash);
+
+                    if (passwordsMatch) {
+                        logger.info("[Auth_Authorize] SUCCESS: Password match successful for:", username);
+                        return user;
+                    } else {
+                        logger.warn("[Auth_Authorize] FAILURE: Password mismatch for user:", username);
                     }
                 } catch (error) {
-                    logger.error("[Auth_Authorize] UNEXPECTED ERROR during authorization:", error);
-                    // Log more details if it's a Prisma error
+                    logger.error("[Auth_Authorize] CRITICAL ERROR during authorization process:", error);
                     const err = error as { name?: string; message?: string; code?: string; meta?: unknown };
-                    logger.error("[Auth_Authorize] Error Details:", {
+                    logger.error("[Auth_Authorize] Stack/Details:", {
                         name: err.name,
                         message: err.message,
                         code: err.code,
