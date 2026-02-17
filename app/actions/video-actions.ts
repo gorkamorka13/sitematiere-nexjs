@@ -16,12 +16,13 @@ export async function getProjectVideos(projectId: string) {
       return { success: false, error: "ID du projet manquant." };
     }
 
+    console.log(`[getProjectVideos] Querying Prisma for projectId: ${projectId}`);
     const videos = await prisma.video.findMany({
       where: { projectId },
-      orderBy: { order: 'asc' }, // Changed from createdAt: 'desc' to support custom ordering
+      orderBy: { order: 'asc' },
     });
 
-    console.log(`[getProjectVideos] Found ${videos.length} videos`);
+    console.log(`[getProjectVideos] Successfully found ${videos.length} videos`);
 
     // Serialize dates to ISO strings for Cloudflare compatibility
     const serializedVideos = videos.map(v => {
@@ -52,11 +53,22 @@ export async function getProjectVideos(projectId: string) {
     });
 
     return { success: true, videos: serializedVideos };
-  } catch (error) {
-    console.error("[getProjectVideos] Exception caught:", error);
+  } catch (error: unknown) {
+    console.error("[getProjectVideos] CRITICAL ERROR:", error);
+    const err = error as { name?: string; message?: string; code?: string; meta?: unknown };
+    const errorDetails = {
+      name: err?.name,
+      message: err?.message,
+      code: err?.code,
+      meta: err?.meta,
+      runtime: process.env.NEXT_RUNTIME,
+      isCloudflare: !!process.env.CF_PAGES
+    };
+    console.error("[getProjectVideos] Error Details:", JSON.stringify(errorDetails));
+
     return {
       success: false,
-      error: error instanceof Error ? `Erreur: ${error.message}` : "Erreur lors de la récupération des vidéos."
+      error: `Détail technique: ${err?.name || 'Error'} - ${err?.message || 'Inconnu'}. Code: ${err?.code || 'N/A'}`
     };
   }
 }

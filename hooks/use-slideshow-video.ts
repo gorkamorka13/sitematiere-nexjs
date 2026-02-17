@@ -61,14 +61,19 @@ export function useSlideshowVideo(projectId: string | null) {
         setHasUnpublishedChanges(hasUnpublished);
       } else {
         if (result.error) {
-          console.error('[useSlideshowVideo] Error result:', result.error);
-          setToast({ message: result.error || "Erreur lors du chargement des vidéos", type: 'error' });
+          console.error('[useSlideshowVideo] Server Action Error:', result.error);
+          setToast({ message: `Erreur serveur: ${result.error}`, type: 'error' });
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       if (isCancelled && isCancelled()) return;
-      console.error('[useSlideshowVideo] Error loading videos:', error);
-      setToast({ message: "Erreur technique lors du chargement des vidéos", type: 'error' });
+      console.error('[useSlideshowVideo] Technical Error Details:', error);
+      const err = error as { message?: string };
+      const technicalInfo = err?.message || (typeof error === 'string' ? error : 'Inconnue');
+      setToast({
+        message: `Erreur technique lors du chargement des vidéos: ${technicalInfo}`,
+        type: 'error'
+      });
     } finally {
       if (!isCancelled || !isCancelled()) {
         setLoading(false);
