@@ -1,7 +1,5 @@
 "use server";
 
-// export const runtime = 'edge'; // Commenté pour le dev local
-
 import prisma from "@/lib/prisma";
 import { naturalSort } from "@/lib/sort-utils";
 import { auth } from "@/lib/auth";
