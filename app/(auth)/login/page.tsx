@@ -29,11 +29,19 @@ export default function LoginPage() {
             redirect: false,
         });
 
+        console.error("[LOGIN_PAGE] SignIn result:", result);
+
         if (result?.error) {
+            console.error("[LOGIN_PAGE] Login error:", result.error);
             setError("Identifiants invalides");
             setLoading(false);
-        } else {
+        } else if (result?.ok) {
+            console.error("[LOGIN_PAGE] Login successful, redirecting...");
             router.push("/");
+        } else {
+            console.error("[LOGIN_PAGE] Unexpected result:", result);
+            setError("Erreur de connexion");
+            setLoading(false);
         }
     };
 

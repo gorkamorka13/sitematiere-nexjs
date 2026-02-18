@@ -83,6 +83,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                         .limit(1);
 
                     if (!user) {
+                        console.error("[AUTH_FLOW] USER NOT FOUND in database:", username);
                         logger.warn("[Auth_Authorize] USER NOT FOUND in database:", username);
                         return null;
                     }
@@ -96,6 +97,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     const passwordsMatch = compareSync(password, user.passwordHash);
 
                     if (passwordsMatch) {
+                        console.error("[AUTH_FLOW] SUCCESS: Password match successful for:", username);
                         logger.info("[Auth_Authorize] SUCCESS: Password match successful for:", username);
                         return {
                             id: user.id,
@@ -109,6 +111,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                             updatedAt: user.updatedAt?.toISOString() ?? null,
                         };
                     } else {
+                        console.error("[AUTH_FLOW] FAILURE: Password mismatch for user:", username);
                         logger.warn("[Auth_Authorize] FAILURE: Password mismatch for user:", username);
                     }
                 } catch (error) {
@@ -130,9 +133,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     callbacks: {
         async jwt({ token, user, trigger, account }) {
             try {
+                console.error("[AUTH_FLOW] JWT callback triggered", { trigger, hasUser: !!user, account: account?.provider });
                 logger.debug("[Auth_JWT] JWT callback triggered", { trigger, hasUser: !!user, account: account?.provider });
                 if (user) {
                     const u = user as User;
+                    console.error("[AUTH_FLOW] JWT callback adding user to token", { userId: u.id, username: u.username });
                     logger.debug("[Auth_JWT] Adding user data to token", { 
                         userId: u.id, 
                         username: u.username,
