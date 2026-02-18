@@ -9,6 +9,9 @@ import { logger } from "@/lib/logger";
 
 export { UserRole, checkRole };
 
+console.error("[AUTH_INIT] NextAuth config - AUTH_SECRET exists:", !!process.env.AUTH_SECRET);
+console.error("[AUTH_INIT] NextAuth config - NODE_ENV:", process.env.NODE_ENV);
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
     session: { strategy: "jwt" },
     secret: process.env.AUTH_SECRET,
@@ -24,6 +27,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 password: { label: "Mot de passe", type: "password" },
             },
             async authorize(credentials) {
+                console.error("[AUTH_FLOW] Authorize callback started for:", credentials?.username);
                 logger.debug("[Auth_Authorize] Attempting login for user/email:", credentials?.username);
                 try {
                     const parsedCredentials = z
@@ -79,8 +83,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     }
                 } catch (error) {
                     logger.error("[Auth_Authorize] CRITICAL ERROR during authorization process:", error);
+                    // Always log errors with console.error for Cloudflare debugging
+                    console.error("[AUTH_ERROR] Authorize callback error:", error);
                     const err = error as { name?: string; message?: string; code?: string; meta?: unknown };
-                    logger.error("[Auth_Authorize] Stack/Details:", {
+                    console.error("[AUTH_ERROR] Error details:", {
                         name: err.name,
                         message: err.message,
                         code: err.code,
@@ -93,26 +99,48 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }),
     ],
     callbacks: {
-        async jwt({ token, user }) {
-            if (user) {
-                const u = user as User;
-                token.id = u.id;
-                token.role = u.role;
-                token.username = u.username;
-                token.name = u.name;
-                token.color = u.color;
+        async jwt({ token, user, trigger, account }) {
+            try {
+                logger.debug("[Auth_JWT] JWT callback triggered", { trigger, hasUser: !!user, account: account?.provider });
+                if (user) {
+                    const u = user as User;
+                    logger.debug("[Auth_JWT] Adding user data to token", { 
+                        userId: u.id, 
+                        username: u.username,
+                        role: u.role 
+                    });
+                    token.id = u.id;
+                    token.role = u.role;
+                    token.username = u.username;
+                    token.name = u.name;
+                    token.color = u.color;
+                }
+                logger.debug("[Auth_JWT] Returning token", { tokenId: token.id });
+                return token;
+            } catch (error) {
+                console.error("[AUTH_ERROR] JWT callback error:", error);
+                throw error;
             }
-            return token;
         },
-        async session({ session, token }) {
-            if (session.user) {
-                session.user.id = token.id as string;
-                session.user.role = token.role as UserRole;
-                session.user.username = token.username as string;
-                session.user.name = token.name as string;
-                session.user.color = token.color as string | null;
+        async session({ session, token, trigger }) {
+            try {
+                logger.debug("[Auth_Session] Session callback triggered", { trigger });
+                if (session.user) {
+                    session.user.id = token.id as string;
+                    session.user.role = token.role as UserRole;
+                    session.user.username = token.username as string;
+                    session.user.name = token.name as string;
+                    session.user.color = token.color as string | null;
+                    logger.debug("[Auth_Session] Session populated with user data", { 
+                        userId: session.user.id,
+                        username: session.user.username 
+                    });
+                }
+                return session;
+            } catch (error) {
+                console.error("[AUTH_ERROR] Session callback error:", error);
+                throw error;
             }
-            return session;
         },
     },
 });

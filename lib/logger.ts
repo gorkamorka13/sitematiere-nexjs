@@ -1,26 +1,27 @@
 /**
  * Centralized logging utility
- * Suppresses debug/info logs in production
+ * Suppresses debug/info logs in production (unless DEBUG_LOGS env var is set)
  * Always logs warnings and errors
  */
 
 const isDev = process.env.NODE_ENV === "development";
+const forceLogs = process.env.DEBUG_LOGS === "true";
 const isClient = typeof window !== "undefined";
 
 /**
  * Logger utility that respects environment
- * - debug/info: Only in development
+ * - debug/info: Only in development (or when DEBUG_LOGS=true)
  * - warn/error: Always logged
  */
 export const logger = {
   debug: (...args: unknown[]) => {
-    if (isDev) {
+    if (isDev || forceLogs) {
       console.log("[DEBUG]", ...args);
     }
   },
 
   info: (...args: unknown[]) => {
-    if (isDev) {
+    if (isDev || forceLogs) {
       console.info("[INFO]", ...args);
     }
   },
