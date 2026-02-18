@@ -29,15 +29,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 password: { label: "Mot de passe", type: "password" },
             },
             async authorize(credentials) {
-                console.error("[AUTH_FLOW] Authorize callback started for:", credentials?.username);
-                logger.debug("[Auth_Authorize] Attempting login for user/email:", credentials?.username);
+                const creds = credentials as { username?: string; password?: string } | undefined;
+                console.error("[AUTH_FLOW] Authorize callback started for:", creds?.username);
+                logger.debug("[Auth_Authorize] Attempting login for user/email:", creds?.username);
+                logger.debug("[Auth_Authorize] Raw credentials received:", { 
+                    hasUsername: !!creds?.username, 
+                    hasPassword: !!creds?.password,
+                    usernameType: typeof creds?.username,
+                    passwordLength: creds?.password?.length || 0
+                });
                 try {
                     const parsedCredentials = z
                         .object({ username: z.string(), password: z.string().min(6) })
                         .safeParse(credentials);
 
                     if (!parsedCredentials.success) {
-                        logger.warn("[Auth_Authorize] Invalid credentials format provided");
+                        logger.warn("[Auth_Authorize] Invalid credentials format provided", { 
+                            error: parsedCredentials.error?.issues,
+                            username: creds?.username,
+                            passwordLength: creds?.password?.length || 0
+                        });
                         return null;
                     }
 
