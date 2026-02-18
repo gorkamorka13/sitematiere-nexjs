@@ -29,8 +29,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 password: { label: "Mot de passe", type: "password" },
             },
             async authorize(credentials) {
-                const creds = credentials as { username?: string; password?: string } | undefined;
-                console.error("[AUTH_FLOW] Authorize callback started for:", creds?.username);
+                console.error("[AUTH_FLOW] Authorize callback started");
+                console.error("[AUTH_FLOW] Credentials type:", typeof credentials);
+                console.error("[AUTH_FLOW] Credentials keys:", credentials ? Object.keys(credentials) : 'null');
+                console.error("[AUTH_FLOW] Raw credentials:", JSON.stringify(credentials, null, 2));
+                
+                // Handle edge case where credentials might be nested
+                let creds = credentials as { username?: string; password?: string } | undefined;
+                
+                // If credentials is undefined or null, try to extract from nested structure
+                if (!creds || (!creds.username && !creds.password)) {
+                    const anyCreds = credentials as any;
+                    if (anyCreds?.json) {
+                        try {
+                            creds = JSON.parse(anyCreds.json);
+                            console.error("[AUTH_FLOW] Parsed nested JSON credentials");
+                        } catch (e) {
+                            console.error("[AUTH_FLOW] Failed to parse nested JSON:", e);
+                        }
+                    }
+                }
+                
+                console.error("[AUTH_FLOW] Processed credentials - username:", creds?.username);
                 logger.debug("[Auth_Authorize] Attempting login for user/email:", creds?.username);
                 logger.debug("[Auth_Authorize] Raw credentials received:", { 
                     hasUsername: !!creds?.username, 
@@ -38,10 +58,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     usernameType: typeof creds?.username,
                     passwordLength: creds?.password?.length || 0
                 });
+                
                 try {
                     const parsedCredentials = z
-                        .object({ username: z.string(), password: z.string().min(6) })
-                        .safeParse(credentials);
+                        .object({ username: z.string().min(1), password: z.string().min(1) })
+                        .safeParse(creds);
 
                     if (!parsedCredentials.success) {
                         logger.warn("[Auth_Authorize] Invalid credentials format provided", { 

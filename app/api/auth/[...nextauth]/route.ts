@@ -23,10 +23,20 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  logger.debug("[Auth_Route] POST request received", { 
-    url: request.url,
-    contentType: request.headers.get("content-type")
-  });
+  // Clone the request to read the body
+  const clonedRequest = request.clone();
+  let bodyText = "";
+  try {
+    bodyText = await clonedRequest.text();
+    logger.debug("[Auth_Route] POST request received", { 
+      url: request.url,
+      contentType: request.headers.get("content-type"),
+      bodyPreview: bodyText.substring(0, 500) // Log first 500 chars
+    });
+  } catch (e) {
+    logger.debug("[Auth_Route] Could not read body", { error: String(e) });
+  }
+  
   try {
     const response = await handlers.POST(request);
     logger.debug("[Auth_Route] POST response", { 
