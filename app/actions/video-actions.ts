@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { videos, projects } from "@/lib/db/schema";
-import { eq, and, desc, asc } from "drizzle-orm";
+import { eq, desc, asc } from "drizzle-orm";
 import { auth, checkRole } from "@/lib/auth";
 import type { UserRole } from "@/lib/auth-types";
 import { revalidatePath } from "next/cache";

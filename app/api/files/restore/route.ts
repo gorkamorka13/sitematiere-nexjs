@@ -3,7 +3,7 @@ import { auth, checkRole } from "@/lib/auth";
 import type { UserRole } from "@/lib/auth-types";
 import { db } from "@/lib/db";
 import { files } from "@/lib/db/schema";
-import { eq, inArray } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import { logger } from "@/lib/logger";
 
 export async function POST(request: Request) {

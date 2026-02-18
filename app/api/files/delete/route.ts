@@ -3,7 +3,7 @@ import { auth, checkRole } from "@/lib/auth";
 import type { UserRole } from "@/lib/auth-types";
 import { db } from "@/lib/db";
 import { images, videos, documents, files } from "@/lib/db/schema";
-import { eq, inArray, and } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import { deleteFile } from "@/lib/files/blob-edge";
 import { extractKeyFromUrl } from "@/lib/storage/r2-operations";
 import { logger } from "@/lib/logger";

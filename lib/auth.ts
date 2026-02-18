@@ -11,8 +11,8 @@ import { logger } from "@/lib/logger";
 
 export { UserRole, checkRole };
 
-console.error("[AUTH_INIT] NextAuth config - AUTH_SECRET exists:", !!process.env.AUTH_SECRET);
-console.error("[AUTH_INIT] NextAuth config - NODE_ENV:", process.env.NODE_ENV);
+logger.debug("[AUTH_INIT] NextAuth config - AUTH_SECRET exists:", !!process.env.AUTH_SECRET);
+logger.debug("[AUTH_INIT] NextAuth config - NODE_ENV:", process.env.NODE_ENV);
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
     session: { strategy: "jwt" },
@@ -29,7 +29,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 password: { label: "Mot de passe", type: "password" },
             },
             async authorize(credentials) {
-                console.error("[AUTH_FLOW] Authorize callback started for:", credentials?.username);
+                logger.debug("[AUTH_FLOW] Authorize callback started for:", credentials?.username);
                 logger.debug("[Auth_Authorize] Attempting login for user/email:", credentials?.username);
                 try {
                     const parsedCredentials = z
@@ -80,10 +80,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                         logger.warn("[Auth_Authorize] FAILURE: Password mismatch for user:", username);
                     }
                 } catch (error) {
-                    logger.error("[Auth_Authorize] CRITICAL ERROR during authorization process:", error);
-                    console.error("[AUTH_ERROR] Authorize callback error:", error);
                     const err = error as { name?: string; message?: string; code?: string; meta?: unknown };
-                    console.error("[AUTH_ERROR] Error details:", {
+                    logger.error("[Auth_Authorize] CRITICAL ERROR during authorization process:", {
+                        error,
                         name: err.name,
                         message: err.message,
                         code: err.code,
@@ -115,7 +114,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 logger.debug("[Auth_JWT] Returning token", { tokenId: token.id });
                 return token;
             } catch (error) {
-                console.error("[AUTH_ERROR] JWT callback error:", error);
+                logger.error("[Auth_JWT] JWT callback error:", error);
                 throw error;
             }
         },
@@ -135,7 +134,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 }
                 return session;
             } catch (error) {
-                console.error("[AUTH_ERROR] Session callback error:", error);
+                logger.error("[Auth_Session] Session callback error:", error);
                 throw error;
             }
         },
