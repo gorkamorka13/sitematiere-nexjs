@@ -62,7 +62,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
                     if (passwordsMatch) {
                         logger.info("[Auth_Authorize] SUCCESS: Password match successful for:", username);
-                        return user;
+                        // Serialize user object to avoid Date serialization issues on Cloudflare Workers
+                        return {
+                            id: user.id,
+                            username: user.username,
+                            email: user.email,
+                            name: user.name,
+                            role: user.role,
+                            color: user.color,
+                            passwordHash: user.passwordHash,
+                            createdAt: user.createdAt?.toISOString() ?? null,
+                            updatedAt: user.updatedAt?.toISOString() ?? null,
+                        };
                     } else {
                         logger.warn("[Auth_Authorize] FAILURE: Password mismatch for user:", username);
                     }
