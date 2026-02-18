@@ -23,17 +23,34 @@ export default function LoginPage() {
         setError("");
         setLoading(true);
 
-        const result = await signIn("credentials", {
-            username,
-            password,
-            redirect: false,
-        });
+        console.log("[LOGIN] Starting login for:", username);
 
-        if (result?.error) {
-            setError("Identifiants invalides");
+        try {
+            const result = await signIn("credentials", {
+                username,
+                password,
+                redirect: false,
+            });
+
+            console.log("[LOGIN] SignIn result:", JSON.stringify(result, null, 2));
+
+            if (result?.error) {
+                console.error("[LOGIN] Error:", result.error);
+                setError("Identifiants invalides");
+                setLoading(false);
+            } else if (result?.ok) {
+                console.log("[LOGIN] Success, redirecting to /");
+                router.push("/");
+                router.refresh();
+            } else {
+                console.warn("[LOGIN] Unknown result state:", result);
+                setError("Erreur de connexion inconnue");
+                setLoading(false);
+            }
+        } catch (err) {
+            console.error("[LOGIN] Exception:", err);
+            setError("Erreur technique");
             setLoading(false);
-        } else {
-            router.push("/");
         }
     };
 
