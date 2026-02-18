@@ -2,7 +2,7 @@ import { MapContainer, TileLayer, Marker, Tooltip, useMap, CircleMarker } from "
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useEffect, useState } from "react";
-import type { Project, Document } from "@prisma/client";
+import type { Project, Document } from "@/lib/db/schema";
 import { getIcon } from "@/lib/map-icons";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { Portal } from "./portal";

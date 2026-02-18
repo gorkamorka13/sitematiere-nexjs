@@ -2,7 +2,7 @@ import 'server-only';
 
 import { uploadToR2, deleteFromR2 } from '../storage/r2-operations';
 import sharp from 'sharp';
-import { FileType } from '@prisma/client';
+import { FileType } from '@/lib/enums';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import fs from 'fs';

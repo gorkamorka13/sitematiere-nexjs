@@ -3,7 +3,7 @@
  * Phase 1 - Setup & Configuration
  */
 
-import { FileType } from "@prisma/client";
+import { FileType } from "@/lib/enums";
 
 // ==================== TYPES DE BASE ====================
 
