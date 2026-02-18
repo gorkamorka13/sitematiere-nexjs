@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
-import type { Project, Video as ProjectVideo } from "@prisma/client";
+import type { Project, Video as ProjectVideo } from "@/lib/db/schema";
 import {
     ImageIcon,
     ChevronLeft,

@@ -13,7 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { useLogger } from "@/lib/logger";
-import type { Project, Document as ProjectDocument, Video as ProjectVideo } from "@prisma/client";
+import type { Project, Document as ProjectDocument, Video as ProjectVideo } from "@/lib/db/schema";
 import jsPDF from "jspdf";
 import * as htmlToImage from "html-to-image";
 import JSZip from "jszip";

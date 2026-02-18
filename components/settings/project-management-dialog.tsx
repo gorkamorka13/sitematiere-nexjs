@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { X, Save, MapPin, AlignLeft, FolderOpen, AlertCircle, CheckCircle2, Globe, Search, Undo2, Redo2, Plus, Trash2, Edit, UploadCloud, Image as ImageIcon } from "lucide-react";
 import NextImage from "next/image";
-import type { Project, Document as ProjectDocument } from "@prisma/client";
+import type { Project, Document as ProjectDocument } from "@/lib/db/schema";
 import { ProjectType, ProjectStatus, DocumentType } from "@/lib/enums";
 import { UserRole } from "@/lib/auth-types";
 import { updateProject, createProject, deleteProject } from "@/app/actions/project-actions";

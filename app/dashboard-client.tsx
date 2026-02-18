@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { getProjectMedia } from "@/app/actions/project-media";
 
-import type { Project, Document as ProjectDocument, Video as ProjectVideo } from "@prisma/client";
+import type { Project, Document as ProjectDocument, Video as ProjectVideo } from "@/lib/db/schema";
 import { ProjectStatus, ProjectType, DocumentType } from "@/lib/enums";
 import { UserRole } from "@/lib/auth-types";
 import ProjectsMapWrapper from "@/components/ui/projects-map-wrapper";

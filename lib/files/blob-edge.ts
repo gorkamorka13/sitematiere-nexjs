@@ -1,4 +1,4 @@
-import { FileType } from '@prisma/client';
+import { FileType } from '@/lib/db/schema';
 
 export interface UploadResult {
   url: string;

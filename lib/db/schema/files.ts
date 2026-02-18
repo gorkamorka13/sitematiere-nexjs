@@ -2,6 +2,16 @@ import { pgTable, text, timestamp, integer, boolean, index } from 'drizzle-orm/p
 import { fileTypeEnum } from './enums';
 import { createId } from '@paralleldrive/cuid2';
 
+// TypeScript enum for backward compatibility with old Prisma code
+export enum FileType {
+  IMAGE = 'IMAGE',
+  DOCUMENT = 'DOCUMENT',
+  VIDEO = 'VIDEO',
+  AUDIO = 'AUDIO',
+  ARCHIVE = 'ARCHIVE',
+  OTHER = 'OTHER',
+}
+
 export const files = pgTable('files', {
   id: text('id').primaryKey().$defaultFn(() => createId()),
   name: text('name').notNull(),

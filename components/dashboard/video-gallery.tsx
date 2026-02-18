@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Video as ProjectVideo } from "@prisma/client";
+import type { Video as ProjectVideo } from "@/lib/db/schema";
 import { Video, X, Play } from "lucide-react";
 
 interface VideoGalleryProps {

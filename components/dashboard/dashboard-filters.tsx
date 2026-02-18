@@ -1,5 +1,5 @@
 import { Search } from "lucide-react";
-import type { Project } from "@prisma/client";
+import type { Project } from "@/lib/db/schema";
 import { ProjectStatus, ProjectType } from "@/lib/enums";
 import { getStatusLabel } from "@/lib/utils";
 
