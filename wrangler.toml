@@ -4,7 +4,12 @@ compatibility_date = "2025-09-15"
 compatibility_flags = ["nodejs_compat"]
 
 [build]
-external = ["critters", "@opentelemetry/api"]
+command = ""
+
+[[rules]]
+type = "ESModule"
+globs = ["**/*.js"]
+fallthrough = true
 
 [assets]
 directory = ".open-next/assets"
@@ -15,7 +20,7 @@ head_sampling_rate = 1
 
 # Environment variables (non-sensitive, available at build time and runtime)
 [vars]
-NEXT_PUBLIC_APP_VERSION = "0.1.77"
+NEXT_PUBLIC_APP_VERSION = "0.1.78"
 NEXT_PUBLIC_CREDIT = "Michel ESPARSA"
 NEXT_PUBLIC_R2_PUBLIC_URL = "https://pub-78c42489fd854dc3a6975810aa00edf2.r2.dev"
 NEXT_PUBLIC_R2_HOSTNAME = "pub-78c42489fd854dc3a6975810aa00edf2.r2.dev"

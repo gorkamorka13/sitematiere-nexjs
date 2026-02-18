@@ -55,16 +55,20 @@ export async function getProjectVideos(projectId: string) {
     return { success: true, videos: serializedVideos };
   } catch (error: unknown) {
     logger.error("[getProjectVideos] CRITICAL ERROR:", error);
-    const err = error as { name?: string; message?: string; code?: string; meta?: unknown };
+    const err = error as { name?: string; message?: string; code?: string; meta?: unknown; stack?: string };
     const errorDetails = {
       name: err?.name,
       message: err?.message,
       code: err?.code,
       meta: err?.meta,
+      stack: err?.stack,
       runtime: process.env.NEXT_RUNTIME,
-      isCloudflare: !!process.env.CF_PAGES
+      isCloudflare: !!process.env.CF_PAGES,
+      errorType: typeof error,
+      errorConstructor: error?.constructor?.name,
     };
-    logger.error("[getProjectVideos] Error Details:", errorDetails);
+    logger.error("[getProjectVideos] Error Details:", JSON.stringify(errorDetails, null, 2));
+    logger.error("[getProjectVideos] Full error:", error);
 
     return {
       success: false,

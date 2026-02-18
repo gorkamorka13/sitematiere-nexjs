@@ -37,10 +37,14 @@ export function createDb() {
     throw new Error('DATABASE_URL environment variable is not set');
   }
 
-  // Use fetchOptions for Cloudflare Workers compatibility
+  // Mask connection string for logging
+  const maskedUrl = connectionString.replace(/:[^:@]+@/, ':****@');
+  console.log(`[DB] Creating connection to: ${maskedUrl.substring(0, 50)}...`);
+  console.log(`[DB] CF_PAGES: ${process.env.CF_PAGES}`);
+  console.log(`[DB] NEXT_RUNTIME: ${process.env.NEXT_RUNTIME}`);
+
   const sql = neon(connectionString, {
     fetchOptions: {
-      // Ensure proper handling in edge runtime
       cache: 'no-store',
     },
   });
