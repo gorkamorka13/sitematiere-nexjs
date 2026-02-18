@@ -4,7 +4,7 @@
 
 ### ✅ SUCCESS
 - **Status**: Build completed successfully
-- **Build Time**: ~2 minutes
+- **Build Time**: ~2 minutes.
 - **Output**: `.open-next/` directory created
 - **Worker Entry**: `worker.js` (2.6 KB)
 
