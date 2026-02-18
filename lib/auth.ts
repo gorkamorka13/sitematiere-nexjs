@@ -37,7 +37,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                         .safeParse(credentials);
 
                     if (!parsedCredentials.success) {
-                        logger.warn("[Auth_Authorize] Invalid credentials format provided");
+                        logger.warn("[Auth_Authorize] Invalid credentials format provided", {
+                            errors: parsedCredentials.error.issues,
+                            received: {
+                                username: credentials?.username ? String(credentials.username).substring(0, 3) + '...' : undefined,
+                                passwordLength: credentials?.password ? String(credentials.password).length : 0
+                            }
+                        });
                         return null;
                     }
 
