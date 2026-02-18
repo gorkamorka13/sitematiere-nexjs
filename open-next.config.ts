@@ -25,8 +25,6 @@ const config: OpenNextConfig = {
   },
 };
 
-// Fix pour l'erreur "__name is not defined" sur Cloudflare Workers
-// La minification esbuild ajoute un helper __name qui n'existe pas dans l'environnement Cloudflare
-(config as any).minify = false;
+Object.assign(config, { minify: false });
 
 export default config;

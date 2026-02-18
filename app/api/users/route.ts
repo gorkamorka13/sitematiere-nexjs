@@ -49,7 +49,13 @@ export async function GET() {
       .from(users)
       .orderBy(desc(users.createdAt));
 
-    return NextResponse.json(allUsers);
+    const serializedUsers = allUsers.map(user => ({
+      ...user,
+      createdAt: user.createdAt?.toISOString() ?? null,
+      updatedAt: user.updatedAt?.toISOString() ?? null,
+    }));
+
+    return NextResponse.json(serializedUsers);
   } catch (error) {
     logger.error("Erreur lors de la récupération des utilisateurs:", error);
     return NextResponse.json(
@@ -103,7 +109,13 @@ export async function POST(request: NextRequest) {
         updatedAt: users.updatedAt,
       });
 
-    return NextResponse.json(user, { status: 201 });
+    const serializedUser = {
+      ...user,
+      createdAt: user.createdAt?.toISOString() ?? null,
+      updatedAt: user.updatedAt?.toISOString() ?? null,
+    };
+
+    return NextResponse.json(serializedUser, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -188,7 +200,13 @@ export async function PUT(request: NextRequest) {
         updatedAt: users.updatedAt,
       });
 
-    return NextResponse.json(user);
+    const serializedUser = {
+      ...user,
+      createdAt: user.createdAt?.toISOString() ?? null,
+      updatedAt: user.updatedAt?.toISOString() ?? null,
+    };
+
+    return NextResponse.json(serializedUser);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

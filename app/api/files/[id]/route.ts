@@ -50,7 +50,14 @@ export async function PATCH(
       .where(eq(files.id, id))
       .returning();
 
-    return NextResponse.json(updatedFile);
+    const serializedFile = {
+      ...updatedFile,
+      createdAt: updatedFile.createdAt?.toISOString() ?? null,
+      updatedAt: updatedFile.updatedAt?.toISOString() ?? null,
+      deletedAt: updatedFile.deletedAt?.toISOString() ?? null,
+    };
+
+    return NextResponse.json(serializedFile);
   } catch (error) {
     logger.error("Rename error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

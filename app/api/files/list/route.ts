@@ -89,8 +89,13 @@ export async function GET(request: Request) {
     const total = Number(totalResult[0]?.count ?? 0);
     const sortedFiles = naturalSort(fileRecords, 'name');
 
+    const serializedFiles = sortedFiles.map(f => ({
+      ...f,
+      createdAt: f.createdAt?.toISOString() ?? null,
+    }));
+
     return NextResponse.json({
-      files: sortedFiles,
+      files: serializedFiles,
       total,
       hasMore: total > page * limit,
       page,

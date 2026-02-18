@@ -115,7 +115,12 @@ export async function POST(request: Request) {
           })
           .returning();
 
-        uploadedFiles.push(dbFile);
+        uploadedFiles.push({
+          ...dbFile,
+          createdAt: dbFile.createdAt?.toISOString() ?? null,
+          updatedAt: dbFile.updatedAt?.toISOString() ?? null,
+          deletedAt: dbFile.deletedAt?.toISOString() ?? null,
+        });
 
       } catch (error: unknown) {
         const err = error instanceof Error ? error : new Error(String(error));
