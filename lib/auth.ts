@@ -39,10 +39,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 
                 // If credentials is undefined or null, try to extract from nested structure
                 if (!creds || (!creds.username && !creds.password)) {
-                    const anyCreds = credentials as any;
-                    if (anyCreds?.json) {
+                    const nestedCreds = credentials as Record<string, unknown> | undefined;
+                    if (nestedCreds?.json) {
                         try {
-                            creds = JSON.parse(anyCreds.json);
+                            creds = JSON.parse(String(nestedCreds.json));
                             console.error("[AUTH_FLOW] Parsed nested JSON credentials");
                         } catch (e) {
                             console.error("[AUTH_FLOW] Failed to parse nested JSON:", e);
