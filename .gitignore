@@ -50,3 +50,5 @@ nul
 # scripts
 /scripts/*
 !/scripts/toggle-runtime.js
+
+.open-next/
