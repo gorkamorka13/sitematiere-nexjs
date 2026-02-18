@@ -2,11 +2,17 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { projects, documents, videos } from "@/lib/db/schema";
+import type { Project, Document, Video } from "@/lib/db/schema";
 import { desc, eq } from "drizzle-orm";
 import DashboardClient from "./dashboard-client";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
+// Helper to serialize Date to string for Cloudflare Workers
+function serializeDate(date: Date | null | undefined): string {
+  return date?.toISOString() || new Date().toISOString();
+}
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -28,25 +34,25 @@ export default async function DashboardPage() {
       ]);
 
       // Serialize Date objects for Cloudflare Workers compatibility
+      // Dates are converted to ISO strings to ensure JSON serialization works on Edge Runtime
       const serializedVideos = projectVideos.map(v => ({
         ...v,
-        createdAt: v.createdAt?.toISOString() || new Date().toISOString(),
-        updatedAt: v.updatedAt?.toISOString() || new Date().toISOString(),
-      }));
+        createdAt: serializeDate(v.createdAt),
+        updatedAt: serializeDate(v.updatedAt),
+      })) as unknown as Video[];
 
       const serializedDocuments = projectDocuments.map(d => ({
         ...d,
-        createdAt: d.createdAt?.toISOString() || new Date().toISOString(),
-        updatedAt: d.updatedAt?.toISOString() || new Date().toISOString(),
-      }));
+        createdAt: serializeDate(d.createdAt),
+      })) as unknown as Document[];
 
       return {
         ...project,
-        createdAt: project.createdAt?.toISOString() || new Date().toISOString(),
-        updatedAt: project.updatedAt?.toISOString() || new Date().toISOString(),
+        createdAt: serializeDate(project.createdAt) as unknown as Date,
+        updatedAt: serializeDate(project.updatedAt) as unknown as Date,
         documents: serializedDocuments,
         videos: serializedVideos,
-      };
+      } as Project;
     })
   );
 
