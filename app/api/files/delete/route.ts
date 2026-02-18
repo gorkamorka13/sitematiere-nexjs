@@ -1,17 +1,17 @@
 import { NextResponse } from "next/server";
-import { auth, checkRole, UserRole } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { auth, checkRole } from "@/lib/auth";
+import type { UserRole } from "@/lib/auth-types";
+import { db } from "@/lib/db";
+import { images, videos, documents, files } from "@/lib/db/schema";
+import { eq, inArray, and } from "drizzle-orm";
 import { deleteFile } from "@/lib/files/blob-edge";
 import { extractKeyFromUrl } from "@/lib/storage/r2-operations";
 import { logger } from "@/lib/logger";
 
-// Cloudflare Pages requires Edge Runtime for API routes
-
-
 export async function DELETE(request: Request) {
   const session = await auth();
 
-  if (!checkRole(session, [UserRole.ADMIN])) {
+  if (!checkRole(session, ["ADMIN"] as UserRole[])) {
     return NextResponse.json({ error: "Access denied" }, { status: 403 });
   }
 
@@ -26,16 +26,14 @@ export async function DELETE(request: Request) {
     if (permanent) {
       logger.info(`[DELETE API] Starting permanent deletion for ${fileIds.length} files`);
 
-      // 1. Get files details before deleting them
-      const filesToDelete = await prisma.file.findMany({
-        where: { id: { in: fileIds } }
-      });
+      const filesToDelete = await db.select()
+        .from(files)
+        .where(inArray(files.id, fileIds));
 
       const deletedCount = filesToDelete.length;
       const urlsToDelete = filesToDelete.map(f => f.blobUrl);
 
       for (const file of filesToDelete) {
-        // 2. Delete main file from Cloudflare R2
         try {
           const key = file.blobPath || extractKeyFromUrl(file.blobUrl);
           if (key) {
@@ -46,7 +44,6 @@ export async function DELETE(request: Request) {
           logger.error(`[DELETE API] Error deleting blob for file ${file.id}:`, error);
         }
 
-        // 3. Delete thumbnail if exists
         if (file.thumbnailUrl) {
           try {
             const thumbKey = extractKeyFromUrl(file.thumbnailUrl);
@@ -60,20 +57,16 @@ export async function DELETE(request: Request) {
         }
       }
 
-      // 4. Delete related entries in other tables (Image, Video, Document)
-      // Since these maps to same URLs, we clean them up as well
       logger.debug(`[DELETE API] Cleaning up related DB entries for ${urlsToDelete.length} URLs`);
 
       await Promise.all([
-        prisma.image.deleteMany({ where: { url: { in: urlsToDelete } } }),
-        prisma.video.deleteMany({ where: { url: { in: urlsToDelete } } }),
-        prisma.document.deleteMany({ where: { url: { in: urlsToDelete } } }),
+        db.delete(images).where(inArray(images.url, urlsToDelete)),
+        db.delete(videos).where(inArray(videos.url, urlsToDelete)),
+        db.delete(documents).where(inArray(documents.url, urlsToDelete)),
       ]);
 
-      // 5. Finally delete from File table
-      await prisma.file.deleteMany({
-        where: { id: { in: fileIds } }
-      });
+      await db.delete(files)
+        .where(inArray(files.id, fileIds));
 
       logger.info(`[DELETE API] Permanent deletion complete`);
       return NextResponse.json({
@@ -83,18 +76,14 @@ export async function DELETE(request: Request) {
       });
 
     } else {
-      // Soft delete
       logger.info(`[DELETE API] Performing soft delete for ${fileIds.length} files`);
-      await prisma.file.updateMany({
-        where: {
-          id: { in: fileIds }
-        },
-        data: {
+      await db.update(files)
+        .set({
           isDeleted: true,
           deletedAt: new Date(),
           deletedBy: session.user.id
-        }
-      });
+        })
+        .where(inArray(files.id, fileIds));
 
       return NextResponse.json({
         success: true,

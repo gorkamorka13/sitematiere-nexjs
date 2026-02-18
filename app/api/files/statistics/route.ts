@@ -1,34 +1,42 @@
 import { NextResponse } from "next/server";
-import { auth, checkRole, UserRole } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { auth, checkRole } from "@/lib/auth";
+import type { UserRole } from "@/lib/auth-types";
+import { db } from "@/lib/db";
+import { files } from "@/lib/db/schema";
+import { eq, and, sql, isNull } from "drizzle-orm";
 import { logger } from "@/lib/logger";
 
-
 export async function GET() {
-  // Vérifier l'authentification
   const session = await auth();
-  if (!checkRole(session, [UserRole.ADMIN])) {
+  if (!checkRole(session, ["ADMIN"] as UserRole[])) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
   }
 
   try {
-    // 1. Calculer les statistiques à partir de la table File (Cloudflare)
-    const stats = await prisma.file.aggregate({
-      where: { isDeleted: false },
-      _sum: { size: true },
-      _count: { id: true }
-    });
+    const statsResult = await db.select({
+      totalSize: sql<number>`sum(${files.size})`,
+      totalCount: sql<number>`count(*)`
+    })
+      .from(files)
+      .where(eq(files.isDeleted, false));
 
-    const fileCounts = await prisma.file.groupBy({
-      by: ['fileType'],
-      where: { isDeleted: false },
-      _count: { id: true }
-    });
+    const totalSize = Number(statsResult[0]?.totalSize ?? 0);
+    const totalCount = Number(statsResult[0]?.totalCount ?? 0);
 
-    const projectCount = await prisma.file.groupBy({
-      by: ['projectId'],
-      where: { isDeleted: false }
-    });
+    const fileCounts = await db.select({
+      fileType: files.fileType,
+      count: sql<number>`count(*)`
+    })
+      .from(files)
+      .where(eq(files.isDeleted, false))
+      .groupBy(files.fileType);
+
+    const projectCountResult = await db.select({
+      projectId: files.projectId
+    })
+      .from(files)
+      .where(eq(files.isDeleted, false))
+      .groupBy(files.projectId);
 
     let totalImages = 0;
     let totalPdfs = 0;
@@ -36,14 +44,13 @@ export async function GET() {
     let totalOthers = 0;
 
     fileCounts.forEach((group) => {
-      const count = group._count.id;
+      const count = Number(group.count);
       if (group.fileType === 'IMAGE') totalImages = count;
       else if (group.fileType === 'DOCUMENT') totalPdfs = count;
       else if (group.fileType === 'VIDEO') totalVideos = count;
-      else totalOthers += count; // Accumulate everything else
+      else totalOthers += count;
     });
 
-    const totalSize = stats._sum.size || 0;
     const storageUsed = `${(totalSize / (1024 * 1024)).toFixed(1)} MB`;
 
     const statistics = {
@@ -52,8 +59,8 @@ export async function GET() {
       totalVideos,
       totalOthers,
       storageUsed,
-      storageLimit: "1 GB", // Cloudflare R2 Free Tier
-      totalProjects: projectCount.length,
+      storageLimit: "1 GB",
+      totalProjects: projectCountResult.length,
       orphanedFiles: 0,
       lastScan: new Date().toISOString(),
     };
@@ -61,8 +68,6 @@ export async function GET() {
     return NextResponse.json(statistics);
   } catch (error) {
     logger.error("Erreur lors du calcul des statistiques:", error);
-    // En cas d'erreur de la nouvelle table, on pourrait fallback sur l'ancienne logique
-    // mais ici on préfère renvoyer une erreur car la bascule est demandée.
     return NextResponse.json(
       { error: "Erreur lors du calcul des statistiques" },
       { status: 500 }

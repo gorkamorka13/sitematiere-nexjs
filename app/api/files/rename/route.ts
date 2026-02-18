@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server";
-import { auth, checkRole, UserRole } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { auth, checkRole } from "@/lib/auth";
+import type { UserRole } from "@/lib/auth-types";
+import { db } from "@/lib/db";
+import { files, images } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import { sanitizeFileName } from "@/lib/files/validation";
 import { logger } from "@/lib/logger";
-
 
 export async function PUT(request: Request) {
   const session = await auth();
 
-  if (!checkRole(session, [UserRole.ADMIN])) {
+  if (!checkRole(session, ["ADMIN"] as UserRole[])) {
     return NextResponse.json({ error: "Access denied" }, { status: 403 });
   }
 
@@ -22,30 +24,25 @@ export async function PUT(request: Request) {
 
     const sanitizedName = sanitizeFileName(newName);
 
-    // Check if name already exists in project (optional but good practice)
-    const currentFile = await prisma.file.findUnique({ where: { id: fileId } });
+    const currentFileRecords = await db.select()
+      .from(files)
+      .where(eq(files.id, fileId))
+      .limit(1);
+
+    const currentFile = currentFileRecords[0];
     if (!currentFile) {
       return NextResponse.json({ error: "File not found" }, { status: 404 });
     }
 
-    // Update DB (File table)
-    await prisma.file.update({
-      where: { id: fileId },
-      data: { name: sanitizedName }
-    });
+    await db.update(files)
+      .set({ name: sanitizedName })
+      .where(eq(files.id, fileId));
 
-    // Synchronize with Image table (used by slideshows)
-    // We update the 'alt' field for all images that match this file's URL
     if (currentFile.blobUrl) {
-      await prisma.image.updateMany({
-        where: { url: currentFile.blobUrl },
-        data: { alt: sanitizedName }
-      });
+      await db.update(images)
+        .set({ alt: sanitizedName })
+        .where(eq(images.url, currentFile.blobUrl));
     }
-
-    // Note: We don't rename the Blob file itself because it's complicated (copy + delete)
-    // and not strictly necessary as long as the DB link works.
-    // The displayName is what matters to the user.
 
     return NextResponse.json({ success: true, name: sanitizedName });
 

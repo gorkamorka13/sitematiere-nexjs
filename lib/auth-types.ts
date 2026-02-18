@@ -1,20 +1,19 @@
-import { UserRole } from "@prisma/client";
+import { userRoleEnum } from "@/lib/db/schema/enums";
 import type { Session } from "next-auth";
 
-export { UserRole };
+export type UserRole = typeof userRoleEnum.enumValues[number];
 
-/**
- * Centralized helper to check if a user has the required roles.
- * @param session - The current user session
- * @param allowedRoles - Array of roles that are permitted
- * @returns session is Session - Type guard ensuring session and role are present
- */
+export const UserRole = {
+  ADMIN: "ADMIN" as const,
+  USER: "USER" as const,
+  VISITOR: "VISITOR" as const,
+};
+
 export function checkRole(session: Session | null, allowedRoles: UserRole[]): session is Session {
   if (!session?.user?.role) return false;
   return allowedRoles.includes(session.user.role as UserRole);
 }
 
-// Étendre les types NextAuth
 declare module "next-auth" {
   interface Session {
     user: {

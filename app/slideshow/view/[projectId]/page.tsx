@@ -1,8 +1,10 @@
 import { auth } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
-import prisma from "@/lib/prisma";
+import { db } from "@/lib/db";
+import { projects, slideshowImages, images } from "@/lib/db/schema";
+import { eq, and, asc } from "drizzle-orm";
 import SlideshowViewerClient from "@/app/slideshow/view/[projectId]/slideshow-viewer-client";
-import { UserRole } from "@/lib/auth-types";
+import type { UserRole } from "@/lib/auth-types";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -19,42 +21,45 @@ export default async function SlideshowViewPage({ params }: PageProps) {
     redirect("/login");
   }
 
-  // Fetch project
-  const project = await prisma.project.findUnique({
-    where: { id: projectId },
-    select: {
-      id: true,
-      name: true,
-    },
-  });
+  const projectRecords = await db.select({
+    id: projects.id,
+    name: projects.name,
+  })
+    .from(projects)
+    .where(eq(projects.id, projectId))
+    .limit(1);
+
+  const project = projectRecords[0];
 
   if (!project) {
     notFound();
   }
 
-  // Fetch published slideshow images only
-  const slideshowImages = await prisma.slideshowImage.findMany({
-    where: {
-      projectId,
-      isPublished: true,
+  const slideshowImageRecords = await db.select({
+    id: slideshowImages.id,
+    projectId: slideshowImages.projectId,
+    imageId: slideshowImages.imageId,
+    order: slideshowImages.order,
+    isPublished: slideshowImages.isPublished,
+    createdAt: slideshowImages.createdAt,
+    updatedAt: slideshowImages.updatedAt,
+    image: {
+      id: images.id,
+      url: images.url,
+      alt: images.alt,
     },
-    include: {
-      image: {
-        select: {
-          id: true,
-          url: true,
-          alt: true,
-        },
-      },
-    },
-    orderBy: {
-      order: 'asc',
-    },
-  });
+  })
+    .from(slideshowImages)
+    .innerJoin(images, eq(slideshowImages.imageId, images.id))
+    .where(and(
+      eq(slideshowImages.projectId, projectId),
+      eq(slideshowImages.isPublished, true)
+    ))
+    .orderBy(asc(slideshowImages.order));
 
   return (
     <SlideshowViewerClient
-      images={slideshowImages}
+      images={slideshowImageRecords}
       projectName={project.name}
       user={{
         name: session.user?.name,

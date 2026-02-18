@@ -1,24 +1,25 @@
-import prisma from '@/lib/prisma';
+import { db } from '@/lib/db';
+import { users } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
 import { hash } from 'bcrypt-ts';
 import { logger } from '@/lib/logger';
 
 export async function seedAdminUser() {
   try {
-    // Check if admin user exists
-    const existingAdmin = await prisma.user.findUnique({
-      where: { email: 'admin@sitematiere.com' }
-    });
+    const [existingAdmin] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, 'admin@sitematiere.com'))
+      .limit(1);
 
     if (!existingAdmin) {
-      // Create admin user
       const hashedPassword = await hash('admin123', 12);
-      await prisma.user.create({
-        data: {
-          email: 'admin@sitematiere.com',
-          name: 'admin',
-          passwordHash: hashedPassword,
-          role: 'ADMIN'
-        }
+      await db.insert(users).values({
+        email: 'admin@sitematiere.com',
+        name: 'admin',
+        passwordHash: hashedPassword,
+        role: 'ADMIN',
+        username: 'admin',
       });
       logger.info('Admin user created: admin@sitematiere.com / admin123');
     }

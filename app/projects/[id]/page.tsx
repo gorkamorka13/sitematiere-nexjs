@@ -1,7 +1,8 @@
 import { auth } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
-import prisma from "@/lib/prisma";
-
+import { db } from "@/lib/db";
+import { projects, images, documents } from "@/lib/db/schema";
+import { eq, asc } from "drizzle-orm";
 import Link from "next/link";
 import Image from "next/image";
 import ProjectMapWrapper from "@/components/ui/project-map-wrapper";
@@ -19,27 +20,28 @@ export default async function ProjectDetailPage(props: Props) {
         redirect("/login");
     }
 
-    const project = await prisma.project.findUnique({
-        where: {
-            id: params.id,
-        },
-        include: {
-            images: {
-                orderBy: {
-                    order: 'asc',
-                },
-            },
-            documents: true,
-        },
-    });
+    const projectRecords = await db.select()
+        .from(projects)
+        .where(eq(projects.id, params.id))
+        .limit(1);
+
+    const project = projectRecords[0];
 
     if (!project) {
         notFound();
     }
 
+    const projectImages = await db.select()
+        .from(images)
+        .where(eq(images.projectId, params.id))
+        .orderBy(asc(images.order));
+
+    const projectDocuments = await db.select()
+        .from(documents)
+        .where(eq(documents.projectId, params.id));
+
     return (
         <div className="min-h-screen bg-gray-50 pb-10">
-            {/* Header / Navbar */}
             <nav className="bg-white shadow sticky top-0 z-50">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 justify-between">
@@ -56,7 +58,6 @@ export default async function ProjectDetailPage(props: Props) {
             </nav>
 
             <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-                {/* Header Section */}
                 <div className="md:flex md:items-center md:justify-between mb-8">
                     <div className="min-w-0 flex-1">
                         <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
@@ -85,9 +86,7 @@ export default async function ProjectDetailPage(props: Props) {
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                    {/* Left Column: Details & Description */}
                     <div className="space-y-6">
-                        {/* Description Card */}
                         <div className="overflow-hidden rounded-xl bg-white shadow ring-1 ring-black ring-opacity-5">
                             <div className="border-b border-gray-200 bg-gray-50 px-4 py-4 sm:px-6">
                                 <h3 className="text-base font-semibold leading-6 text-gray-900">Description</h3>
@@ -97,7 +96,6 @@ export default async function ProjectDetailPage(props: Props) {
                             </div>
                         </div>
 
-                        {/* Progress Card (if applicable) */}
                         <div className="overflow-hidden rounded-xl bg-white shadow ring-1 ring-black ring-opacity-5">
                             <div className="border-b border-gray-200 bg-gray-50 px-4 py-4 sm:px-6">
                                 <h3 className="text-base font-semibold leading-6 text-gray-900">Avancement du Projet</h3>
@@ -129,14 +127,13 @@ export default async function ProjectDetailPage(props: Props) {
                             </div>
                         </div>
 
-                        {/* Documents Card */}
-                        {project.documents.length > 0 && (
+                        {projectDocuments.length > 0 && (
                             <div className="overflow-hidden rounded-xl bg-white shadow ring-1 ring-black ring-opacity-5">
                                 <div className="border-b border-gray-200 bg-gray-50 px-4 py-4 sm:px-6">
                                     <h3 className="text-base font-semibold leading-6 text-gray-900">Documents</h3>
                                 </div>
                                 <ul role="list" className="divide-y divide-gray-100 px-4 py-5 sm:p-6">
-                                    {project.documents.map((doc) => (
+                                    {projectDocuments.map((doc) => (
                                         <li key={doc.id} className="flex items-center justify-between py-2">
                                             <div className="flex items-center truncate">
                                                 <svg className="h-5 w-5 flex-shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
@@ -147,7 +144,6 @@ export default async function ProjectDetailPage(props: Props) {
                                                     {doc.type}
                                                 </span>
                                             </div>
-                                            {/* Note: Links are disabled for now as the paths might be local or need adjustment */}
                                             <span className="text-xs text-gray-400">{doc.url}</span>
                                         </li>
                                     ))}
@@ -156,18 +152,15 @@ export default async function ProjectDetailPage(props: Props) {
                         )}
                     </div>
 
-                    {/* Right Column: Images & Map (Map placeholder for now) */}
                     <div className="space-y-6">
-                        {/* Images Gallery */}
                         <div className="overflow-hidden rounded-xl bg-white shadow ring-1 ring-black ring-opacity-5">
                             <div className="border-b border-gray-200 bg-gray-50 px-4 py-4 sm:px-6">
                                 <h3 className="text-base font-semibold leading-6 text-gray-900">Galerie Photos</h3>
                             </div>
                             <div className="p-4 grid grid-cols-2 gap-4">
-                                {project.images.length > 0 ? (
-                                    project.images.map((img) => (
+                                {projectImages.length > 0 ? (
+                                    projectImages.map((img) => (
                                         <div key={img.id} className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 group">
-                                            {/* Using simple img tag for external urls or local paths without optimization configuration */}
                                             <Image
                                                 src={normalizeImageUrl(img.url)}
                                                 alt={img.alt || project.name}
@@ -185,7 +178,6 @@ export default async function ProjectDetailPage(props: Props) {
                             </div>
                         </div>
 
-                        {/* Map Dynamic Component */}
                         <div className="overflow-hidden rounded-xl bg-white shadow ring-1 ring-black ring-opacity-5">
                             <div className="border-b border-gray-200 bg-gray-50 px-4 py-4 sm:px-6">
                                 <h3 className="text-base font-semibold leading-6 text-gray-900">Localisation</h3>

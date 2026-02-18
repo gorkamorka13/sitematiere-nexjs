@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth, checkRole, UserRole } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { db } from "@/lib/db";
+import { users } from "@/lib/db/schema";
+import { eq, desc } from "drizzle-orm";
 import { hash } from "bcrypt-ts";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
-
 
 const userSchema = z.object({
   username: z.string().min(1),
@@ -25,10 +26,9 @@ const updateUserSchema = z.object({
 
 async function checkAdminAccess() {
   const session = await auth();
-  return checkRole(session, [UserRole.ADMIN]);
+  return checkRole(session, ["ADMIN"] as UserRole[]);
 }
 
-// GET /api/users - Liste tous les utilisateurs (admin uniquement)
 export async function GET() {
   try {
     const isAdmin = await checkAdminAccess();
@@ -36,22 +36,20 @@ export async function GET() {
       return NextResponse.json({ error: "Accès non autorisé" }, { status: 403 });
     }
 
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        username: true,
-        name: true,
-        role: true,
-        color: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+    const allUsers = await db
+      .select({
+        id: users.id,
+        username: users.username,
+        name: users.name,
+        role: users.role,
+        color: users.color,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      })
+      .from(users)
+      .orderBy(desc(users.createdAt));
 
-    return NextResponse.json(users);
+    return NextResponse.json(allUsers);
   } catch (error) {
     logger.error("Erreur lors de la récupération des utilisateurs:", error);
     return NextResponse.json(
@@ -61,7 +59,6 @@ export async function GET() {
   }
 }
 
-// POST /api/users - Crée un nouvel utilisateur (admin uniquement)
 export async function POST(request: NextRequest) {
   try {
     const isAdmin = await checkAdminAccess();
@@ -72,10 +69,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = userSchema.parse(body);
 
-    // Vérifier si le username existe déjà
-    const existingUser = await prisma.user.findUnique({
-      where: { username: validatedData.username },
-    });
+    const [existingUser] = await db
+      .select()
+      .from(users)
+      .where(eq(users.username, validatedData.username))
+      .limit(1);
 
     if (existingUser) {
       return NextResponse.json(
@@ -84,27 +82,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Hasher le mot de passe
     const passwordHash = await hash(validatedData.password, 10);
 
-    const user = await prisma.user.create({
-      data: {
+    const [user] = await db
+      .insert(users)
+      .values({
         username: validatedData.username,
         name: validatedData.name,
         passwordHash,
         role: validatedData.role as UserRole,
         color: validatedData.color || "#6366f1",
-      },
-      select: {
-        id: true,
-        username: true,
-        name: true,
-        role: true,
-        color: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+      })
+      .returning({
+        id: users.id,
+        username: users.username,
+        name: users.name,
+        role: users.role,
+        color: users.color,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      });
 
     return NextResponse.json(user, { status: 201 });
   } catch (error) {
@@ -122,7 +119,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT /api/users - Met à jour un utilisateur (admin uniquement)
 export async function PUT(request: NextRequest) {
   try {
     const isAdmin = await checkAdminAccess();
@@ -135,10 +131,11 @@ export async function PUT(request: NextRequest) {
 
     const { id, ...updateData } = validatedData;
 
-    // Vérifier si l'utilisateur existe
-    const existingUser = await prisma.user.findUnique({
-      where: { id },
-    });
+    const [existingUser] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1);
 
     if (!existingUser) {
       return NextResponse.json(
@@ -147,11 +144,12 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Si le username est modifié, vérifier s'il est déjà pris
     if (updateData.username && updateData.username !== existingUser.username) {
-      const usernameTaken = await prisma.user.findUnique({
-        where: { username: updateData.username },
-      });
+      const [usernameTaken] = await db
+        .select()
+        .from(users)
+        .where(eq(users.username, updateData.username))
+        .limit(1);
       if (usernameTaken) {
         return NextResponse.json(
           { error: "Ce nom de connexion est déjà utilisé par un autre utilisateur" },
@@ -160,37 +158,35 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    // Préparer les données de mise à jour
     const dataToUpdate: {
       username?: string;
       name?: string | null;
-      role?: UserRole; // Role type comes from @prisma/client
+      role?: UserRole;
       color?: string | null;
       passwordHash?: string;
     } = {};
     if (updateData.username) dataToUpdate.username = updateData.username;
     if (updateData.name !== undefined) dataToUpdate.name = updateData.name;
-    if (updateData.role) dataToUpdate.role = updateData.role;
+    if (updateData.role) dataToUpdate.role = updateData.role as UserRole;
     if (updateData.color !== undefined) dataToUpdate.color = updateData.color;
 
-    // Uniquement si le mot de passe n'est pas vide
     if (updateData.password && updateData.password.trim().length >= 6) {
       dataToUpdate.passwordHash = await hash(updateData.password, 10);
     }
 
-    const user = await prisma.user.update({
-      where: { id },
-      data: dataToUpdate,
-      select: {
-        id: true,
-        username: true,
-        name: true,
-        role: true,
-        color: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+    const [user] = await db
+      .update(users)
+      .set(dataToUpdate)
+      .where(eq(users.id, id))
+      .returning({
+        id: users.id,
+        username: users.username,
+        name: users.name,
+        role: users.role,
+        color: users.color,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      });
 
     return NextResponse.json(user);
   } catch (error) {
@@ -208,7 +204,6 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// DELETE /api/users - Supprime un utilisateur (admin uniquement)
 export async function DELETE(request: NextRequest) {
   try {
     const isAdmin = await checkAdminAccess();
@@ -226,10 +221,11 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Vérifier si l'utilisateur existe
-    const existingUser = await prisma.user.findUnique({
-      where: { id },
-    });
+    const [existingUser] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1);
 
     if (!existingUser) {
       return NextResponse.json(
@@ -238,7 +234,6 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Empêcher la suppression du compte admin principal
     if (existingUser.username === "admin") {
       return NextResponse.json(
         { error: "Le compte administrateur principal ne peut pas être supprimé" },
@@ -246,7 +241,6 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Empêcher la suppression de son propre compte
     const session = await auth();
     if (session?.user?.id === id) {
       return NextResponse.json(
@@ -255,9 +249,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    await prisma.user.delete({
-      where: { id },
-    });
+    await db.delete(users).where(eq(users.id, id));
 
     return NextResponse.json({ success: true });
   } catch (error) {

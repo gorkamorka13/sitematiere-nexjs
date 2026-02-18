@@ -1,7 +1,10 @@
 "use server";
 
-import prisma from "@/lib/prisma";
-import { auth, checkRole, UserRole } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { users, projects, documents, files } from "@/lib/db/schema";
+import { eq, and, inArray } from "drizzle-orm";
+import { auth, checkRole } from "@/lib/auth";
+import type { UserRole } from "@/lib/auth-types";
 import { ProjectUpdateSchema, ProjectUpdateInput, ProjectCreateSchema, ProjectCreateInput } from "@/lib/validations";
 import { revalidatePath } from "next/cache";
 import { deleteFromR2, extractKeyFromUrl } from "@/lib/storage/r2-operations";
@@ -12,20 +15,16 @@ import { R2_PUBLIC_URL } from "@/lib/constants";
 export async function updateProject(formData: ProjectUpdateInput) {
   const session = await auth();
 
-  // Vérification de l'authentification et du rôle
-  if (!checkRole(session, [UserRole.ADMIN, UserRole.USER])) {
+  if (!checkRole(session, ["ADMIN", "USER"] as UserRole[])) {
     throw new Error("Action non autorisée. Seuls les administrateurs et utilisateurs autorisés peuvent modifier les projets.");
   }
 
-  // Validation des données
   const validatedData = ProjectUpdateSchema.parse(formData);
 
   try {
-    await prisma.$transaction(async (tx) => {
-      // Mise à jour du projet
-      await tx.project.update({
-        where: { id: validatedData.id },
-        data: {
+    await db.transaction(async (tx) => {
+      await tx.update(projects)
+        .set({
           latitude: validatedData.latitude,
           longitude: validatedData.longitude,
           description: validatedData.description,
@@ -35,10 +34,10 @@ export async function updateProject(formData: ProjectUpdateInput) {
           transport: validatedData.transport,
           construction: validatedData.construction,
           status: validatedData.status,
-        },
-      });
+          updatedAt: new Date(),
+        })
+        .where(eq(projects.id, validatedData.id));
 
-      // Mise à jour automatique du document "PIN" basé sur le statut
       if (validatedData.status) {
         let pinUrl = "";
 
@@ -55,84 +54,84 @@ export async function updateProject(formData: ProjectUpdateInput) {
             break;
         }
 
-        const existingPin = await tx.document.findFirst({
-          where: { projectId: validatedData.id, type: DocumentType.PIN }
-        });
+        const existingPin = await tx.select()
+          .from(documents)
+          .where(and(
+            eq(documents.projectId, validatedData.id),
+            eq(documents.type, DocumentType.PIN)
+          ))
+          .limit(1);
 
-        if (existingPin) {
-          await tx.document.update({
-            where: { id: existingPin.id },
-            data: { url: pinUrl, name: "Pin Carte (Auto)" }
-          });
+        if (existingPin.length > 0) {
+          await tx.update(documents)
+            .set({ url: pinUrl, name: "Pin Carte (Auto)" })
+            .where(eq(documents.id, existingPin[0].id));
         } else {
-          await tx.document.create({
-            data: {
+          await tx.insert(documents)
+            .values({
               projectId: validatedData.id,
               type: DocumentType.PIN,
               url: pinUrl,
               name: "Pin Carte (Auto)",
-            }
-          });
+            });
         }
       }
 
-      // Mise à jour ou création du document "FLAG"
       if (validatedData.flagName !== undefined) {
-        const existingFlag = await tx.document.findFirst({
-          where: { projectId: validatedData.id, type: DocumentType.FLAG }
-        });
+        const existingFlag = await tx.select()
+          .from(documents)
+          .where(and(
+            eq(documents.projectId, validatedData.id),
+            eq(documents.type, DocumentType.FLAG)
+          ))
+          .limit(1);
 
         if (validatedData.flagName !== "") {
-          if (existingFlag) {
-            await tx.document.update({
-              where: { id: existingFlag.id },
-              data: { url: validatedData.flagName }
-            });
+          if (existingFlag.length > 0) {
+            await tx.update(documents)
+              .set({ url: validatedData.flagName })
+              .where(eq(documents.id, existingFlag[0].id));
           } else {
-            await tx.document.create({
-              data: {
+            await tx.insert(documents)
+              .values({
                 projectId: validatedData.id,
                 type: DocumentType.FLAG,
                 url: validatedData.flagName,
                 name: "Drapeau",
-              }
-            });
+              });
           }
-        } else if (existingFlag) {
-          // Supprimer l'association si le champ est vidé
-          await tx.document.delete({
-            where: { id: existingFlag.id }
-          });
+        } else if (existingFlag.length > 0) {
+          await tx.delete(documents)
+            .where(eq(documents.id, existingFlag[0].id));
         }
       }
 
-      // Mise à jour ou création du document "CLIENT_LOGO"
       if (validatedData.clientLogoName !== undefined) {
-        const existingLogo = await tx.document.findFirst({
-          where: { projectId: validatedData.id, type: DocumentType.CLIENT_LOGO }
-        });
+        const existingLogo = await tx.select()
+          .from(documents)
+          .where(and(
+            eq(documents.projectId, validatedData.id),
+            eq(documents.type, DocumentType.CLIENT_LOGO)
+          ))
+          .limit(1);
 
         if (validatedData.clientLogoName !== "") {
-          if (existingLogo) {
-            await tx.document.update({
-              where: { id: existingLogo.id },
-              data: { url: validatedData.clientLogoName }
-            });
+          if (existingLogo.length > 0) {
+            await tx.update(documents)
+              .set({ url: validatedData.clientLogoName })
+              .where(eq(documents.id, existingLogo[0].id));
           } else {
-            await tx.document.create({
-              data: {
+            await tx.insert(documents)
+              .values({
                 projectId: validatedData.id,
                 type: DocumentType.CLIENT_LOGO,
                 url: validatedData.clientLogoName,
                 name: "Logo Client",
-              }
-            });
+              });
           }
-        } else if (existingLogo) {
-          // Supprimer l'association si le champ est vidé
-          await tx.document.delete({
-            where: { id: existingLogo.id }
-          });
+        } else if (existingLogo.length > 0) {
+          await tx.delete(documents)
+            .where(eq(documents.id, existingLogo[0].id));
         }
       }
     });
@@ -148,16 +147,16 @@ export async function updateProject(formData: ProjectUpdateInput) {
 export async function createProject(formData: ProjectCreateInput) {
   const session = await auth();
 
-  if (!checkRole(session, [UserRole.ADMIN])) {
+  if (!checkRole(session, ["ADMIN"] as UserRole[])) {
     throw new Error("Action non autorisée. Seuls les administrateurs peuvent créer des projets.");
   }
 
   const validatedData = ProjectCreateSchema.parse(formData);
 
   try {
-    const result = await prisma.$transaction(async (tx) => {
-      const project = await tx.project.create({
-        data: {
+    const result = await db.transaction(async (tx) => {
+      const [project] = await tx.insert(projects)
+        .values({
           name: validatedData.name,
           country: validatedData.country,
           latitude: validatedData.latitude,
@@ -172,37 +171,31 @@ export async function createProject(formData: ProjectCreateInput) {
           transport: validatedData.transport,
           construction: validatedData.construction,
           ownerId: session.user.id as string,
-        },
-      });
+        })
+        .returning();
 
-      // Créer le document "FLAG" si fourni
       if (validatedData.flagName && validatedData.flagName !== "") {
-        await tx.document.create({
-          data: {
+        await tx.insert(documents)
+          .values({
             projectId: project.id,
             type: DocumentType.FLAG,
             url: validatedData.flagName,
             name: "Drapeau",
-          }
-        });
+          });
       }
 
-      // Créer le document "CLIENT_LOGO" si fourni
       if (validatedData.clientLogoName && validatedData.clientLogoName !== "") {
-        await tx.document.create({
-          data: {
+        await tx.insert(documents)
+          .values({
             projectId: project.id,
             type: DocumentType.CLIENT_LOGO,
             url: validatedData.clientLogoName,
             name: "Logo Client",
-          }
-        });
+          });
       }
 
-      // Créer le document "PIN" - utiliser le pin personnalisé si fourni, sinon assigner selon le statut
       let pinUrl = validatedData.pinName;
       if (!pinUrl || pinUrl === "") {
-        // Assigner un pin par défaut selon le statut
         switch (validatedData.status) {
           case 'DONE':
             pinUrl = `${R2_PUBLIC_URL}/pins/realise.png`;
@@ -217,14 +210,13 @@ export async function createProject(formData: ProjectCreateInput) {
         }
       }
 
-      await tx.document.create({
-        data: {
+      await tx.insert(documents)
+        .values({
           projectId: project.id,
           type: DocumentType.PIN,
           url: pinUrl,
           name: "Pin Carte",
-        }
-      });
+        });
 
       return project;
     });
@@ -241,44 +233,39 @@ export async function createProject(formData: ProjectCreateInput) {
 export async function deleteProject(projectId: string, confirmName: string) {
   const session = await auth();
 
-  if (!checkRole(session, [UserRole.ADMIN])) {
+  if (!checkRole(session, ["ADMIN"] as UserRole[])) {
     throw new Error("Action non autorisée. Seuls les administrateurs peuvent supprimer des projets.");
   }
 
   try {
-    const project = await prisma.project.findUnique({
-      where: { id: projectId },
-      select: { name: true },
-    });
+    const project = await db.select({ name: projects.name })
+      .from(projects)
+      .where(eq(projects.id, projectId))
+      .limit(1);
 
-    if (!project) {
+    if (project.length === 0) {
       return { success: false, error: "Projet introuvable." };
     }
 
-    if (project.name !== confirmName) {
+    if (project[0].name !== confirmName) {
       return { success: false, error: "Le nom de confirmation ne correspond pas au nom du projet." };
     }
 
-    // Récupérer tous les fichiers associés pour nettoyage R2
-    const files = await prisma.file.findMany({
-      where: { projectId },
-      select: { blobUrl: true, blobPath: true },
-    });
+    const fileRecords = await db.select({ blobUrl: files.blobUrl, blobPath: files.blobPath })
+      .from(files)
+      .where(eq(files.projectId, projectId));
 
-    // Supprimer les fichiers de R2
-    if (files.length > 0) {
+    if (fileRecords.length > 0) {
       await Promise.all(
-        files.map((file) => {
+        fileRecords.map((file) => {
           const key = file.blobPath || extractKeyFromUrl(file.blobUrl);
           return deleteFromR2(key).catch((err) => logger.error(`Erreur suppression R2 ${key}:`, err));
         })
       );
     }
 
-    // Supprimer le projet (cascade DB gérera les entrées Document, Image, Video, File)
-    await prisma.project.delete({
-      where: { id: projectId },
-    });
+    await db.delete(projects)
+      .where(eq(projects.id, projectId));
 
     revalidatePath("/");
 

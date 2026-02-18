@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
-import { auth, checkRole, UserRole } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { auth, checkRole } from "@/lib/auth";
+import type { UserRole } from "@/lib/auth-types";
+import { db } from "@/lib/db";
+import { projects, files } from "@/lib/db/schema";
+import { eq, inArray } from "drizzle-orm";
 import { logger } from "@/lib/logger";
-
 
 export async function PATCH(request: Request) {
     const session = await auth();
-    if (!checkRole(session, [UserRole.ADMIN])) {
+    if (!checkRole(session, ["ADMIN"] as UserRole[])) {
         return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
@@ -21,28 +23,24 @@ export async function PATCH(request: Request) {
             return NextResponse.json({ error: "ProjectId is required" }, { status: 400 });
         }
 
-        // Verify project exists
-        const project = await prisma.project.findUnique({ where: { id: projectId } });
-        if (!project) {
+        const projectRecords = await db.select()
+            .from(projects)
+            .where(eq(projects.id, projectId))
+            .limit(1);
+
+        if (projectRecords.length === 0) {
             return NextResponse.json({ error: "Target project not found" }, { status: 404 });
         }
 
-        // Update all files in one transaction or one updateMany (if applicable)
-        // updateMany doesn't support relation-based filtering easily if we had any,
-        // but here we just update by IDs.
-        const result = await prisma.file.updateMany({
-            where: {
-                id: { in: fileIds },
-            },
-            data: {
-                projectId: projectId,
-            },
-        });
+        const result = await db.update(files)
+            .set({ projectId: projectId })
+            .where(inArray(files.id, fileIds))
+            .returning();
 
         return NextResponse.json({
             success: true,
-            count: result.count,
-            message: `${result.count} fichier(s) déplacé(s) avec succès`
+            count: result.length,
+            message: `${result.length} fichier(s) déplacé(s) avec succès`
         });
     } catch (error) {
         logger.error("Bulk move error:", error);

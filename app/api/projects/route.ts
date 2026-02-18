@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
-import { auth, checkRole, UserRole } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { auth, checkRole } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { projects } from "@/lib/db/schema";
+import { asc } from "drizzle-orm";
 import { logger } from "@/lib/logger";
-
+import type { UserRole } from "@/lib/auth-types";
 
 export async function GET() {
   const session = await auth();
@@ -11,25 +13,21 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Vérifier si l'utilisateur est ADMIN
-  const isAdmin = checkRole(session, [UserRole.ADMIN]);
+  const isAdmin = checkRole(session, ["ADMIN"] as UserRole[]);
 
   try {
-    const projects = await prisma.project.findMany({
-      select: {
-        id: true,
-        name: true,
-        country: true,
-      },
-      orderBy: {
-        name: 'asc',
-      },
-    });
+    const allProjects = await db
+      .select({
+        id: projects.id,
+        name: projects.name,
+        country: projects.country,
+      })
+      .from(projects)
+      .orderBy(asc(projects.name));
 
-    // Filtrer les projets système pour les non-administrateurs
     const filteredProjects = isAdmin
-      ? projects
-      : projects.filter(project => project.country !== 'Système');
+      ? allProjects
+      : allProjects.filter(project => project.country !== 'Système');
 
     return NextResponse.json(filteredProjects);
   } catch (error) {

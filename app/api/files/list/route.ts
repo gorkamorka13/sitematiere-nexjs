@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { db } from "@/lib/db";
+import { projects, files, fileTypeEnum } from "@/lib/db/schema";
+import { eq, and, or, isNull, ilike, sql, inArray } from "drizzle-orm";
 import { logger } from "@/lib/logger";
-import { FileType, Prisma } from "@prisma/client";
 import { naturalSort } from "@/lib/sort-utils";
 
-
+type FileType = typeof fileTypeEnum.enumValues[number];
 
 export async function GET(request: Request) {
   const session = await auth();
@@ -17,78 +18,76 @@ export async function GET(request: Request) {
   const projectId = searchParams.get("projectId");
   const fileType = searchParams.get("fileType") as FileType | null;
   const page = parseInt(searchParams.get("page") || "1");
-  // Increased default limit to 1200 to show all files in dropdowns
   const limit = parseInt(searchParams.get("limit") || "1200");
   const search = searchParams.get("search");
   const country = searchParams.get("country");
 
   try {
-    const where: Prisma.FileWhereInput = {
-      isDeleted: false,
-    };
+    const conditions = [eq(files.isDeleted, false)];
 
     if (projectId) {
       if (projectId === "ORPHANED") {
-        where.projectId = { equals: null };
+        conditions.push(isNull(files.projectId));
       } else {
-        where.projectId = projectId;
+        conditions.push(eq(files.projectId, projectId));
       }
     }
 
     if (country && country !== "Tous") {
       if (country === "Autre") {
-        where.OR = [
-          { project: { is: null } },
-          { projectId: { equals: null } }
-        ];
+        conditions.push(isNull(files.projectId));
       } else {
-        where.project = {
-          country: country
-        };
+        const projectsInCountry = await db.select({ id: projects.id })
+          .from(projects)
+          .where(eq(projects.country, country));
+        
+        if (projectsInCountry.length > 0) {
+          const projectIds = projectsInCountry.map(p => p.id);
+          conditions.push(inArray(files.projectId, projectIds));
+        } else {
+          conditions.push(sql`1 = 0`);
+        }
       }
     }
 
     if (fileType) {
-      where.fileType = fileType;
+      conditions.push(eq(files.fileType, fileType));
     }
 
     if (search) {
-      where.name = {
-        contains: search,
-        mode: "insensitive",
-      };
+      conditions.push(ilike(files.name, `%${search}%`));
     }
 
-    const [files, total] = await Promise.all([
-      prisma.file.findMany({
-        where,
-        orderBy: { name: "asc" }, // Sort alphabetically by name
-        skip: (page - 1) * limit,
-        take: limit,
-        select: {
-          id: true,
-          name: true,
-          blobUrl: true,
-          blobPath: true,
-          thumbnailUrl: true,
-          fileType: true,
-          size: true,
-          mimeType: true,
-          createdAt: true,
-          projectId: true,
-          project: {
-            select: {
-              id: true,
-              name: true,
-              country: true,
-            }
-          }
+    const [fileRecords, totalResult] = await Promise.all([
+      db.select({
+        id: files.id,
+        name: files.name,
+        blobUrl: files.blobUrl,
+        blobPath: files.blobPath,
+        thumbnailUrl: files.thumbnailUrl,
+        fileType: files.fileType,
+        size: files.size,
+        mimeType: files.mimeType,
+        createdAt: files.createdAt,
+        projectId: files.projectId,
+        project: {
+          id: projects.id,
+          name: projects.name,
+          country: projects.country,
         }
-      }),
-      prisma.file.count({ where }),
+      })
+        .from(files)
+        .leftJoin(projects, eq(files.projectId, projects.id))
+        .where(and(...conditions))
+        .limit(limit)
+        .offset((page - 1) * limit),
+      db.select({ count: sql<number>`count(*)` })
+        .from(files)
+        .where(and(...conditions))
     ]);
 
-    const sortedFiles = naturalSort(files, 'name');
+    const total = Number(totalResult[0]?.count ?? 0);
+    const sortedFiles = naturalSort(fileRecords, 'name');
 
     return NextResponse.json({
       files: sortedFiles,

@@ -1,9 +1,11 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import prisma from "@/lib/prisma";
+import { db } from "@/lib/db";
+import { users } from "@/lib/db/schema";
+import { eq, or } from "drizzle-orm";
 import { compareSync } from "bcrypt-ts";
 import { z } from "zod";
-import { User } from "@prisma/client";
+import { type User } from "@/lib/db/schema";
 import { UserRole, checkRole } from "./auth-types";
 import { logger } from "@/lib/logger";
 
@@ -42,14 +44,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     const { username, password } = parsedCredentials.data;
 
                     logger.debug("[Auth_Authorize] Querying database for user:", username);
-                    const user = await prisma.user.findFirst({
-                        where: {
-                            OR: [
-                                { username: username },
-                                { email: username }
-                            ]
-                        }
-                    });
+                    const [user] = await db
+                        .select()
+                        .from(users)
+                        .where(or(eq(users.username, username), eq(users.email, username)))
+                        .limit(1);
 
                     if (!user) {
                         logger.warn("[Auth_Authorize] USER NOT FOUND in database:", username);
@@ -66,7 +65,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
                     if (passwordsMatch) {
                         logger.info("[Auth_Authorize] SUCCESS: Password match successful for:", username);
-                        // Serialize user object to avoid Date serialization issues on Cloudflare Workers
                         return {
                             id: user.id,
                             username: user.username,
@@ -83,7 +81,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     }
                 } catch (error) {
                     logger.error("[Auth_Authorize] CRITICAL ERROR during authorization process:", error);
-                    // Always log errors with console.error for Cloudflare debugging
                     console.error("[AUTH_ERROR] Authorize callback error:", error);
                     const err = error as { name?: string; message?: string; code?: string; meta?: unknown };
                     console.error("[AUTH_ERROR] Error details:", {

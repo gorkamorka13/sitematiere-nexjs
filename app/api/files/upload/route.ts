@@ -1,64 +1,53 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { db } from "@/lib/db";
+import { projects, files } from "@/lib/db/schema";
+import { eq, and, sql, isNull } from "drizzle-orm";
 import { uploadFile, getFileTypeFromMime } from "@/lib/files/blob-edge";
 import { validateFileSize, validateFileType, sanitizeFileName } from "@/lib/files/validation";
 import { logger } from "@/lib/logger";
-// Duplicate import removed
-
-// Cloudflare Pages requires Edge Runtime for API routes
-
 
 export async function POST(request: Request) {
-
-
   const session = await auth();
 
-
-  // 1. Authentication Check - Allow both ADMIN and USER roles
   if (!session?.user) {
-
     return NextResponse.json({ error: "Access denied - Not authenticated" }, { status: 403 });
   }
 
   const userRole = session.user.role;
   if (userRole !== "ADMIN" && userRole !== "USER") {
-
     return NextResponse.json({ error: "Access denied - Insufficient permissions" }, { status: 403 });
   }
 
   try {
     const formData = await request.formData();
-    const files = formData.getAll("file") as File[];
+    const filesInput = formData.getAll("file") as File[];
     const projectId = formData.get("projectId") as string;
 
     let targetProjectId: string | null = projectId;
     let folderName = projectId;
 
-    // Check if we are doing a global/unassigned upload
     if (!projectId || projectId === "global_unassigned") {
       targetProjectId = null;
-      folderName = "global"; // Upload to a 'global' folder in Blob
+      folderName = "global";
     } else {
-      // Verify project exists
-      const project = await prisma.project.findUnique({
-        where: { id: projectId }
-      });
+      const project = await db.select()
+        .from(projects)
+        .where(eq(projects.id, projectId))
+        .limit(1);
 
-      if (!project) {
+      if (project.length === 0) {
         return NextResponse.json({ error: "Project not found" }, { status: 404 });
       }
-      folderName = project.id;
+      folderName = project[0].id;
     }
 
     const uploadedFiles = [];
     const errors = [];
     const overwrite = formData.get("overwrite") === "true";
 
-    // 2. Process each file
-    for (const file of files) {
+    for (const file of filesInput) {
       try {
-        // Validation
         const sizeValidation = validateFileSize(file.size);
         if (!sizeValidation.valid) throw new Error(sizeValidation.error);
 
@@ -68,16 +57,25 @@ export async function POST(request: Request) {
         const sanitizedName = sanitizeFileName(file.name);
         const fileType = getFileTypeFromMime(file.type);
 
-        // Conflict Detection
-        const existingFile = await prisma.file.findFirst({
-          where: {
-            name: sanitizedName,
-            projectId: targetProjectId,
-            isDeleted: false
-          }
-        });
+        const existingFile = targetProjectId
+          ? await db.select()
+              .from(files)
+              .where(and(
+                eq(files.name, sanitizedName),
+                eq(files.projectId, targetProjectId),
+                eq(files.isDeleted, false)
+              ))
+              .limit(1)
+          : await db.select()
+              .from(files)
+              .where(and(
+                eq(files.name, sanitizedName),
+                isNull(files.projectId),
+                eq(files.isDeleted, false)
+              ))
+              .limit(1);
 
-        if (existingFile && !overwrite) {
+        if (existingFile.length > 0 && !overwrite) {
           return NextResponse.json({
             success: false,
             conflict: true,
@@ -85,21 +83,15 @@ export async function POST(request: Request) {
           }, { status: 409 });
         }
 
-        // If overwrite is true and exists, we should delete the old blob first
-        if (existingFile && overwrite) {
-          // Note: In a real production app, we'd call the blob deletion service here
-          // For now, let's proceed with upload and we can either keep or delete old record
-          // Better: delete the old record and blob
+        if (existingFile.length > 0 && overwrite) {
           try {
-            // Delete blob if possible (implementation depends on storage backend)
-            // For now, skip actual delete to be safe, but delete the DB record
-            await prisma.file.delete({ where: { id: existingFile.id } });
+            await db.delete(files)
+              .where(eq(files.id, existingFile[0].id));
           } catch (e) {
             logger.error("Failed to delete existing file record", e);
           }
         }
 
-        // Upload to Cloudflare R2
         const { url, pathname } = await uploadFile(file, folderName);
 
         const thumbnailUrl = null;
@@ -107,9 +99,8 @@ export async function POST(request: Request) {
         const height = null;
         const duration = null;
 
-        // 3. Create DB Record
-        const dbFile = await prisma.file.create({
-          data: {
+        const [dbFile] = await db.insert(files)
+          .values({
             name: sanitizedName,
             blobUrl: url,
             blobPath: pathname,
@@ -121,8 +112,8 @@ export async function POST(request: Request) {
             width,
             height,
             duration
-          }
-        });
+          })
+          .returning();
 
         uploadedFiles.push(dbFile);
 

@@ -1,18 +1,18 @@
 import { NextResponse } from "next/server";
-import { auth, checkRole, UserRole } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { auth, checkRole } from "@/lib/auth";
+import type { UserRole } from "@/lib/auth-types";
+import { db } from "@/lib/db";
+import { projects, files } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import { sanitizeFileName } from "@/lib/files/validation";
 import { logger } from "@/lib/logger";
-
-
-
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
-  if (!checkRole(session, [UserRole.ADMIN])) {
+  if (!checkRole(session, ["ADMIN"] as UserRole[])) {
     return NextResponse.json({ error: "Access denied" }, { status: 403 });
   }
 
@@ -25,41 +25,30 @@ export async function PATCH(
       return NextResponse.json({ error: "Name or ProjectId is required" }, { status: 400 });
     }
 
-    const existingFile = await prisma.file.findUnique({
-      where: { id },
-    });
+    const existingFile = await db.select()
+      .from(files)
+      .where(eq(files.id, id))
+      .limit(1);
 
-    if (!existingFile) {
+    if (existingFile.length === 0) {
       return NextResponse.json({ error: "File not found" }, { status: 404 });
     }
 
     const dataToUpdate: { name?: string; projectId?: string } = {};
     if (name) dataToUpdate.name = sanitizeFileName(name);
     if (projectId) {
-      // Verify project exists
-      const project = await prisma.project.findUnique({ where: { id: projectId } });
-      if (!project) return NextResponse.json({ error: "Target project not found" }, { status: 404 });
+      const project = await db.select()
+        .from(projects)
+        .where(eq(projects.id, projectId))
+        .limit(1);
+      if (project.length === 0) return NextResponse.json({ error: "Target project not found" }, { status: 404 });
       dataToUpdate.projectId = projectId;
-
-      // Note: We might want to move the blob physically if we were using a folder structure in Blob,
-      // but Cloudflare R2 is flat URL based, and we store path in DB.
-      // If we want to organize by folder in Blob, we would need to copy/delete.
-      // For now, we just update the reference in DB as specified in Phase 0 structure (flat).
-      // Actually Phase 0 says "un dossier par projet".
-      // If we strictly follow that, we should move blob.
-      // But for Cloudflare R2, "folders" are just prefixes.
-      // Renaming the blob (copy + delete) is expensive and might change the URL.
-      // Let's stick to DB update for now unless strictly required to move Blob.
-      // The spec says "Mise à jour BDD + Blob (copy + delete)".
-      // Implementing blob move is complex (download -> upload -> delete).
-      // Let's start with DB update as it satisfies the UI requirement of "Moving".
-      // The URL will remain the same.
     }
 
-    const updatedFile = await prisma.file.update({
-      where: { id },
-      data: dataToUpdate,
-    });
+    const [updatedFile] = await db.update(files)
+      .set(dataToUpdate)
+      .where(eq(files.id, id))
+      .returning();
 
     return NextResponse.json(updatedFile);
   } catch (error) {
@@ -69,7 +58,5 @@ export async function PATCH(
 }
 
 export async function DELETE() {
-  // We already have a bulk delete route, but proper REST suggests singular delete here too.
-  // Skipping for now as we focus on Rename.
   return NextResponse.json({ error: "Method not implemented" }, { status: 405 });
 }

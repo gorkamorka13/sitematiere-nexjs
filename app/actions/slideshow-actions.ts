@@ -1,16 +1,13 @@
 "use server";
 
-import prisma from "@/lib/prisma";
-import { auth, checkRole, UserRole } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { slideshowImages, images, files } from "@/lib/db/schema";
+import { eq, and, desc, asc, sql } from "drizzle-orm";
+import { auth, checkRole } from "@/lib/auth";
+import type { UserRole } from "@/lib/auth-types";
 import { revalidatePath } from "next/cache";
-import { Prisma } from "@prisma/client";
 import { logger } from "@/lib/logger";
 
-/**
- * Get slideshow images for a project
- * @param projectId - Project ID
- * @param publishedOnly - If true, only return published images
- */
 export async function getSlideshowImages(projectId: string, publishedOnly: boolean = false) {
   logger.debug(`[getSlideshowImages] Fetching for projectId: ${projectId}, publishedOnly: ${publishedOnly}`);
   try {
@@ -19,25 +16,29 @@ export async function getSlideshowImages(projectId: string, publishedOnly: boole
       return { success: false, error: "ID du projet manquant." };
     }
 
-    const where: Prisma.SlideshowImageWhereInput = { projectId };
+    const conditions = [eq(slideshowImages.projectId, projectId)];
     if (publishedOnly) {
-      where.isPublished = true;
+      conditions.push(eq(slideshowImages.isPublished, true));
     }
 
-    const slideshowImages = await prisma.slideshowImage.findMany({
-      where,
-      include: {
-        image: true,
-      },
-      orderBy: {
-        order: 'asc',
-      },
-    });
+    const slideshowImageRecords = await db.select({
+      id: slideshowImages.id,
+      projectId: slideshowImages.projectId,
+      imageId: slideshowImages.imageId,
+      order: slideshowImages.order,
+      isPublished: slideshowImages.isPublished,
+      createdAt: slideshowImages.createdAt,
+      updatedAt: slideshowImages.updatedAt,
+      image: images,
+    })
+      .from(slideshowImages)
+      .innerJoin(images, eq(slideshowImages.imageId, images.id))
+      .where(and(...conditions))
+      .orderBy(asc(slideshowImages.order));
 
-    logger.debug(`[getSlideshowImages] Found ${slideshowImages.length} images`);
+    logger.debug(`[getSlideshowImages] Found ${slideshowImageRecords.length} images`);
 
-    // Serialize dates for Cloudflare compatibility
-    const serializedImages = slideshowImages.map(si => {
+    const serializedImages = slideshowImageRecords.map(si => {
       try {
         return {
           id: si.id,
@@ -86,64 +87,59 @@ export async function getSlideshowImages(projectId: string, publishedOnly: boole
   }
 }
 
-/**
- * Add an image to the slideshow (as draft)
- */
 export async function addSlideshowImage(projectId: string, imageId: string) {
   const session = await auth();
 
-  if (!checkRole(session, [UserRole.ADMIN])) {
+  if (!checkRole(session, ["ADMIN"] as UserRole[])) {
     return { success: false, error: "Action non autorisée. Seuls les administrateurs peuvent gérer les slideshows." };
   }
 
   try {
-    // Check if image already exists in slideshow
-    const existing = await prisma.slideshowImage.findUnique({
-      where: {
-        projectId_imageId: {
-          projectId,
-          imageId,
-        },
-      },
-    });
+    const existing = await db.select()
+      .from(slideshowImages)
+      .where(and(
+        eq(slideshowImages.projectId, projectId),
+        eq(slideshowImages.imageId, imageId)
+      ))
+      .limit(1);
 
-    if (existing) {
+    if (existing.length > 0) {
       return { success: false, error: "Cette image est déjà dans le slideshow." };
     }
 
-    // Get the highest order number
-    const maxOrder = await prisma.slideshowImage.findFirst({
-      where: { projectId },
-      orderBy: { order: 'desc' },
-      select: { order: true },
-    });
+    const maxOrderResult = await db.select({ order: slideshowImages.order })
+      .from(slideshowImages)
+      .where(eq(slideshowImages.projectId, projectId))
+      .orderBy(desc(slideshowImages.order))
+      .limit(1);
 
-    const newOrder = (maxOrder?.order ?? -1) + 1;
+    const newOrder = (maxOrderResult[0]?.order ?? -1) + 1;
 
-    const slideshowImage = await prisma.slideshowImage.create({
-      data: {
+    const [slideshowImageRecord] = await db.insert(slideshowImages)
+      .values({
         projectId,
         imageId,
         order: newOrder,
         isPublished: false,
-      },
-      include: {
-        image: true,
-      },
-    });
+      })
+      .returning();
+
+    const [imageRecord] = await db.select()
+      .from(images)
+      .where(eq(images.id, imageId))
+      .limit(1);
 
     revalidatePath("/");
     revalidatePath(`/slideshow/view/${projectId}`);
 
-    // Serialize dates for Cloudflare compatibility
     const serializedSlideshowImage = {
-      ...slideshowImage,
-      createdAt: slideshowImage.createdAt.toISOString(),
-      updatedAt: slideshowImage.updatedAt.toISOString(),
-      image: {
-        ...slideshowImage.image,
-        createdAt: slideshowImage.image.createdAt.toISOString(),
-      },
+      ...slideshowImageRecord,
+      createdAt: slideshowImageRecord.createdAt.toISOString(),
+      updatedAt: slideshowImageRecord.updatedAt.toISOString(),
+      image: imageRecord ? {
+        ...imageRecord,
+        createdAt: imageRecord.createdAt.toISOString(),
+      } : null,
     };
 
     return { success: true, slideshowImage: serializedSlideshowImage };
@@ -153,76 +149,72 @@ export async function addSlideshowImage(projectId: string, imageId: string) {
   }
 }
 
-/**
- * Add an image from the File table to the slideshow
- */
 export async function addImageToSlideshow(projectId: string, fileId: string) {
   const session = await auth();
 
-  if (!checkRole(session, [UserRole.ADMIN])) {
+  if (!checkRole(session, ["ADMIN"] as UserRole[])) {
     return { success: false, error: "Action non autorisée. Seuls les administrateurs peuvent gérer les slideshows." };
   }
 
   try {
-    // 1. Get file details
-    const file = await prisma.file.findUnique({
-      where: { id: fileId }
-    });
+    const [file] = await db.select()
+      .from(files)
+      .where(eq(files.id, fileId))
+      .limit(1);
 
     if (!file || file.fileType !== 'IMAGE') {
       return { success: false, error: "Fichier image introuvable." };
     }
 
-    // 2. Ensure Image record exists
-    let image = await prisma.image.findFirst({
-      where: { url: file.blobUrl, projectId }
-    });
+    let imageRecord = await db.select()
+      .from(images)
+      .where(and(
+        eq(images.url, file.blobUrl),
+        eq(images.projectId, projectId)
+      ))
+      .limit(1);
 
-    if (!image) {
-      image = await prisma.image.create({
-        data: {
+    if (imageRecord.length === 0) {
+      const [newImage] = await db.insert(images)
+        .values({
           url: file.blobUrl,
           alt: file.name,
           projectId,
           order: 0
-        }
-      });
+        })
+        .returning();
+      imageRecord = [newImage];
     }
 
-    // 3. Add to slideshow via existing logic
-    return await addSlideshowImage(projectId, image.id);
+    return await addSlideshowImage(projectId, imageRecord[0].id);
   } catch (error) {
     logger.error("Error adding image to slideshow:", error);
     return { success: false, error: "Erreur lors de l'ajout de l'image au slideshow." };
   }
 }
 
-/**
- * Remove an image from the slideshow
- */
 export async function removeSlideshowImage(slideshowImageId: string) {
   const session = await auth();
 
-  if (!checkRole(session, [UserRole.ADMIN])) {
+  if (!checkRole(session, ["ADMIN"] as UserRole[])) {
     return { success: false, error: "Action non autorisée. Seuls les administrateurs peuvent gérer les slideshows." };
   }
 
   try {
-    const slideshowImage = await prisma.slideshowImage.findUnique({
-      where: { id: slideshowImageId },
-      select: { projectId: true },
-    });
+    const [slideshowImageRecord] = await db.select({ projectId: slideshowImages.projectId })
+      .from(slideshowImages)
+      .where(eq(slideshowImages.id, slideshowImageId))
+      .limit(1);
 
-    if (!slideshowImage) {
+    if (!slideshowImageRecord) {
       return { success: false, error: "Image de slideshow introuvable." };
     }
 
-    await prisma.slideshowImage.delete({
-      where: { id: slideshowImageId },
-    });
+    await db.delete(slideshowImages)
+      .where(eq(slideshowImages.id, slideshowImageId));
 
     revalidatePath("/slideshow");
-    revalidatePath(`/slideshow/view/${slideshowImage.projectId}`);
+    revalidatePath(`/slideshow/view/${slideshowImageRecord.projectId}`);
 
     return { success: true };
   } catch (error) {
@@ -231,28 +223,21 @@ export async function removeSlideshowImage(slideshowImageId: string) {
   }
 }
 
-/**
- * Reorder slideshow images
- * @param projectId - Project ID
- * @param orderedImageIds - Array of slideshow image IDs in the new order
- */
 export async function reorderSlideshowImages(projectId: string, orderedImageIds: string[]) {
   const session = await auth();
 
-  if (!checkRole(session, [UserRole.ADMIN])) {
+  if (!checkRole(session, ["ADMIN"] as UserRole[])) {
     return { success: false, error: "Action non autorisée. Seuls les administrateurs peuvent gérer les slideshows." };
   }
 
   try {
-    // Update order for each image in a transaction
-    await prisma.$transaction(
-      orderedImageIds.map((id, index) =>
-        prisma.slideshowImage.update({
-          where: { id },
-          data: { order: index },
-        })
-      )
-    );
+    await db.transaction(async (tx) => {
+      for (let index = 0; index < orderedImageIds.length; index++) {
+        await tx.update(slideshowImages)
+          .set({ order: index })
+          .where(eq(slideshowImages.id, orderedImageIds[index]));
+      }
+    });
 
     revalidatePath("/");
     revalidatePath(`/slideshow/view/${projectId}`);
@@ -264,22 +249,17 @@ export async function reorderSlideshowImages(projectId: string, orderedImageIds:
   }
 }
 
-/**
- * Publish all current slideshow images for a project
- */
 export async function publishSlideshow(projectId: string) {
   const session = await auth();
 
-  if (!checkRole(session, [UserRole.ADMIN])) {
+  if (!checkRole(session, ["ADMIN"] as UserRole[])) {
     return { success: false, error: "Action non autorisée. Seuls les administrateurs peuvent publier les slideshows." };
   }
 
   try {
-    // Mark all slideshow images for this project as published
-    await prisma.slideshowImage.updateMany({
-      where: { projectId },
-      data: { isPublished: true },
-    });
+    await db.update(slideshowImages)
+      .set({ isPublished: true })
+      .where(eq(slideshowImages.projectId, projectId));
 
     revalidatePath("/");
     revalidatePath(`/slideshow/view/${projectId}`);
@@ -291,21 +271,17 @@ export async function publishSlideshow(projectId: string) {
   }
 }
 
-/**
- * Unpublish all slideshow images for a project (revert to draft)
- */
 export async function unpublishSlideshow(projectId: string) {
   const session = await auth();
 
-  if (!checkRole(session, [UserRole.ADMIN])) {
+  if (!checkRole(session, ["ADMIN"] as UserRole[])) {
     return { success: false, error: "Action non autorisée. Seuls les administrateurs peuvent gérer les slideshows." };
   }
 
   try {
-    await prisma.slideshowImage.updateMany({
-      where: { projectId },
-      data: { isPublished: false },
-    });
+    await db.update(slideshowImages)
+      .set({ isPublished: false })
+      .where(eq(slideshowImages.projectId, projectId));
 
     revalidatePath("/");
     revalidatePath(`/slideshow/view/${projectId}`);

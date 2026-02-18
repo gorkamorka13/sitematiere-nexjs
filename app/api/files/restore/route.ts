@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
-import { auth, checkRole, UserRole } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { auth, checkRole } from "@/lib/auth";
+import type { UserRole } from "@/lib/auth-types";
+import { db } from "@/lib/db";
+import { files } from "@/lib/db/schema";
+import { eq, inArray } from "drizzle-orm";
 import { logger } from "@/lib/logger";
-
 
 export async function POST(request: Request) {
   const session = await auth();
 
-  if (!checkRole(session, [UserRole.ADMIN])) {
+  if (!checkRole(session, ["ADMIN"] as UserRole[])) {
     return NextResponse.json({ error: "Access denied" }, { status: 403 });
   }
 
@@ -19,17 +21,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No files specified" }, { status: 400 });
     }
 
-    // Restore files (Soft delete = false)
-    await prisma.file.updateMany({
-      where: {
-        id: { in: fileIds }
-      },
-      data: {
+    await db.update(files)
+      .set({
         isDeleted: false,
         deletedAt: null,
         deletedBy: null
-      }
-    });
+      })
+      .where(inArray(files.id, fileIds));
 
     return NextResponse.json({ success: true, count: fileIds.length });
 

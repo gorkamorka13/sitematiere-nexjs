@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { db } from '@/lib/db';
+import { users } from '@/lib/db/schema';
+import { eq, asc, sql } from 'drizzle-orm';
 
 interface DebugInfo {
   timestamp: string;
@@ -49,27 +51,26 @@ export async function GET() {
     },
   };
 
-  // Test database connection
   try {
-    const userCount = await prisma.user.count();
+    const userCountResult = await db.select({ count: sql<number>`count(*)` })
+      .from(users);
+    const userCount = Number(userCountResult[0]?.count ?? 0);
+    
     debugInfo.databaseConnection.status = 'connected';
     debugInfo.databaseConnection.userCount = userCount;
 
-    // Get first user (without password)
-    const firstUser = await prisma.user.findFirst({
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        role: true,
-        createdAt: true,
-      },
-      orderBy: {
-        createdAt: 'asc',
-      },
-    });
+    const firstUser = await db.select({
+      id: users.id,
+      username: users.username,
+      email: users.email,
+      role: users.role,
+      createdAt: users.createdAt,
+    })
+      .from(users)
+      .orderBy(asc(users.createdAt))
+      .limit(1);
 
-    debugInfo.databaseConnection.firstUser = firstUser;
+    debugInfo.databaseConnection.firstUser = firstUser[0];
   } catch (error: unknown) {
     const err = error instanceof Error ? error : new Error(String(error));
     debugInfo.databaseConnection.status = 'error';

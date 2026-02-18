@@ -1,14 +1,14 @@
 "use server";
 
-import prisma from "@/lib/prisma";
-import { auth, checkRole, UserRole } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { videos, projects } from "@/lib/db/schema";
+import { eq, and, desc, asc } from "drizzle-orm";
+import { auth, checkRole } from "@/lib/auth";
+import type { UserRole } from "@/lib/auth-types";
 import { revalidatePath } from "next/cache";
 import { getSignedUploadUrl, getFileUrl } from "@/lib/storage/r2-operations";
 import { logger } from "@/lib/logger";
 
-/**
- * Get all videos for a project, ordered by 'order' field
- */
 export async function getProjectVideos(projectId: string) {
   logger.debug(`[getProjectVideos] Fetching videos for projectId: ${projectId}`);
   try {
@@ -17,16 +17,15 @@ export async function getProjectVideos(projectId: string) {
       return { success: false, error: "ID du projet manquant." };
     }
 
-    logger.debug(`[getProjectVideos] Querying Prisma for projectId: ${projectId}`);
-    const videos = await prisma.video.findMany({
-      where: { projectId },
-      orderBy: { order: 'asc' },
-    });
+    logger.debug(`[getProjectVideos] Querying Drizzle for projectId: ${projectId}`);
+    const videoRecords = await db.select()
+      .from(videos)
+      .where(eq(videos.projectId, projectId))
+      .orderBy(asc(videos.order));
 
-    logger.debug(`[getProjectVideos] Successfully found ${videos.length} videos`);
+    logger.debug(`[getProjectVideos] Successfully found ${videoRecords.length} videos`);
 
-    // Serialize dates to ISO strings for Cloudflare compatibility
-    const serializedVideos = videos.map(v => {
+    const serializedVideos = videoRecords.map(v => {
       try {
         return {
           id: v.id,
@@ -74,13 +73,10 @@ export async function getProjectVideos(projectId: string) {
   }
 }
 
-/**
- * Add a new video to a project
- */
 export async function addProjectVideo(projectId: string, url: string, title?: string) {
   const session = await auth();
 
-  if (!checkRole(session, [UserRole.ADMIN])) {
+  if (!checkRole(session, ["ADMIN"] as UserRole[])) {
     return { success: false, error: "Action non autorisée. Seuls les administrateurs peuvent gérer les vidéos." };
   }
 
@@ -89,29 +85,27 @@ export async function addProjectVideo(projectId: string, url: string, title?: st
   }
 
   try {
-    // Get max order to append at the end
-    const maxOrderVideo = await prisma.video.findFirst({
-      where: { projectId },
-      orderBy: { order: 'desc' },
-      select: { order: true }
-    });
+    const maxOrderVideo = await db.select({ order: videos.order })
+      .from(videos)
+      .where(eq(videos.projectId, projectId))
+      .orderBy(desc(videos.order))
+      .limit(1);
 
-    const newOrder = (maxOrderVideo?.order ?? -1) + 1;
+    const newOrder = (maxOrderVideo[0]?.order ?? -1) + 1;
 
-    const video = await prisma.video.create({
-      data: {
+    const [video] = await db.insert(videos)
+      .values({
         projectId,
         url,
         title: title || "Vidéo sans titre",
         order: newOrder,
-        isPublished: false, // Default to unpublished (draft)
-      },
-    });
+        isPublished: false,
+      })
+      .returning();
 
     revalidatePath("/");
     revalidatePath("/dashboard");
 
-    // Serialize dates to ISO strings for Cloudflare compatibility
     const serializedVideo = {
       ...video,
       createdAt: video.createdAt.toISOString(),
@@ -125,20 +119,16 @@ export async function addProjectVideo(projectId: string, url: string, title?: st
   }
 }
 
-/**
- * Delete a video
- */
 export async function deleteProjectVideo(videoId: string) {
   const session = await auth();
 
-  if (!checkRole(session, [UserRole.ADMIN])) {
+  if (!checkRole(session, ["ADMIN"] as UserRole[])) {
     return { success: false, error: "Action non autorisée. Seuls les administrateurs peuvent gérer les vidéos." };
   }
 
   try {
-    await prisma.video.delete({
-      where: { id: videoId },
-    });
+    await db.delete(videos)
+      .where(eq(videos.id, videoId));
 
     revalidatePath("/");
     revalidatePath("/dashboard");
@@ -150,28 +140,21 @@ export async function deleteProjectVideo(videoId: string) {
   }
 }
 
-/**
- * Reorder videos
- * @param projectId - Project ID
- * @param orderedVideoIds - Array of video IDs in the new order
- */
 export async function reorderProjectVideos(projectId: string, orderedVideoIds: string[]) {
   const session = await auth();
 
-  if (!checkRole(session, [UserRole.ADMIN])) {
+  if (!checkRole(session, ["ADMIN"] as UserRole[])) {
     return { success: false, error: "Action non autorisée." };
   }
 
   try {
-    // Update order in transaction
-    await prisma.$transaction(
-      orderedVideoIds.map((id, index) =>
-        prisma.video.update({
-          where: { id },
-          data: { order: index },
-        })
-      )
-    );
+    await db.transaction(async (tx) => {
+      for (let index = 0; index < orderedVideoIds.length; index++) {
+        await tx.update(videos)
+          .set({ order: index })
+          .where(eq(videos.id, orderedVideoIds[index]));
+      }
+    });
 
     revalidatePath("/");
     revalidatePath("/dashboard");
@@ -183,21 +166,17 @@ export async function reorderProjectVideos(projectId: string, orderedVideoIds: s
   }
 }
 
-/**
- * Publish all videos for a project
- */
 export async function publishProjectVideos(projectId: string) {
   const session = await auth();
 
-  if (!checkRole(session, [UserRole.ADMIN])) {
+  if (!checkRole(session, ["ADMIN"] as UserRole[])) {
     return { success: false, error: "Action non autorisée." };
   }
 
   try {
-    await prisma.video.updateMany({
-      where: { projectId },
-      data: { isPublished: true },
-    });
+    await db.update(videos)
+      .set({ isPublished: true })
+      .where(eq(videos.projectId, projectId));
 
     revalidatePath("/");
     revalidatePath("/dashboard");
@@ -209,21 +188,17 @@ export async function publishProjectVideos(projectId: string) {
   }
 }
 
-/**
- * Unpublish all videos for a project (revert to draft)
- */
 export async function unpublishProjectVideos(projectId: string) {
   const session = await auth();
 
-  if (!checkRole(session, [UserRole.ADMIN])) {
+  if (!checkRole(session, ["ADMIN"] as UserRole[])) {
     return { success: false, error: "Action non autorisée." };
   }
 
   try {
-    await prisma.video.updateMany({
-      where: { projectId },
-      data: { isPublished: false },
-    });
+    await db.update(videos)
+      .set({ isPublished: false })
+      .where(eq(videos.projectId, projectId));
 
     revalidatePath("/");
     revalidatePath("/dashboard");
@@ -235,33 +210,29 @@ export async function unpublishProjectVideos(projectId: string) {
   }
 }
 
-/**
- * Toggle publish status for a single video
- */
 export async function toggleVideoPublishStatus(videoId: string) {
   const session = await auth();
 
-  if (!checkRole(session, [UserRole.ADMIN])) {
+  if (!checkRole(session, ["ADMIN"] as UserRole[])) {
     return { success: false, error: "Action non autorisée." };
   }
 
   try {
-    const video = await prisma.video.findUnique({
-      where: { id: videoId },
-      select: { isPublished: true, projectId: true }
-    });
+    const [video] = await db.select({ isPublished: videos.isPublished, projectId: videos.projectId })
+      .from(videos)
+      .where(eq(videos.id, videoId))
+      .limit(1);
 
     if (!video) throw new Error("Vidéo introuvable");
 
-    const updatedVideo = await prisma.video.update({
-      where: { id: videoId },
-      data: { isPublished: !video.isPublished }
-    });
+    const [updatedVideo] = await db.update(videos)
+      .set({ isPublished: !video.isPublished, updatedAt: new Date() })
+      .where(eq(videos.id, videoId))
+      .returning();
 
     revalidatePath("/");
     revalidatePath("/dashboard");
 
-    // Serialize date
     const serializedVideo = {
       ...updatedVideo,
       createdAt: updatedVideo.createdAt.toISOString(),
@@ -275,21 +246,18 @@ export async function toggleVideoPublishStatus(videoId: string) {
   }
 }
 
-/**
- * Get a signed URL for uploading a video to R2
- */
 export async function getSignedVideoUploadAction(projectId: string, fileName: string, contentType: string) {
   const session = await auth();
 
-  if (!checkRole(session, [UserRole.ADMIN])) {
+  if (!checkRole(session, ["ADMIN"] as UserRole[])) {
     return { success: false, error: "Action non autorisée." };
   }
 
   try {
-    const project = await prisma.project.findUnique({
-      where: { id: projectId },
-      select: { name: true }
-    });
+    const [project] = await db.select({ name: projects.name })
+      .from(projects)
+      .where(eq(projects.id, projectId))
+      .limit(1);
 
     if (!project) {
       return { success: false, error: "Projet non trouvé." };
