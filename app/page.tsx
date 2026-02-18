@@ -26,10 +26,26 @@ export default async function DashboardPage() {
         db.select().from(documents).where(eq(documents.projectId, project.id)),
         db.select().from(videos).where(eq(videos.projectId, project.id)),
       ]);
+
+      // Serialize Date objects for Cloudflare Workers compatibility
+      const serializedVideos = projectVideos.map(v => ({
+        ...v,
+        createdAt: v.createdAt?.toISOString() || new Date().toISOString(),
+        updatedAt: v.updatedAt?.toISOString() || new Date().toISOString(),
+      }));
+
+      const serializedDocuments = projectDocuments.map(d => ({
+        ...d,
+        createdAt: d.createdAt?.toISOString() || new Date().toISOString(),
+        updatedAt: d.updatedAt?.toISOString() || new Date().toISOString(),
+      }));
+
       return {
         ...project,
-        documents: projectDocuments,
-        videos: projectVideos,
+        createdAt: project.createdAt?.toISOString() || new Date().toISOString(),
+        updatedAt: project.updatedAt?.toISOString() || new Date().toISOString(),
+        documents: serializedDocuments,
+        videos: serializedVideos,
       };
     })
   );
