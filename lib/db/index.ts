@@ -28,22 +28,42 @@ const getDatabaseUrl = (): string | undefined => {
   return undefined;
 };
 
-let dbInstance: ReturnType<typeof drizzle> | undefined;
-
-function getDb() {
-  if (dbInstance) {
-    return dbInstance;
-  }
-
+// For Cloudflare Workers, we create a new connection per request
+// to avoid connection pooling issues in serverless environments
+export function createDb() {
   const connectionString = getDatabaseUrl();
 
   if (!connectionString) {
     throw new Error('DATABASE_URL environment variable is not set');
   }
 
-  const sql = neon(connectionString);
-  dbInstance = drizzle(sql, { schema });
+  // Use fetchOptions for Cloudflare Workers compatibility
+  const sql = neon(connectionString, {
+    fetchOptions: {
+      // Ensure proper handling in edge runtime
+      cache: 'no-store',
+    },
+  });
   
+  return drizzle(sql, { schema });
+}
+
+// Maintain backward compatibility with existing code
+// In serverless environments, each request gets its own connection
+let dbInstance: ReturnType<typeof drizzle> | undefined;
+
+function getDb() {
+  // In Cloudflare Workers (CF_PAGES), always create fresh connection
+  if (process.env.CF_PAGES) {
+    return createDb();
+  }
+  
+  // In Node.js environments, use singleton pattern
+  if (dbInstance) {
+    return dbInstance;
+  }
+
+  dbInstance = createDb();
   return dbInstance;
 }
 
