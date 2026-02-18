@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { projects, files, fileTypeEnum } from "@/lib/db/schema";
-import { eq, and, or, isNull, ilike, sql, inArray } from "drizzle-orm";
+import { eq, and, ilike, sql, inArray, isNull } from "drizzle-orm";
 import { logger } from "@/lib/logger";
 import { naturalSort } from "@/lib/sort-utils";
 

@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { projects, slideshowImages, images, files } from "@/lib/db/schema";
-import { eq, and, or, asc, ilike, isNull } from "drizzle-orm";
+import { eq, and, or, asc, ilike } from "drizzle-orm";
 import { naturalSort } from "@/lib/sort-utils";
 import { auth } from "@/lib/auth";
 import type { UserRole } from "@/lib/auth-types";

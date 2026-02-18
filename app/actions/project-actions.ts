@@ -1,8 +1,8 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { users, projects, documents, files } from "@/lib/db/schema";
-import { eq, and, inArray } from "drizzle-orm";
+import { projects, documents, files } from "@/lib/db/schema";
+import { eq, and } from "drizzle-orm";
 import { auth, checkRole } from "@/lib/auth";
 import type { UserRole } from "@/lib/auth-types";
 import { ProjectUpdateSchema, ProjectUpdateInput, ProjectCreateSchema, ProjectCreateInput } from "@/lib/validations";

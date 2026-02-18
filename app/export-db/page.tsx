@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { users, projects, files, slideshowImages, images, videos, documents } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
-import type { UserRole } from "@/lib/auth-types";
+
 import Link from "next/link";
 import { Database, FileJson, FileText, ArrowLeft, Download, ShieldCheck } from "lucide-react";
 

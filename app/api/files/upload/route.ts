@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { projects, files } from "@/lib/db/schema";
-import { eq, and, sql, isNull } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import { uploadFile, getFileTypeFromMime } from "@/lib/files/blob-edge";
 import { validateFileSize, validateFileType, sanitizeFileName } from "@/lib/files/validation";
 import { logger } from "@/lib/logger";

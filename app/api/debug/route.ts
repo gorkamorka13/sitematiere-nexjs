@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { users } from '@/lib/db/schema';
-import { eq, asc, sql } from 'drizzle-orm';
+import { asc, sql } from 'drizzle-orm';
 
 interface DebugInfo {
   timestamp: string;
