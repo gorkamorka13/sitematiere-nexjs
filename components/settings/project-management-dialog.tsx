@@ -856,6 +856,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                         type="number"
                         min="0"
                         max="100"
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         value={(formData as any)[step.key] === 0 ? "" : (formData as any)[step.key]}
                         onChange={(e) => {
                           const value = e.target.value;
@@ -1340,7 +1341,8 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                         type="number"
                         min="0"
                         max="100"
-                        value={createFormData[step.key as keyof typeof createFormData] === 0 ? "" : createFormData[step.key as keyof typeof createFormData]}
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        value={(createFormData as any)[step.key] === 0 ? "" : (createFormData as any)[step.key]}
                         onChange={(e) => {
                           const value = e.target.value;
                           if (value === "" || value === "0") {
