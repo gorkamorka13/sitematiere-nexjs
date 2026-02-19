@@ -17,7 +17,7 @@ export async function GET() {
   const userId = session.user.id;
 
   try {
-    let query = db
+    const query = db
       .select({
         id: projects.id,
         name: projects.name,

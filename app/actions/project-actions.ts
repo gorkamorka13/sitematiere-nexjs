@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { users, projects, documents, files } from "@/lib/db/schema";
-import { eq, and, or } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { auth, checkRole } from "@/lib/auth";
 import { hash } from "bcrypt-ts";
 import type { UserRole } from "@/lib/auth-types";
@@ -40,7 +40,7 @@ export async function updateProject(formData: ProjectUpdateInput) {
     }
 
     await db.transaction(async (tx) => {
-      const updateData: any = {
+      const updateData: Partial<typeof projects.$inferInsert> = {
         latitude: validatedData.latitude,
         longitude: validatedData.longitude,
         description: validatedData.description,

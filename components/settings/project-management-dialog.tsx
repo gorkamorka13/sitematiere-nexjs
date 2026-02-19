@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { X, Save, MapPin, AlignLeft, FolderOpen, AlertCircle, CheckCircle2, Globe, Search, Undo2, Redo2, Plus, Trash2, Edit, UploadCloud, Image as ImageIcon, Lock, Users, UserCircle, Eye, EyeOff } from "lucide-react";
+import { X, Save, MapPin, AlignLeft, FolderOpen, AlertCircle, CheckCircle2, Globe, Search, Undo2, Redo2, Plus, Trash2, Edit, UploadCloud, Image as ImageIcon, Lock, Users, Eye } from "lucide-react";
 import NextImage from "next/image";
 import type { Project, Document as ProjectDocument } from "@/lib/db/schema";
 import { ProjectType, ProjectStatus, DocumentType } from "@/lib/enums";
@@ -333,7 +333,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
           clientLogoName: logoDoc?.url || "",
           status: (project.status as unknown as ProjectStatus) || ProjectStatus.PROSPECT,
           ownerId: project.ownerId || "",
-          visible: (project as any).visible ?? false,
+          visible: project.visible ?? false,
         });
         setStatus(null);
       }

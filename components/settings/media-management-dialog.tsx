@@ -267,7 +267,7 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
                                         ].map((tab) => (
                                             <button
                                                 key={tab.id}
-                                                onClick={() => setActiveTab(tab.id as any)}
+                                                onClick={() => setActiveTab(tab.id as typeof activeTab)}
                                                 className={`flex-1 lg:flex-none flex items-center justify-center gap-2.5 px-6 py-2 rounded-xl text-[11px] font-black transition-all duration-300 whitespace-nowrap ${activeTab === tab.id
                                                     ? 'bg-white dark:bg-gray-700 shadow-lg shadow-gray-200/50 dark:shadow-none text-indigo-600 dark:text-indigo-400 scale-100'
                                                     : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-200 scale-95 opacity-70 hover:opacity-100'

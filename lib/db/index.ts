@@ -7,9 +7,10 @@ if (typeof window === 'undefined') {
   // Only use 'ws' if native WebSocket is not available (Node.js)
   if (!globalThis.WebSocket) {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const ws = require('ws');
       neonConfig.webSocketConstructor = ws;
-    } catch (e) {
+    } catch (_e) {
       // If we're in a specialized environment where ws is needed but missing
     }
   }
@@ -17,9 +18,9 @@ if (typeof window === 'undefined') {
 
 const getDatabaseUrl = (): string => {
   const url = process.env.DATABASE_URL ||
-              (globalThis as any).__env?.DATABASE_URL ||
-              (globalThis as any).env?.DATABASE_URL ||
-              (globalThis as any).DATABASE_URL;
+              (globalThis as Record<string, any>).__env?.DATABASE_URL ||
+              (globalThis as Record<string, any>).env?.DATABASE_URL ||
+              (globalThis as Record<string, any>).DATABASE_URL;
 
   if (!url) {
     throw new Error('DATABASE_URL is not defined. Please check your environment variables.');
@@ -57,7 +58,7 @@ function getDbInstance() {
 export const db = new Proxy({} as ReturnType<typeof drizzle<typeof schema>>, {
   get(target, prop) {
     const instance = getDbInstance();
-    const value = (instance as any)[prop];
+    const value = (instance as Record<string | symbol, any>)[prop];
 
     if (typeof value === 'function' && typeof prop === 'string' && !['then', 'catch', 'finally'].includes(prop)) {
       return value.bind(instance);
