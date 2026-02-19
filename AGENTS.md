@@ -1,6 +1,6 @@
 # AGENTS.md
 
-This file contains coding guidelines and conventions for agentic coding agents working on this Next.js bridge construction management system.
+This file contains coding guidelines and conventions for agentic coding agents working on this Next.js bridge construction management system..
 
 ## Project Overview
 
@@ -76,10 +76,10 @@ interface ComponentNameProps {
   variant?: "default" | "icon" | "sidebar";
 }
 
-export function ComponentName({ 
-  required, 
-  optional, 
-  variant = "default" 
+export function ComponentName({
+  required,
+  optional,
+  variant = "default"
 }: ComponentNameProps) {
   return (
     <div className="tailwind-classes">
