@@ -101,7 +101,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }),
     ],
     callbacks: {
-        async jwt({ token, user, trigger, account }) {
+        async jwt({ token, user }) {
             try {
                 if (user) {
                     const u = user as User;

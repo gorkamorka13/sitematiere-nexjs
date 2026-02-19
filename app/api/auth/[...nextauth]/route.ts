@@ -15,15 +15,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  // Clone the request to read the body
-  const clonedRequest = request.clone();
-  let bodyText = "";
-  try {
-    bodyText = await clonedRequest.text();
-  } catch (e) {
-    // Silently continue
-  }
-
   try {
     const response = await handlers.POST(request);
     return response;
