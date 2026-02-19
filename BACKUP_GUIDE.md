@@ -1,6 +1,6 @@
 # Database Backup Guide
 
-This project includes an automated backup system for your Neon PostgreSQL database.
+This project includes an automated backup system for your Neon PostgreSQL database..
 
 ## Quick Start
 
