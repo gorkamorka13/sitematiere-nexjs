@@ -1,9 +1,10 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { projects, documents, files } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { users, projects, documents, files } from "@/lib/db/schema";
+import { eq, and, or } from "drizzle-orm";
 import { auth, checkRole } from "@/lib/auth";
+import { hash } from "bcrypt-ts";
 import type { UserRole } from "@/lib/auth-types";
 import { ProjectUpdateSchema, ProjectUpdateInput, ProjectCreateSchema, ProjectCreateInput } from "@/lib/validations";
 import { revalidatePath } from "next/cache";
@@ -22,20 +23,47 @@ export async function updateProject(formData: ProjectUpdateInput) {
   const validatedData = ProjectUpdateSchema.parse(formData);
 
   try {
+    const [project] = await db.select()
+      .from(projects)
+      .where(eq(projects.id, validatedData.id))
+      .limit(1);
+
+    if (!project) {
+      return { success: false, error: "Projet introuvable." };
+    }
+
+    const isAdmin = checkRole(session, ["ADMIN"] as UserRole[]);
+    const isOwner = project.ownerId === session?.user?.id;
+
+    if (!isAdmin && !isOwner) {
+      return { success: false, error: "Vous n'êtes pas autorisé à modifier ce projet." };
+    }
+
     await db.transaction(async (tx) => {
+      const updateData: any = {
+        latitude: validatedData.latitude,
+        longitude: validatedData.longitude,
+        description: validatedData.description,
+        prospection: validatedData.prospection,
+        studies: validatedData.studies,
+        fabrication: validatedData.fabrication,
+        transport: validatedData.transport,
+        construction: validatedData.construction,
+        status: validatedData.status,
+        updatedAt: new Date(),
+      };
+
+      if (validatedData.visible !== undefined) {
+        updateData.visible = validatedData.visible;
+      }
+
+      // Seul l'admin peut changer le propriétaire
+      if (isAdmin && validatedData.ownerId) {
+        updateData.ownerId = validatedData.ownerId;
+      }
+
       await tx.update(projects)
-        .set({
-          latitude: validatedData.latitude,
-          longitude: validatedData.longitude,
-          description: validatedData.description,
-          prospection: validatedData.prospection,
-          studies: validatedData.studies,
-          fabrication: validatedData.fabrication,
-          transport: validatedData.transport,
-          construction: validatedData.construction,
-          status: validatedData.status,
-          updatedAt: new Date(),
-        })
+        .set(updateData)
         .where(eq(projects.id, validatedData.id));
 
       if (validatedData.status) {
@@ -155,6 +183,35 @@ export async function createProject(formData: ProjectCreateInput) {
 
   try {
     const result = await db.transaction(async (tx) => {
+      let determinedOwnerId = session?.user?.id as string;
+
+      // Logique d'affectation
+      if (validatedData.assignToUserId) {
+        const [existingUser] = await tx.select()
+          .from(users)
+          .where(eq(users.id, validatedData.assignToUserId))
+          .limit(1);
+
+        if (existingUser) {
+          determinedOwnerId = existingUser.id;
+        } else if (validatedData.createUserIfNotExists && validatedData.newUserUsername && validatedData.newUserPassword) {
+          // Création à la volée
+          const passwordHash = await hash(validatedData.newUserPassword, 10);
+          const [newUser] = await tx.insert(users)
+            .values({
+              username: validatedData.newUserUsername,
+              name: validatedData.newUserName || null,
+              passwordHash,
+              role: (validatedData.newUserRole as UserRole) || "USER",
+              color: "#6366f1", // Couleur par défaut
+            })
+            .returning();
+          determinedOwnerId = newUser.id;
+        } else {
+          throw new Error("L'utilisateur spécifié n'existe pas.");
+        }
+      }
+
       const [project] = await tx.insert(projects)
         .values({
           name: validatedData.name,
@@ -170,7 +227,8 @@ export async function createProject(formData: ProjectCreateInput) {
           fabrication: validatedData.fabrication,
           transport: validatedData.transport,
           construction: validatedData.construction,
-          ownerId: session.user.id as string,
+          ownerId: determinedOwnerId,
+          visible: validatedData.visible ?? false,
         })
         .returning();
 

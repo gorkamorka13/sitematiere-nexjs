@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, real, integer, varchar, index } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, real, integer, varchar, index, boolean } from 'drizzle-orm/pg-core';
 import { projectTypeEnum, projectStatusEnum } from './enums';
 import { createId } from '@paralleldrive/cuid2';
 
@@ -20,6 +20,7 @@ export const projects = pgTable('projects', {
   createdAt: timestamp('createdAt').defaultNow().notNull(),
   updatedAt: timestamp('updatedAt').defaultNow().notNull(),
   ownerId: text('ownerId').notNull(),
+  visible: boolean('visible').default(false).notNull(),
 }, (table) => ({
   countryIdx: index().on(table.country),
   typeIdx: index().on(table.type),

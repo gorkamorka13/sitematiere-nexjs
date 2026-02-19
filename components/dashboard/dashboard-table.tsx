@@ -1,6 +1,7 @@
 import type { Project } from "@/lib/db/schema";
 import { ProjectStatus, ProjectType } from "@/lib/enums";
-import { Download, Search, ArrowUpDown, ArrowUpIcon, ArrowDownIcon } from "lucide-react";
+import type { UserRole } from "@/lib/auth-types";
+import { Download, Search, ArrowUpDown, ArrowUpIcon, ArrowDownIcon, Eye, EyeOff } from "lucide-react";
 import { getStatusLabel } from "@/lib/utils";
 import { useState, useMemo } from "react";
 
@@ -17,6 +18,7 @@ interface DashboardTableProps {
     onCountryChange: (country: string) => void;
     selectedTypes: ProjectType[];
     selectedStatuses: ProjectStatus[];
+    currentUser: { id?: string; role?: UserRole };
 }
 
 type SortConfig = {
@@ -32,7 +34,8 @@ export function DashboardTable({
     searchQuery,
     setSearchQuery,
     selectedCountry,
-    onCountryChange
+    onCountryChange,
+    currentUser
 }: DashboardTableProps) {
     const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'name', direction: 'asc' });
 
@@ -142,6 +145,17 @@ export function DashboardTable({
                                             </div>
                                         </th>
 
+                                        {/* Visibility Column */}
+                                        <th scope="col" className="px-3 py-2 text-left min-w-[100px]">
+                                            <button
+                                                onClick={() => handleSort('visible')}
+                                                className="group inline-flex items-center text-xs font-bold text-gray-400 uppercase tracking-widest hover:text-indigo-500 transition-colors"
+                                            >
+                                                Visibilité
+                                                <SortIcon columnKey="visible" />
+                                            </button>
+                                        </th>
+
                                         {/* Type Column */}
                                         <th scope="col" className="hidden sm:table-cell px-3 py-3.5 text-left">
                                             <button
@@ -180,8 +194,28 @@ export function DashboardTable({
                                                     : ''
                                                     }`}
                                             >
-                                                <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-semibold text-gray-900 dark:text-white sm:pl-6">{project.name}</td>
+                                                <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-semibold text-gray-900 dark:text-white sm:pl-6">
+                                                    <div className="flex items-center gap-2">
+                                                        {project.name}
+                                                        {project.ownerId === currentUser.id && (
+                                                            <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700 ring-1 ring-inset ring-indigo-700/10 dark:bg-indigo-900/40 dark:text-indigo-300">
+                                                                Mon projet
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </td>
                                                 <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400 font-medium">{project.country}</td>
+                                                <td className="whitespace-nowrap px-3 py-4 text-sm font-medium">
+                                                    {project.visible ? (
+                                                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-700/10 dark:bg-amber-900/30 dark:text-amber-400 text-[10px] font-bold uppercase tracking-wider">
+                                                            <Eye className="w-3 h-3" /> Public
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gray-50 text-gray-600 ring-1 ring-inset ring-gray-600/10 dark:bg-gray-700/30 dark:text-gray-400 text-[10px] font-bold uppercase tracking-wider">
+                                                            <EyeOff className="w-3 h-3" /> Privé
+                                                        </span>
+                                                    )}
+                                                </td>
                                                 <td className="hidden sm:table-cell whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">{project.type}</td>
                                                 <td className="hidden md:table-cell whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
                                                     <span className={`inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ring-1 ring-inset ${project.status === 'DONE' ? 'bg-green-50 text-green-700 ring-green-600/20 dark:bg-green-900/30 dark:text-green-400 dark:ring-green-400/20' :

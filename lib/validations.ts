@@ -14,6 +14,8 @@ export const ProjectUpdateSchema = z.object({
   flagName: z.string().optional(),
   clientLogoName: z.string().optional(),
   pinName: z.string().optional(),
+  ownerId: z.string().optional(),
+  visible: z.boolean().optional(),
 });
 
 export type ProjectUpdateInput = z.infer<typeof ProjectUpdateSchema>;
@@ -35,6 +37,13 @@ export const ProjectCreateSchema = z.object({
   flagName: z.string().optional(),
   clientLogoName: z.string().optional(),
   pinName: z.string().optional(),
+  assignToUserId: z.string().optional(),
+  createUserIfNotExists: z.boolean().optional(),
+  newUserUsername: z.string().optional(),
+  newUserName: z.string().optional(),
+  newUserPassword: z.string().min(6).optional(),
+  newUserRole: z.enum(["ADMIN", "USER", "VISITOR"]).optional(),
+  visible: z.boolean().optional(),
 });
 
 export type ProjectCreateInput = z.infer<typeof ProjectCreateSchema>;

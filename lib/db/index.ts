@@ -1,56 +1,69 @@
-import { drizzle } from 'drizzle-orm/neon-http';
-import { neon } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-serverless';
+import { Pool, neonConfig } from '@neondatabase/serverless';
 import * as schema from './schema';
 
-const getDatabaseUrl = (): string | undefined => {
-  if (process.env.DATABASE_URL) {
-    return process.env.DATABASE_URL;
+// Required for neon-serverless to work in standard Node.js environments
+if (typeof window === 'undefined') {
+  // Only use 'ws' if native WebSocket is not available (Node.js)
+  if (!globalThis.WebSocket) {
+    try {
+      const ws = require('ws');
+      neonConfig.webSocketConstructor = ws;
+    } catch (e) {
+      // If we're in a specialized environment where ws is needed but missing
+    }
   }
+}
 
-  const globalWithEnv = globalThis as {
-    __env?: { DATABASE_URL?: string };
-    env?: { DATABASE_URL?: string };
-    DATABASE_URL?: string;
-  };
+const getDatabaseUrl = (): string => {
+  const url = process.env.DATABASE_URL ||
+              (globalThis as any).__env?.DATABASE_URL ||
+              (globalThis as any).env?.DATABASE_URL ||
+              (globalThis as any).DATABASE_URL;
 
-  if (globalWithEnv.__env?.DATABASE_URL) {
-    return globalWithEnv.__env.DATABASE_URL;
+  if (!url) {
+    throw new Error('DATABASE_URL is not defined. Please check your environment variables.');
   }
-
-  if (globalWithEnv.env?.DATABASE_URL) {
-    return globalWithEnv.env.DATABASE_URL;
-  }
-
-  if (globalWithEnv.DATABASE_URL) {
-    return globalWithEnv.DATABASE_URL;
-  }
-
-  return undefined;
+  return url;
 };
 
-let dbInstance: ReturnType<typeof drizzle> | undefined;
+// Singleton pattern to avoid multiple pools in development
+interface GlobalDb {
+  pool?: Pool;
+  db?: ReturnType<typeof drizzle<typeof schema>>;
+}
 
-function getDb() {
-  if (dbInstance) {
-    return dbInstance;
-  }
+const globalForDb = globalThis as unknown as GlobalDb;
+
+function getDbInstance() {
+  if (globalForDb.db) return globalForDb.db;
 
   const connectionString = getDatabaseUrl();
+  console.log('[DB] Connecting to Neon via WebSockets (Support Transactions)...');
 
-  if (!connectionString) {
-    throw new Error('DATABASE_URL environment variable is not set');
+  const pool = new Pool({ connectionString });
+  const dbInstance = drizzle(pool, { schema });
+
+  // Store in global only in non-production to persist across HMR
+  if (process.env.NODE_ENV !== 'production') {
+    globalForDb.pool = pool;
+    globalForDb.db = dbInstance;
   }
-
-  const sql = neon(connectionString);
-  dbInstance = drizzle(sql, { schema });
 
   return dbInstance;
 }
 
-export const db = new Proxy({} as ReturnType<typeof drizzle>, {
+// Proxy to defer initialization until first property access and fix binding
+export const db = new Proxy({} as ReturnType<typeof drizzle<typeof schema>>, {
   get(target, prop) {
-    const database = getDb();
-    return database[prop as keyof typeof database];
+    const instance = getDbInstance();
+    const value = (instance as any)[prop];
+
+    if (typeof value === 'function' && typeof prop === 'string' && !['then', 'catch', 'finally'].includes(prop)) {
+      return value.bind(instance);
+    }
+
+    return value;
   },
 });
 

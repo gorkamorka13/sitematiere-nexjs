@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { X, Save, MapPin, AlignLeft, FolderOpen, AlertCircle, CheckCircle2, Globe, Search, Undo2, Redo2, Plus, Trash2, Edit, UploadCloud, Image as ImageIcon } from "lucide-react";
+import { X, Save, MapPin, AlignLeft, FolderOpen, AlertCircle, CheckCircle2, Globe, Search, Undo2, Redo2, Plus, Trash2, Edit, UploadCloud, Image as ImageIcon, Lock, Users, UserCircle, Eye, EyeOff } from "lucide-react";
 import NextImage from "next/image";
 import type { Project, Document as ProjectDocument } from "@/lib/db/schema";
 import { ProjectType, ProjectStatus, DocumentType } from "@/lib/enums";
@@ -71,6 +71,8 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
     clientLogoName: "",
     pinName: "",
     status: ProjectStatus.PROSPECT,
+    ownerId: "",
+    visible: false,
   });
 
   const [createFormData, setCreateFormData] = useState({
@@ -90,6 +92,13 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
     flagName: "",
     clientLogoName: "",
     pinName: "",
+    assignToUserId: "",
+    createUserIfNotExists: false,
+    newUserUsername: "",
+    newUserName: "",
+    newUserPassword: "",
+    newUserRole: "USER" as UserRole,
+    visible: false,
   });
 
   const [confirmName, setConfirmName] = useState("");
@@ -113,6 +122,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
   const [isFlagPickerOpen, setIsFlagPickerOpen] = useState(false);
   const [isLogoPickerOpen, setIsLogoPickerOpen] = useState(false);
   const [isPinPickerOpen, setIsPinPickerOpen] = useState(false);
+  const [allUsers, setAllUsers] = useState<{ id: string; username: string; name: string | null; role: string; color: string | null }[]>([]);
 
   // Handle map marker position change
   const handleMapPositionChange = (lat: number, lng: number, isFinal: boolean = true) => {
@@ -248,6 +258,15 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
     }
   };
 
+  // Charger tous les utilisateurs pour la liste déroulante Propriétaire (Admins uniquement)
+  useEffect(() => {
+    if (!isOpen || !isAdmin) return;
+    fetch('/api/users')
+      .then(res => res.ok ? res.json() : [])
+      .then(data => setAllUsers(Array.isArray(data) ? data : []))
+      .catch(() => setAllUsers([]));
+  }, [isOpen, isAdmin]);
+
   // Extract unique countries from projects
   const countries = Array.from(
     new Set((projects || []).map(p => p.country).filter(Boolean))
@@ -309,10 +328,12 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
           fabrication: project.fabrication || 0,
           transport: project.transport || 0,
           construction: project.construction || 0,
+          pinName: pinDoc?.url || "",
           flagName: flagDoc?.url || "",
           clientLogoName: logoDoc?.url || "",
-          pinName: pinDoc?.url || "",
           status: (project.status as unknown as ProjectStatus) || ProjectStatus.PROSPECT,
+          ownerId: project.ownerId || "",
+          visible: (project as any).visible ?? false,
         });
         setStatus(null);
       }
@@ -330,6 +351,8 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
         clientLogoName: "",
         pinName: "",
         status: ProjectStatus.PROSPECT,
+        ownerId: "",
+        visible: false,
       });
     }
   }, [selectedProjectId, projects]);
@@ -427,7 +450,15 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
           flagName: "",
           clientLogoName: "",
           pinName: "",
+          assignToUserId: "",
+          createUserIfNotExists: false,
+          newUserUsername: "",
+          newUserName: "",
+          newUserPassword: "",
+          newUserRole: "USER" as UserRole,
+          visible: false,
         });
+        setUserSearchQuery("");
         setUploads([]);
 
         setTimeout(() => {
@@ -496,6 +527,8 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
         clientLogoName: formData.clientLogoName,
         pinName: formData.pinName,
         status: formData.status,
+        ownerId: isAdmin ? formData.ownerId : undefined,
+        visible: formData.visible,
       });
 
       if (result.success) {
@@ -986,6 +1019,55 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                       </div>
                     </div>
                   </div>
+
+                  {/* Accès et Visibilité */}
+                  <div className="space-y-4 pt-6 border-t border-gray-100 dark:border-gray-800">
+                    <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                      <Lock className="w-4 h-4 text-indigo-500" />
+                      Accès et Visibilité
+                    </h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Visibilité */}
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                          <Eye className="w-3 h-3" /> Visibilité
+                        </label>
+                        <select
+                          value={formData.visible ? "true" : "false"}
+                          onChange={(e) => setFormData(prev => ({ ...prev, visible: e.target.value === "true" }))}
+                          className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm transition-all focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                        >
+                          <option value="true">Visible (Public)</option>
+                          <option value="false">Masqué (Privé)</option>
+                        </select>
+                      </div>
+
+                      {/* Propriétaire (Admin seulement pour modif) */}
+                      {isAdmin && (
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                            <Users className="w-3 h-3" /> Propriétaire
+                          </label>
+                          <select
+                            value={formData.ownerId}
+                            onChange={(e) => setFormData({ ...formData, ownerId: e.target.value })}
+                            disabled={!selectedProjectId}
+                            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm transition-all focus:ring-2 focus:ring-indigo-500/20 outline-none disabled:opacity-50"
+                          >
+                            <option value="">— Sélectionner un propriétaire —</option>
+                            {allUsers
+                              .filter((user) => user.role !== "VISITOR")
+                              .map((user) => (
+                                <option key={user.id} value={user.id}>
+                                  {user.username}{user.name ? ` (${user.name})` : ''} · {user.role}
+                                </option>
+                              ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1376,6 +1458,52 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                         )}
                       </div>
                     </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Accès et Affectation */}
+              <div className="space-y-4 pt-6 border-t border-gray-100 dark:border-gray-800">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Users className="w-4 h-4 text-indigo-500" />
+                  Accès et Affectation
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Affectation à un utilisateur */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      Affecter à un utilisateur
+                    </label>
+                    <select
+                      value={createFormData.assignToUserId}
+                      onChange={(e) => setCreateFormData({ ...createFormData, assignToUserId: e.target.value, createUserIfNotExists: false })}
+                      className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white text-sm"
+                    >
+                      <option value="">— Moi-même (par défaut) —</option>
+                      {allUsers
+                        .filter((user) => user.role !== "VISITOR")
+                        .map((user) => (
+                          <option key={user.id} value={user.id}>
+                            {user.username}{user.name ? ` (${user.name})` : ''} · {user.role}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+
+                  {/* Visibilité pour Création */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                      <Eye className="w-3 h-3" /> Visibilité
+                    </label>
+                    <select
+                      value={createFormData.visible ? "true" : "false"}
+                      onChange={(e) => setCreateFormData(prev => ({ ...prev, visible: e.target.value === "true" }))}
+                      className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white text-sm"
+                    >
+                      <option value="true">Visible (Public)</option>
+                      <option value="false">Masqué (Privé)</option>
+                    </select>
                   </div>
                 </div>
               </div>

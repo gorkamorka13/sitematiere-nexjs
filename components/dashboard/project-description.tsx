@@ -4,7 +4,7 @@ import { FileText } from "lucide-react";
 import { normalizeImageUrl } from "@/lib/utils/image-url";
 
 interface ProjectDescriptionProps {
-    selectedProject: Project | null;
+    selectedProject: (Project & { owner?: { username: string | null; color: string | null } }) | null;
     flagDoc: ProjectDocument | undefined;
     logoDoc: ProjectDocument | undefined;
 }
@@ -24,6 +24,12 @@ export function ProjectDescription({ selectedProject, flagDoc, logoDoc }: Projec
                     <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Description</h3>
                 </div>
                 <div className="flex items-center gap-3">
+                    {selectedProject?.owner && (
+                        <div className="flex items-center gap-1.5 px-2 py-1 bg-indigo-50/50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800 shadow-sm shrink-0">
+                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: selectedProject.owner.color || '#6366f1' }} />
+                            <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-tight">{selectedProject.owner.username}</span>
+                        </div>
+                    )}
                     {flagDoc && (
                         <div className="flex items-center gap-1.5 px-2 py-1 bg-white/50 dark:bg-black/20 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm shrink-0">
                             <div className="w-7 h-4.5 relative rounded-[2px] overflow-hidden border border-gray-100 dark:border-gray-800 bg-gray-100 dark:bg-gray-800">

@@ -25,15 +25,19 @@ import { PhotoGallery } from "@/components/dashboard/photo-gallery";
 import { PdfViewer } from "@/components/dashboard/pdf-viewer";
 import { DashboardTable } from "@/components/dashboard/dashboard-table";
 
-type DashboardClientProps = {
-    initialProjects: Project[];
-    user: { name?: string | null; username?: string | null; role?: UserRole; color?: string | null };
+// Extended Project type with owner info and media relations
+export type ProjectWithOwner = Project & {
+    owner?: { username: string | null; color: string | null };
 };
 
-// Extended Project type with optional documents and videos relation
-export type ProjectWithDocuments = Project & {
+export type ProjectWithRelations = ProjectWithOwner & {
     documents?: ProjectDocument[];
     videos?: ProjectVideo[];
+};
+
+type DashboardClientProps = {
+    initialProjects: ProjectWithRelations[];
+    user: { id?: string | null; name?: string | null; username?: string | null; role?: UserRole; color?: string | null };
 };
 
 export default function DashboardClient({ initialProjects, user }: DashboardClientProps) {
@@ -54,7 +58,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
     const [selectedStatuses, setSelectedStatuses] = useState<ProjectStatus[]>([]);
 
     // State for Selected Project (for right map)
-    const [selectedProject, setSelectedProject] = useState<ProjectWithDocuments | null>(defaultProject as ProjectWithDocuments || initialProjects[0] as ProjectWithDocuments || null);
+    const [selectedProject, setSelectedProject] = useState<ProjectWithRelations | null>(defaultProject as ProjectWithRelations || initialProjects[0] as ProjectWithRelations || null);
 
     // State for dynamic media from filesystem
     const [dynamicMedia, setDynamicMedia] = useState<{
@@ -69,7 +73,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
     const [isMediaManagementOpen, setIsMediaManagementOpen] = useState(false);
     const [activeMediaTab, setActiveMediaTab] = useState<'photos' | 'videos' | 'edit'>('photos');
     const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
-    const [projectToExport, setProjectToExport] = useState<ProjectWithDocuments | null>(null);
+    const [projectToExport, setProjectToExport] = useState<ProjectWithRelations | null>(null);
     const [mapNonce, setMapNonce] = useState<number>(0);
     const [fitNonce, setFitNonce] = useState<number>(0);
     const [globalCenterNonce, setGlobalCenterNonce] = useState<number>(0);
@@ -124,11 +128,11 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
 
     // Extraire le drapeau et le logo du client pour le projet sélectionné
     const { flagDoc, logoDoc, pinDoc } = useMemo(() => {
-        const docs = (selectedProject as ProjectWithDocuments | null)?.documents || [];
+        const docs = (selectedProject as ProjectWithRelations | null)?.documents || [];
         return {
-            flagDoc: docs.find((d) => d.type === DocumentType.FLAG),
-            logoDoc: docs.find((d) => d.type === DocumentType.CLIENT_LOGO || d.name.replace(/_/g, ' ').toLowerCase().includes('logo')),
-            pinDoc: docs.find((d) => d.type === DocumentType.PIN)
+            flagDoc: docs.find((d: ProjectDocument) => d.type === DocumentType.FLAG),
+            logoDoc: docs.find((d: ProjectDocument) => d.type === DocumentType.CLIENT_LOGO || d.name.replace(/_/g, ' ').toLowerCase().includes('logo')),
+            pinDoc: docs.find((d: ProjectDocument) => d.type === DocumentType.PIN)
         };
     }, [selectedProject]);
 
@@ -483,7 +487,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                     onExportClick={(e, project) => {
                         e.stopPropagation();
                         handleProjectSelect(project);
-                        setProjectToExport(project as ProjectWithDocuments);
+                        setProjectToExport(project as ProjectWithRelations);
                         setIsExportDialogOpen(true);
                     }}
                     searchQuery={searchQuery}
@@ -492,6 +496,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                     onCountryChange={handleCountryChange}
                     selectedTypes={selectedTypes}
                     selectedStatuses={selectedStatuses}
+                    currentUser={{ id: user.id || undefined, role: user.role }}
                 />
 
                 <div className="mt-4 text-sm text-gray-500 dark:text-gray-400 text-right">
