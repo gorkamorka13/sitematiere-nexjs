@@ -6,25 +6,25 @@ const getDatabaseUrl = (): string | undefined => {
   if (process.env.DATABASE_URL) {
     return process.env.DATABASE_URL;
   }
-  
-  const globalWithEnv = globalThis as { 
-    __env?: { DATABASE_URL?: string }; 
+
+  const globalWithEnv = globalThis as {
+    __env?: { DATABASE_URL?: string };
     env?: { DATABASE_URL?: string };
     DATABASE_URL?: string;
   };
-  
+
   if (globalWithEnv.__env?.DATABASE_URL) {
     return globalWithEnv.__env.DATABASE_URL;
   }
-  
+
   if (globalWithEnv.env?.DATABASE_URL) {
     return globalWithEnv.env.DATABASE_URL;
   }
-  
+
   if (globalWithEnv.DATABASE_URL) {
     return globalWithEnv.DATABASE_URL;
   }
-  
+
   return undefined;
 };
 
@@ -36,8 +36,6 @@ function getDb() {
   }
 
   const connectionString = getDatabaseUrl();
-  console.error('[DB_DEBUG] DATABASE_URL exists:', !!connectionString, 'length:', connectionString?.length);
-  console.error('[DB_DEBUG] DATABASE_URL preview:', connectionString?.substring(0, 30) + '...');
 
   if (!connectionString) {
     throw new Error('DATABASE_URL environment variable is not set');
@@ -45,7 +43,7 @@ function getDb() {
 
   const sql = neon(connectionString);
   dbInstance = drizzle(sql, { schema });
-  
+
   return dbInstance;
 }
 

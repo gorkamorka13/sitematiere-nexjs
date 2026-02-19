@@ -9,7 +9,6 @@ import { revalidatePath } from "next/cache";
 import { logger } from "@/lib/logger";
 
 export async function getSlideshowImages(projectId: string, publishedOnly: boolean = false) {
-  logger.debug(`[getSlideshowImages] Fetching for projectId: ${projectId}, publishedOnly: ${publishedOnly}`);
   try {
     if (!projectId) {
       logger.error("[getSlideshowImages] projectId is missing");
@@ -36,7 +35,6 @@ export async function getSlideshowImages(projectId: string, publishedOnly: boole
       .where(and(...conditions))
       .orderBy(asc(slideshowImages.order));
 
-    logger.debug(`[getSlideshowImages] Found ${slideshowImageRecords.length} images`);
 
     const serializedImages = slideshowImageRecords.map(si => {
       try {

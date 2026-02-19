@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { projects, documents, videos } from "@/lib/db/schema";
-import { desc, eq, inArray } from "drizzle-orm";
+import { desc, inArray } from "drizzle-orm";
 import DashboardClient from "./dashboard-client";
 
 export const dynamic = 'force-dynamic';

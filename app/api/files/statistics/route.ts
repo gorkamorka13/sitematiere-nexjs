@@ -19,13 +19,13 @@ export async function GET() {
       .from(files)
       .where(eq(files.isDeleted, false));
 
-    const totalCountResult = await db.select({ count: sql<number>`count(*)` })
+    const [totalCountResult] = await db.select({ count: sql<number>`count(*)` })
       .from(files)
       .where(eq(files.isDeleted, false));
 
     const totalSize = Number(statsResult[0]?.totalSize ?? 0);
     // const totalCount = Number(statsResult[0]?.totalCount ?? 0); // Removed as per instruction
-    const totalCount = Number(totalCountResult[0]?.count ?? 0); // Added to get totalCount from new query
+    const totalCount = Number(totalCountResult?.count ?? 0);
 
     const fileCounts = await db.select({
       fileType: files.fileType,

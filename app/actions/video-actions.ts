@@ -10,20 +10,17 @@ import { getSignedUploadUrl, getFileUrl } from "@/lib/storage/r2-operations";
 import { logger } from "@/lib/logger";
 
 export async function getProjectVideos(projectId: string) {
-  logger.debug(`[getProjectVideos] Fetching videos for projectId: ${projectId}`);
   try {
     if (!projectId) {
       logger.error("[getProjectVideos] projectId is missing");
       return { success: false, error: "ID du projet manquant." };
     }
 
-    logger.debug(`[getProjectVideos] Querying Drizzle for projectId: ${projectId}`);
     const videoRecords = await db.select()
       .from(videos)
       .where(eq(videos.projectId, projectId))
       .orderBy(asc(videos.order));
 
-    logger.debug(`[getProjectVideos] Successfully found ${videoRecords.length} videos`);
 
     const serializedVideos = videoRecords.map(v => {
       try {
