@@ -94,14 +94,30 @@ export const useImageProcessor = (): UseImageProcessorReturn => {
   const loadImageFromUrl = useCallback(async (url: string, filename: string) => {
     setIsProcessing(true);
     try {
-      const proxyUrl = `/api/proxy?url=${encodeURIComponent(url)}`;
-      const response = await fetch(proxyUrl);
-      if (!response.ok) throw new Error(`Proxy fetch failed: ${response.statusText}`);
+      // Use proxy only for external URLs to avoid loopbacks and CORS issues
+      const isExternal = url.startsWith('http') && !url.includes(window.location.host);
+      const fetchUrl = isExternal ? `/api/proxy?url=${encodeURIComponent(url)}` : url;
+
+      const response = await fetch(fetchUrl);
+
+      if (!response.ok) {
+        let errorMsg = `Proxy fetch failed: ${response.statusText}`;
+        try {
+          const errorData = await response.json();
+          if (errorData.details) errorMsg += ` - ${errorData.details}`;
+          else if (errorData.error) errorMsg += ` - ${errorData.error}`;
+        } catch {
+          // Fallback to status text if JSON parsing fails
+        }
+        throw new Error(errorMsg);
+      }
+
       const blob = await response.blob();
       const file = new File([blob], filename, { type: blob.type });
       await loadImage(file);
     } catch (error) {
       logger.error("Failed to load image from URL", error);
+      throw error; // Re-throw to allow component to handle it
     } finally {
       setIsProcessing(false);
     }

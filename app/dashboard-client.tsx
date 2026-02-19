@@ -206,7 +206,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
     }, [initialProjects, selectedCountry, selectedTypes, selectedStatuses]);
 
     // Handlers
-    const handleProjectSelect = useCallback((project: Project) => {
+    const handleProjectSelect = useCallback((project: ProjectWithRelations) => {
         setSelectedProject(project);
         setSelectedCountry(project.country || "");
         // On synchronise le nom pour mettre à jour le menu déroulant

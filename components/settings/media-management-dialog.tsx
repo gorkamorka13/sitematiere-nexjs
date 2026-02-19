@@ -48,6 +48,7 @@ import { useSlideshow, SlideshowImage } from '@/hooks/use-slideshow';
 import { useSlideshowVideo } from '@/hooks/use-slideshow-video';
 import { useLogger } from '@/lib/logger';
 import { VideosTab } from './VideosTab';
+import { normalizeImageUrl } from '@/lib/utils/image-url';
 
 interface Project {
     id: string;
@@ -113,8 +114,19 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
 
     const handleRetouch = useCallback(async (imageUrl: string, filename: string) => {
         setToast({ message: 'Chargement de l\'image dans l\'éditeur...', type: 'success' });
-        await processor.loadImageFromUrl(imageUrl, filename);
         setActiveTab('edit');
+        try {
+            // Ensure the URL is absolute before passing to proxy
+            const normalizedUrl = normalizeImageUrl(imageUrl);
+            await processor.loadImageFromUrl(normalizedUrl, filename);
+        } catch (error) {
+            console.error("Retouch error:", error);
+            setToast({
+                message: error instanceof Error ? error.message : "Erreur lors du chargement de l'image",
+                type: 'error'
+            });
+            setActiveTab('photos');
+        }
     }, [processor, setToast]);
 
     // Consolidate toasts
@@ -530,7 +542,8 @@ function EditTab({ processor, projectId, onSuccess }: EditTabProps) {
             const actualBlob = await res.blob();
 
             // Prepare filename
-            const ext = processor.currentImage.src.split(';')[0].split('/')[1] || 'png';
+            const mimeType = processor.currentImage.src.split(';')[0].split(':')[1] || 'image/png';
+            const ext = mimeType.split('/')[1] || 'png';
             const baseName = processor.originalImage?.file?.name.replace(/\.[^/.]+$/, "") || `edit_${Date.now()}`;
             const filename = `mod_${baseName}.${ext}`;
 
@@ -678,7 +691,7 @@ function EditTab({ processor, projectId, onSuccess }: EditTabProps) {
                                     title="Résultat actuel"
                                     size={processor.currentImage.size}
                                     dimensions={{ width: processor.currentImage.width, height: processor.currentImage.height }}
-                                    filename={processor.originalImage.file.name}
+                                    filename={processor.originalImage.file?.name || 'image.jpg'}
                                 />
                             )
                         )}
