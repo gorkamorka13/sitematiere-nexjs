@@ -36,6 +36,8 @@ function getDb() {
   }
 
   const connectionString = getDatabaseUrl();
+  console.error('[DB_DEBUG] DATABASE_URL exists:', !!connectionString, 'length:', connectionString?.length);
+  console.error('[DB_DEBUG] DATABASE_URL preview:', connectionString?.substring(0, 30) + '...');
 
   if (!connectionString) {
     throw new Error('DATABASE_URL environment variable is not set');
