@@ -3,7 +3,7 @@ import { auth, checkRole } from "@/lib/auth";
 import type { UserRole } from "@/lib/auth-types";
 import { db } from "@/lib/db";
 import { images, videos, documents, files } from "@/lib/db/schema";
-import { eq, inArray } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import { deleteFile } from "@/lib/files/blob-edge";
 import { extractKeyFromUrl } from "@/lib/storage/r2-operations";
 import { logger } from "@/lib/logger";
@@ -81,7 +81,7 @@ export async function DELETE(request: Request) {
         .set({
           isDeleted: true,
           deletedAt: new Date(),
-          deletedBy: session.user.id
+          deletedBy: session?.user?.id || 'unknown'
         })
         .where(inArray(files.id, fileIds));
 
