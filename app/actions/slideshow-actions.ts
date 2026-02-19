@@ -49,6 +49,7 @@ export async function getSlideshowImages(projectId: string, publishedOnly: boole
           image: si.image ? {
             id: si.image.id,
             url: si.image.url ? si.image.url.trim().replace(/\n/g, '') : '',
+            thumbnailUrl: si.image.thumbnailUrl,
             alt: si.image.alt,
             projectId: si.image.projectId,
             createdAt: si.image.createdAt ? si.image.createdAt.toISOString() : new Date().toISOString(),
@@ -67,6 +68,7 @@ export async function getSlideshowImages(projectId: string, publishedOnly: boole
           image: si.image ? {
             id: si.image.id,
             url: si.image.url ? si.image.url.trim().replace(/\n/g, '') : '',
+            thumbnailUrl: si.image.thumbnailUrl,
             alt: si.image.alt,
             projectId: si.image.projectId,
             createdAt: new Date().toISOString(),
@@ -176,6 +178,7 @@ export async function addImageToSlideshow(projectId: string, fileId: string) {
       const [newImage] = await db.insert(images)
         .values({
           url: file.blobUrl,
+          thumbnailUrl: file.thumbnailUrl,
           alt: file.name,
           projectId,
           order: 0

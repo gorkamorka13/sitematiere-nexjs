@@ -13,6 +13,7 @@ interface SortableImageCardProps {
   image: {
     id: string;
     url: string;
+    thumbnailUrl?: string | null;
     alt: string | null;
   };
   isPublished: boolean;
@@ -63,7 +64,7 @@ export function SortableImageCard({
         {/* Image Preview - Smaller on mobile */}
         <div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-800 flex-shrink-0">
           <Image
-            src={normalizeImageUrl(image.url)}
+            src={normalizeImageUrl(image.thumbnailUrl || image.url)}
             alt={image.alt || `Image`}
             fill
             sizes="(max-width: 640px) 64px, (max-width: 768px) 80px, 96px"
