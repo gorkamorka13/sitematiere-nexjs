@@ -27,7 +27,7 @@ import { DashboardTable } from "@/components/dashboard/dashboard-table";
 
 // Extended Project type with owner info and media relations
 export type ProjectWithOwner = Project & {
-    owner?: { username: string | null; color: string | null };
+    owner?: { username: string | null; color: string | null } | null;
 };
 
 export type ProjectWithRelations = ProjectWithOwner & {

@@ -458,7 +458,6 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
           newUserRole: "USER" as UserRole,
           visible: false,
         });
-        setUserSearchQuery("");
         setUploads([]);
 
         setTimeout(() => {
@@ -857,7 +856,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                         type="number"
                         min="0"
                         max="100"
-                        value={formData[step.key as keyof typeof formData] === 0 ? "" : formData[step.key as keyof typeof formData]}
+                        value={(formData as any)[step.key] === 0 ? "" : (formData as any)[step.key]}
                         onChange={(e) => {
                           const value = e.target.value;
                           if (value === "" || value === "0") {

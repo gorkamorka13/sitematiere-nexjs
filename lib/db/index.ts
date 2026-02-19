@@ -10,7 +10,7 @@ if (typeof window === 'undefined') {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const ws = require('ws');
       neonConfig.webSocketConstructor = ws;
-    } catch (_e) {
+    } catch {
       // If we're in a specialized environment where ws is needed but missing
     }
   }
@@ -18,8 +18,11 @@ if (typeof window === 'undefined') {
 
 const getDatabaseUrl = (): string => {
   const url = process.env.DATABASE_URL ||
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               (globalThis as Record<string, any>).__env?.DATABASE_URL ||
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               (globalThis as Record<string, any>).env?.DATABASE_URL ||
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               (globalThis as Record<string, any>).DATABASE_URL;
 
   if (!url) {
@@ -58,6 +61,7 @@ function getDbInstance() {
 export const db = new Proxy({} as ReturnType<typeof drizzle<typeof schema>>, {
   get(target, prop) {
     const instance = getDbInstance();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const value = (instance as Record<string | symbol, any>)[prop];
 
     if (typeof value === 'function' && typeof prop === 'string' && !['then', 'catch', 'finally'].includes(prop)) {

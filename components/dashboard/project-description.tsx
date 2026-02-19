@@ -4,7 +4,7 @@ import { FileText } from "lucide-react";
 import { normalizeImageUrl } from "@/lib/utils/image-url";
 
 interface ProjectDescriptionProps {
-    selectedProject: (Project & { owner?: { username: string | null; color: string | null } }) | null;
+    selectedProject: (Project & { owner?: { username: string | null; color: string | null } | null }) | null;
     flagDoc: ProjectDocument | undefined;
     logoDoc: ProjectDocument | undefined;
 }
