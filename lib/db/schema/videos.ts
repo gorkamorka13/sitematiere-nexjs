@@ -5,7 +5,7 @@ export const videos = pgTable('videos', {
   id: text('id').primaryKey().$defaultFn(() => createId()),
   url: text('url').notNull(),
   title: text('title'),
-  projectId: text('projectId').notNull(),
+  projectId: text('project').notNull(),
   createdAt: timestamp('createdAt').defaultNow().notNull(),
   isPublished: boolean('isPublished').default(false).notNull(),
   order: integer('order').default(0).notNull(),
