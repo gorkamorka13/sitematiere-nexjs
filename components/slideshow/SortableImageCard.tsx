@@ -48,65 +48,56 @@ export function SortableImageCard({
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex flex-col sm:flex-row items-start sm:items-center gap-4 p-3 sm:p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl transition-all ${isDragging ? 'shadow-2xl scale-[1.02] z-50 bg-white dark:bg-gray-800' : 'hover:border-indigo-300 dark:hover:border-indigo-700'
+      className={`group/card flex flex-col sm:flex-row items-stretch sm:items-center gap-4 p-4 bg-white dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-2xl transition-all duration-300 ${isDragging ? 'shadow-2xl scale-[1.02] z-50 ring-2 ring-indigo-500/50' : 'hover:shadow-lg hover:shadow-indigo-100/50 dark:hover:shadow-none hover:border-indigo-200 dark:hover:border-indigo-800 hover:-translate-y-0.5'
         }`}
     >
-      <div className="flex items-center gap-3 w-full sm:w-auto">
+      <div className="flex items-center gap-4">
         {/* Drag Handle */}
         <div
           {...attributes}
           {...listeners}
-          className="cursor-grab active:cursor-grabbing p-2 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-lg transition-colors shrink-0"
+          className="cursor-grab active:cursor-grabbing p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors shrink-0 text-gray-400 hover:text-indigo-500"
         >
-          <GripVertical className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+          <GripVertical className="w-5 h-5" />
         </div>
 
-        {/* Image Preview - Smaller on mobile */}
-        <div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-800 flex-shrink-0">
+        {/* Image Preview */}
+        <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-900 flex-shrink-0 shadow-inner group-hover/card:scale-105 transition-transform duration-500">
           <Image
             src={normalizeImageUrl(image.thumbnailUrl || image.url)}
             alt={image.alt || `Image`}
             fill
-            sizes="(max-width: 640px) 64px, (max-width: 768px) 80px, 96px"
+            sizes="(max-width: 640px) 80px, 96px"
             className="object-cover"
           />
-        </div>
-
-        {/* Image Info - Mobile only layout part */}
-        <div className="flex-1 min-w-0 sm:hidden">
-          <p className="text-[13px] font-bold text-gray-900 dark:text-white truncate">
-            {image.alt || 'Sans titre'}
-          </p>
-          <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate mt-0.5">
-            {image.url.split('/').pop()}
-          </p>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity" />
         </div>
       </div>
 
       {/* Image Info */}
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+      <div className="flex-1 min-w-0 pr-4">
+        <p className="text-sm font-black text-gray-900 dark:text-white truncate tracking-tight">
           {image.alt || 'Sans titre'}
         </p>
-        <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-1">
+        <p className="text-[10px] font-mono text-gray-400 truncate mt-1 opactiy-60 uppercase tracking-widest">
           {image.url.split('/').pop()}
         </p>
       </div>
 
       {/* Status Badge */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center sm:justify-center shrink-0">
         {isPublished ? (
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-            <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
-            <span className="text-xs font-bold text-green-700 dark:text-green-400 uppercase tracking-wider">
-              Publié
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 dark:bg-green-500/20 border border-green-500/20 dark:border-green-500/30 rounded-full">
+            <CheckCircle2 className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+            <span className="text-[10px] font-black text-green-700 dark:text-green-400 uppercase tracking-widest">
+              Live
             </span>
           </div>
         ) : (
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-            <Clock className="w-4 h-4 text-amber-600 dark:text-amber-300" />
-            <span className="text-xs font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wider">
-              Brouillon
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/20 dark:border-amber-500/30 rounded-full">
+            <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+            <span className="text-[10px] font-black text-amber-700 dark:text-amber-400 uppercase tracking-widest">
+              Draft
             </span>
           </div>
         )}

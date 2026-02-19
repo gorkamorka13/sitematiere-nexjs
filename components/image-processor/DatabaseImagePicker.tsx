@@ -220,19 +220,19 @@ export function DatabaseImagePicker({ isOpen, onClose, onSelect, initialProjectF
             <div className="relative bg-white dark:bg-gray-900 w-full max-w-5xl h-[85vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200 dark:border-gray-800 animate-in zoom-in-95 duration-300">
 
                 {/* Header */}
-                <div className="p-5 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-gray-900/50">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-indigo-50 dark:bg-indigo-900/40 rounded-lg">
-                            <Search className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                <div className="p-5 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-white/80 dark:bg-gray-900/80 backdrop-blur-md">
+                    <div className="flex items-center gap-4">
+                        <div className="p-2.5 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg shadow-indigo-200 dark:shadow-none">
+                            <Search className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-gray-900 dark:text-white uppercase tracking-tight">Bibliothèque d&apos;Images</h2>
-                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-none mt-1">Sélectionnez une image pour traitement</p>
+                            <h2 className="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">Bibliothèque d&apos;Images</h2>
+                            <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] leading-none mt-1.5 opactiy-80">Ressources R2</p>
                         </div>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                        className="p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all"
                     >
                         <X className="w-5 h-5" />
                     </button>
@@ -324,17 +324,17 @@ export function DatabaseImagePicker({ isOpen, onClose, onSelect, initialProjectF
                 </div>
 
                 {/* Footer */}
-                <div className="p-5 border-t border-gray-200 dark:border-gray-800 flex justify-end gap-3 bg-gray-50/50 dark:bg-gray-900/50">
-                    <Button variant="ghost" onClick={onClose} className="font-bold uppercase tracking-widest text-xs">
+                <div className="p-5 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-3 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md">
+                    <Button variant="ghost" onClick={onClose} className="font-black uppercase tracking-widest text-[10px] hover:bg-red-50 hover:text-red-500 rounded-xl px-6 transition-all">
                         Annuler
                     </Button>
                     <button
                         onClick={handleConfirm}
                         disabled={!selectedId}
-                        className={`px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg
+                        className={`px-10 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 shadow-xl
                             ${!selectedId
-                                ? 'bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed shadow-none'
-                                : 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:scale-105 active:scale-95 shadow-gray-200 dark:shadow-none'}
+                                ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed shadow-none'
+                                : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:scale-105 active:scale-95 shadow-indigo-200 dark:shadow-none hover:shadow-indigo-300/50'}
                         `}
                     >
                         Importer cette image

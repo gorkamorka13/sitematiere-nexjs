@@ -157,14 +157,14 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
             {/* Modal Body */}
             <div className="relative w-full h-full lg:h-[90vh] lg:max-w-6xl bg-white dark:bg-gray-900 lg:rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-300 border border-gray-200 dark:border-gray-800">
                 {/* Header */}
-                <div className="px-4 lg:px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-white dark:bg-gray-900 sticky top-0 z-10 shrink-0">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl">
-                            <ImageIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                <div className="px-4 lg:px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-white/80 dark:bg-gray-900/80 backdrop-blur-md sticky top-0 z-10 shrink-0">
+                    <div className="flex items-center gap-4">
+                        <div className="p-2.5 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg shadow-indigo-200 dark:shadow-none">
+                            <ImageIcon className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                            <h2 className="text-lg lg:text-xl font-bold text-gray-900 dark:text-white">Gestion Média</h2>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 hidden sm:block">Configurez le diaporama et les vidéos par projet</p>
+                            <h2 className="text-lg lg:text-xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">Gestion Média</h2>
+                            <p className="text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400 hidden sm:block uppercase tracking-wider">Configurez le diaporama et les vidéos par projet</p>
                         </div>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors">
@@ -243,42 +243,40 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
                         ) : (
                             <>
                                 {/* Project Toolbar */}
-                                <div className="px-4 lg:px-6 py-3 border-b border-gray-100 dark:border-gray-800 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 shrink-0">
-                                    <div className="flex flex-col w-full lg:w-auto">
+                                <div className="px-4 lg:px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 shrink-0 bg-gray-50/50 dark:bg-gray-900/50">
+                                    <div className="flex flex-col min-w-0">
                                         <button
                                             onClick={() => setInternalProjectId(null)}
-                                            className="lg:hidden flex items-center gap-1 text-[10px] font-bold text-gray-400 hover:text-gray-600 mb-2 uppercase tracking-wider"
+                                            className="lg:hidden flex items-center gap-2 text-[10px] font-bold text-gray-400 hover:text-indigo-600 mb-3 uppercase tracking-widest transition-colors"
                                         >
-                                            <ArrowRight className="w-3 h-3 rotate-180" />
-                                            Retour aux projets
+                                            <ArrowRight className="w-3.5 h-3.5 rotate-180" />
+                                            Projets
                                         </button>
-                                        <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest leading-none mb-1">PROJET SÉLECTIONNÉ</span>
-                                        <h3 className="text-lg font-bold text-gray-900 dark:text-white truncate max-w-md">{selectedProject?.name}</h3>
+                                        <div className="flex flex-col">
+                                            <span className="text-[9px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-[0.2em] leading-none mb-1.5 opacity-80">SÉLECTION</span>
+                                            <h3 className="text-xl font-black text-gray-900 dark:text-white truncate lg:max-w-md drop-shadow-sm">{selectedProject?.name}</h3>
+                                        </div>
                                     </div>
 
                                     {/* Tabs */}
-                                    <div className="flex w-full lg:w-auto p-1 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-x-auto no-scrollbar">
-                                        <button
-                                            onClick={() => setActiveTab('photos')}
-                                            className={`flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${activeTab === 'photos' ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
-                                        >
-                                            <ImageIcon className="w-4 h-4 shrink-0" />
-                                            PHOTOS
-                                        </button>
-                                        <button
-                                            onClick={() => setActiveTab('videos')}
-                                            className={`flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${activeTab === 'videos' ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
-                                        >
-                                            <VideoIcon className="w-4 h-4 shrink-0" />
-                                            VIDÉOS
-                                        </button>
-                                        <button
-                                            onClick={() => setActiveTab('edit')}
-                                            className={`flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${activeTab === 'edit' ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
-                                        >
-                                            <Wand2 className="w-4 h-4 shrink-0" />
-                                            OUTILS
-                                        </button>
+                                    <div className="flex p-1.5 bg-gray-200/50 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-200/30 dark:border-gray-700/50 overflow-x-auto no-scrollbar shadow-inner">
+                                        {[
+                                            { id: 'photos', icon: ImageIcon, label: 'PHOTOS' },
+                                            { id: 'videos', icon: VideoIcon, label: 'VIDÉOS' },
+                                            { id: 'edit', icon: Wand2, label: 'OUTILS' }
+                                        ].map((tab) => (
+                                            <button
+                                                key={tab.id}
+                                                onClick={() => setActiveTab(tab.id as any)}
+                                                className={`flex-1 lg:flex-none flex items-center justify-center gap-2.5 px-6 py-2 rounded-xl text-[11px] font-black transition-all duration-300 whitespace-nowrap ${activeTab === tab.id
+                                                    ? 'bg-white dark:bg-gray-700 shadow-lg shadow-gray-200/50 dark:shadow-none text-indigo-600 dark:text-indigo-400 scale-100'
+                                                    : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-200 scale-95 opacity-70 hover:opacity-100'
+                                                    }`}
+                                            >
+                                                <tab.icon className={`w-4 h-4 shrink-0 ${activeTab === tab.id ? 'animate-pulse' : ''}`} />
+                                                {tab.label}
+                                            </button>
+                                        ))}
                                     </div>
                                 </div>
 
@@ -395,44 +393,47 @@ function SlideshowTab({
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <h4 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">DIAPORAMA ({images.length})</h4>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3 flex-wrap">
+                    <h4 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider shrink-0">DIAPORAMA ({images.length})</h4>
                     {hasChanges && (
-                        <span className="flex items-center gap-1.5 px-2 py-0.5 bg-amber-50 dark:bg-amber-900/20 text-[10px] font-bold text-amber-600 dark:text-amber-400 rounded-full border border-amber-100 dark:border-amber-800/30">
+                        <span className="flex items-center gap-1.5 px-2 py-0.5 bg-amber-50 dark:bg-amber-900/20 text-[10px] font-bold text-amber-600 dark:text-amber-400 rounded-full border border-amber-100 dark:border-amber-800/30 shrink-0">
                             <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
                             CHANGEMENTS NON PUBLIÉS
                         </span>
                     )}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                     <Button
                         size="sm"
                         variant="outline"
                         onClick={() => setShowPreview(true)}
                         disabled={images.length === 0}
-                        className="text-[10px] font-bold tracking-widest uppercase h-9 px-4"
+                        className="text-[10px] font-bold tracking-widest uppercase h-9 px-3 sm:px-4"
+                        title="Tester le diaporama"
                     >
-                        <Eye className="w-3.5 h-3.5 mr-2" />
-                        TESTER
+                        <Eye className="w-3.5 h-3.5 sm:mr-2" />
+                        <span className="hidden sm:inline">TESTER</span>
                     </Button>
                     <Button
                         size="sm"
                         variant="outline"
                         onClick={() => setShowPicker(true)}
-                        className="text-[10px] font-bold tracking-widest uppercase h-9 px-4 border-dashed"
+                        className="text-[10px] font-bold tracking-widest uppercase h-9 px-3 sm:px-4 border-dashed"
+                        title="Ajouter des photos"
                     >
-                        <Plus className="w-3.5 h-3.5 mr-2" />
-                        AJOUTER
+                        <Plus className="w-3.5 h-3.5 sm:mr-2" />
+                        <span className="hidden sm:inline">AJOUTER</span>
                     </Button>
                     <Button
                         size="sm"
                         disabled={!hasChanges || publishing || images.length === 0}
                         onClick={onPublish}
-                        className="text-[10px] font-bold tracking-widest uppercase h-9 px-4 bg-indigo-600 hover:bg-indigo-700 text-white"
+                        className="text-[10px] font-bold tracking-widest uppercase h-9 px-3 sm:px-4 bg-indigo-600 hover:bg-indigo-700 text-white"
+                        title="Publier les modifications"
                     >
-                        {publishing ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : <Upload className="w-3.5 h-3.5 mr-2" />}
-                        PUBLIER
+                        {publishing ? <Loader2 className="w-3.5 h-3.5 animate-spin sm:mr-2" /> : <Upload className="w-3.5 h-3.5 sm:mr-2" />}
+                        <span className="hidden sm:inline">PUBLIER</span>
                     </Button>
                 </div>
             </div>

@@ -194,55 +194,43 @@ export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileM
             {/* Dialog Container */}
             <div className="relative w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-2xl rounded-2xl animate-in zoom-in-95 duration-300">
                 {/* Header */}
-                <div className="flex flex-col border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50 select-none">
+                <div className="flex flex-col border-b border-gray-100 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md sticky top-0 z-10 select-none">
                     <div className="flex items-center justify-between p-5">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-indigo-50 dark:bg-indigo-900/40 rounded-lg">
-                                <FileStack className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                        <div className="flex items-center gap-4">
+                            <div className="p-2.5 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg shadow-indigo-200 dark:shadow-none">
+                                <FileStack className="w-5 h-5 text-white" />
                             </div>
                             <div>
-                                <h2 className="text-lg lg:text-xl font-bold text-gray-900 dark:text-white uppercase tracking-tight">Gestion des Fichiers</h2>
-                                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-none mt-1">Administration Globale</p>
+                                <h2 className="text-lg lg:text-xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">Gestion des Fichiers</h2>
+                                <p className="text-[10px] sm:text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em] leading-none mt-1.5 opacity-80">Administration Globale</p>
                             </div>
                         </div>
                         <button
                             onClick={onClose}
-                            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                            className="p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all"
                         >
                             <X className="w-5 h-5" />
                         </button>
                     </div>
 
                     {/* Tabs Navigation */}
-                    <div className="flex px-4 sm:px-5 gap-4 sm:gap-6 overflow-x-auto min-w-0 border-b border-gray-100 dark:border-gray-700 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700">
-                        <button
-                            onClick={() => setActiveTab("dashboard")}
-                            className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 whitespace-nowrap shrink-0 ${activeTab === "dashboard"
+                    <div className="flex px-5 gap-6 overflow-x-auto min-w-0 no-scrollbar border-b border-gray-100 dark:border-gray-800 -mb-px">
+                        {[
+                            { id: "dashboard", label: "Tableau de Bord" },
+                            { id: "explorer", label: "Explorateur" },
+                            { id: "upload", label: "Téléverser" }
+                        ].map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id as Tab)}
+                                className={`pb-4 text-[11px] font-black uppercase tracking-[0.15em] transition-all border-b-2 whitespace-nowrap shrink-0 ${activeTab === tab.id
                                     ? "text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400"
                                     : "text-gray-400 border-transparent hover:text-gray-600 dark:hover:text-gray-200"
-                                }`}
-                        >
-                            Tableau de bord
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("explorer")}
-                            className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 whitespace-nowrap shrink-0 ${activeTab === "explorer"
-                                    ? "text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400"
-                                    : "text-gray-400 border-transparent hover:text-gray-600 dark:hover:text-gray-200"
-                                }`}
-                        >
-                            Explorateur
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("upload")}
-                            className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 whitespace-nowrap shrink-0 ${activeTab === "upload"
-                                    ? "text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400"
-                                    : "text-gray-400 border-transparent hover:text-gray-600 dark:hover:text-gray-200"
-                                }`}
-                        >
-                            Téléverser
-                        </button>
-                        <div className="w-8 shrink-0" aria-hidden="true" />
+                                    }`}
+                            >
+                                {tab.label}
+                            </button>
+                        ))}
                     </div>
                 </div>
 
@@ -353,12 +341,12 @@ export default function FileManagementDialog({ isOpen, isAdmin, onClose }: FileM
                 </div>
 
                 {/* Footer */}
-                <footer className="p-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50 flex justify-end">
+                <footer className="p-5 border-t border-gray-100 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md flex justify-end">
                     <button
                         onClick={onClose}
-                        className="px-8 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-xs font-black uppercase tracking-widest rounded-xl hover:scale-105 transition-all active:scale-95 shadow-lg shadow-gray-200 dark:shadow-none"
+                        className="px-10 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl hover:scale-105 transition-all active:scale-95 shadow-xl shadow-gray-200 dark:shadow-none"
                     >
-                        Fermer l&apos;administration
+                        Quitter l&apos;administration
                     </button>
                 </footer>
             </div>

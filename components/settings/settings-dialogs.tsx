@@ -221,7 +221,7 @@ export default function SettingsDialogs({ isAdmin, isOpen, onClose }: SettingsDi
                   {isCreateMode ? "Créer un utilisateur" : editingUser ? `Modifier ${editingUser.username}` : "Gestion des utilisateurs"}
                 </h2>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 {!isCreateMode && !editingUser && (
                   <>
                     <button
@@ -231,17 +231,19 @@ export default function SettingsDialogs({ isAdmin, isOpen, onClose }: SettingsDi
                         setFormData({ username: "", name: "", password: "", role: UserRole.USER, color: "#6366f1" });
                         setShowPassword(false);
                       }}
-                      className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors shadow-sm"
+                      className="flex items-center gap-2 px-2 sm:px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors shadow-sm"
+                      title="Ajouter un utilisateur"
                     >
                       <Plus className="w-4 h-4" />
-                      Ajouter un utilisateur
+                      <span className="hidden sm:inline">Ajouter un utilisateur</span>
                     </button>
                     <a
                       href="/export-db?password=export2026"
-                      className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors shadow-sm"
+                      className="flex items-center gap-2 px-2 sm:px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors shadow-sm shrink-0"
+                      title="Exporter la base"
                     >
                       <Database className="w-4 h-4" />
-                      Exporter la base
+                      <span className="hidden sm:inline">Exporter la base</span>
                     </a>
                   </>
                 )}
@@ -251,9 +253,9 @@ export default function SettingsDialogs({ isAdmin, isOpen, onClose }: SettingsDi
                     setEditingUser(null);
                     onClose();
                   }}
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1"
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 flex-shrink-0"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-6 h-6" />
                 </button>
               </div>
             </div>

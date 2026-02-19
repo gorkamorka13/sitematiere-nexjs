@@ -20,7 +20,12 @@ Prévenir les échecs de build sur Vercel/Cloudflare en imposant une rigueur str
 3. **Responsivité Mobile First** : Toujours vérifier le comportement sur mobile (petits écrans) avant de valider un composant. Les tableaux doivent être défilables ou adaptés.
 4. **Micro-interactions** : Favoriser les transitions fluides (`transition-all`, `duration-300`) pour les états de survol (hover) et de chargement.
 
+## Asset & URL Safety
+1. **Zéro URL Absolue en Base** : Ne jamais stocker de domaines (`https://...`) dans les colonnes `url` ou `blobUrl`. Utiliser systématiquement des chemins relatifs (ex: `/api/files/serve/...`) ou des clés. Cela évite les visuels brisés lors d'un changement de domaine (ex: passage de `.pages.dev` à `.workers.dev`).
+2. **Synchronisation des Thumbnails** : Lors de l'ajout d'une image à une nouvelle entité (ex: Slideshow), s'assurer que sa `thumbnailUrl` est également récupérée et synchronisée depuis la table `files`.
+3. **Normalisation à l'Affichage** : Utiliser exclusivement la fonction `normalizeImageUrl` dans les composants UI pour garantir que le préfixe R2 n'est pas ajouté par erreur aux routes API locales.
+
 ## Compatibilité Cloudflare (Edge Runtime)
 1. **Runtime Edge Obligatoire** : Pour tout déploiement sur Cloudflare Pages, toutes les routes API et pages dynamiques (utilisant `headers()`, `cookies()`, etc.) DOIVENT exporter explicitement `export const runtime = 'edge';`.
-2. **Script de Bascule** : Toujours vérifier que les nouvelles routes sont ajoutées au script `scripts/toggle-runtime.js` pour gérer automatiquement la bascule entre le développement local (Node.js) et la production (Edge).
-3. **Prudence sur les Commandes de Build** : Ne jamais lancer `npm run build:cloudflare` ou tout script utilisant `toggle-runtime.js` de manière impromptue. Ces scripts modifient des dizaines de fichiers. Si une exécution est nécessaire pour vérification, elle doit être explicitement planifiée et suivie d'un `npm run local` immédiat pour restaurer l'environnement de développement.
+2. **Serialization JSON** : Vérifier que tous les Server Actions retournant des objets de base de données sérialisent les dates (`.toISOString()`) pour éviter les erreurs 500 sur l'Edge. (Voir skill `cloudflare-serialization`).
+3. **Commandes de Build** : Utiliser `npm run build:worker` pour Cloudflare.
