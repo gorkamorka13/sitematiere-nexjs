@@ -2,7 +2,7 @@
 
 ## Vue d'ensemble
 
-Site Matière utilise **PostgreSQL** comme système de gestion de base de données relationnelle, avec **Prisma** comme ORM (Object-Relational Mapping) pour interagir avec la base de données de manière type-safe.
+Site Matière utilise **PostgreSQL** comme système de gestion de base de données relationnelle, avec **Prisma** comme ORM (Object-Relational Mapping) pour interagir avec la base de données de manière type-safe..
 
 ## Stack Technique
 
@@ -285,7 +285,7 @@ import prisma from "@/lib/prisma";
 
 export async function updateProject(formData: ProjectUpdateInput) {
   // Validation et autorisation...
-  
+
   await prisma.project.update({
     where: { id: validatedData.id },
     data: {
@@ -295,7 +295,7 @@ export async function updateProject(formData: ProjectUpdateInput) {
       // ...
     },
   });
-  
+
   revalidatePath('/'); // Invalidation du cache
 }
 ```
@@ -313,17 +313,17 @@ Points d'accès REST pour les opérations de lecture.
 ```typescript
 export async function GET() {
   const session = await auth();
-  
+
   const projects = await prisma.project.findMany({
     select: { id: true, name: true, country: true },
     orderBy: { name: 'asc' },
   });
-  
+
   // Filtrage selon le rôle
-  const filteredProjects = isAdmin 
-    ? projects 
+  const filteredProjects = isAdmin
+    ? projects
     : projects.filter(p => p.country !== 'Système');
-  
+
   return NextResponse.json(filteredProjects);
 }
 ```
@@ -382,20 +382,20 @@ Les fichiers utilisent un système de suppression logique :
 // Suppression
 await prisma.file.update({
   where: { id },
-  data: { 
-    isDeleted: true, 
-    deletedAt: new Date(), 
-    deletedBy: userId 
+  data: {
+    isDeleted: true,
+    deletedAt: new Date(),
+    deletedBy: userId
   },
 });
 
 // Récupération
 await prisma.file.update({
   where: { id },
-  data: { 
-    isDeleted: false, 
-    deletedAt: null, 
-    deletedBy: null 
+  data: {
+    isDeleted: false,
+    deletedAt: null,
+    deletedBy: null
   },
 });
 ```
