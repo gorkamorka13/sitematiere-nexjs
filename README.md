@@ -9,43 +9,46 @@ Site Matière is a Next.js-based project management system designed specifically
 ## Features
 
 ### Project Management
-- **Interactive Map Visualization**: View all projects on an interactive map with custom pins and filtering
-- **Project Lifecycle Tracking**: Track projects through phases: Prospection → Studies → Fabrication → Transport → Construction
-- **Detailed Project Views**: Access comprehensive project information including coordinates, descriptions, and progress tracking
-- **Export Capabilities**: Generate PDF reports with project maps and details
+- **Interactive Map Visualization**: View all projects on an interactive map with custom pins and filtering.
+- **Project Lifecycle Tracking**: Track projects through phases: Prospection → Studies → Fabrication → Transport → Construction.
+- **Detailed Project Views**: Access comprehensive project information including coordinates, descriptions, and progress tracking.
+- **Pins System**: Custom map pins based on project status or type.
 
 ### Media & Document Management
-- **Photo Gallery**: Slideshow functionality with fullscreen viewing and navigation controls
-- **Video Management**: Organize and preview project-related videos
-- **Document Explorer**: File management system with folder structures
-- **Image Processing**: Built-in image cropping, resizing, and optimization tools
+- **Photo Gallery**: Slideshow functionality with fullscreen viewing and dynamic loading from Cloudflare R2.
+- **Video Management**: Organize and preview project-related videos with optimized streaming.
+- **Document Explorer**: Global file management system with folder structures and integrated PDF viewer.
+- **Image Processing**: Built-in image retouching, cropping, and optimization tools.
 
 ### User Management
-- **Role-Based Access**: Three-tier system (Admin, User, Visitor) with appropriate permissions
-- **Team Coordination**: User assignment and project ownership
-- **Authentication**: Secure login system with NextAuth.js
+- **Role-Based Access**: Three-tier system (Admin, User, Visitor) with strictly enforced permissions.
+- **Account Protection**: Built-in protection against deletion of core administrative accounts.
+- **Authentication**: Secure login system with NextAuth.js v5.
 
-### Responsive Design
-- **Mobile-First Approach**: Fully responsive interface optimized for tablets and field use
-- **Adaptive Layouts**: Dynamic UI adjustments for different screen sizes
-- **Touch-Friendly Controls**: Optimized for touch interactions on mobile devices
+### Modern Interface & Responsive Design
+- **adaptive Dialogs**: Management modals optimized for all screen sizes with sticky headers and scrolling content.
+- **Floating Controls**: Intelligent floating close buttons and action triggers for mobile usability.
+- **Glassmorphism**: Premium UI aesthetics using backdrop blurs and modern color palettes.
 
 ## Tech Stack
 
-- **Framework**: Next.js 15.5.12 with App Router
-- **Language**: TypeScript (strict mode)
-- **Database**: PostgreSQL with Prisma ORM
-- **Authentication**: NextAuth.js v5 (beta)
-- **Styling**: Tailwind CSS v4 with custom CSS variables
-- **Maps**: React-Leaflet for geolocation features
-- **UI Components**: Custom component library with Radix UI primitives
-- **State Management**: React hooks and context
+- **Framework**: [Next.js 15+](https://nextjs.org/) (App Router)
+- **Edge Runtime**: Fully compatible with Cloudflare Workers/Pages
+- **Language**: TypeScript (Strict Mode)
+- **Database**: PostgreSQL via [Neon](https://neon.tech/)
+- **ORM**: [Drizzle ORM](https://orm.drizzle.team/)
+- **Storage**: [Cloudflare R2](https://www.cloudflare.com/products/r2/) for assets and documents
+- **Authentication**: [NextAuth.js v5 (Auth.js)](https://authjs.dev/)
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Maps**: [React-Leaflet](https://react-leaflet.js.org/)
 
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18+
-- PostgreSQL database
+- Node.js 20+
+- Neon Database (PostgreSQL)
+- Cloudflare R2 Bucket
 - npm or yarn
 
 ### Installation
@@ -62,107 +65,58 @@ npm install
 ```
 
 3. Set up environment variables:
-Create a `.env` file with:
+Create a `.env` file based on your environment:
 ```env
-DATABASE_URL="postgresql://user:password@localhost:5432/sitematiere"
+DATABASE_URL="postgresql://user:password@hostname/dbname?sslmode=require"
 NEXTAUTH_SECRET="your-secret-key"
-NEXTAUTH_URL="http://localhost:3000"
+R2_BUCKET_NAME="your-bucket-name"
+# ... other R2 and Auth configs
 ```
 
-4. Initialize the database:
-```bash
-npx prisma db push
-```
-
-5. Start the development server:
-```bash
-npm run dev
-```
-
-6. Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-## Development Commands
+### Development Commands
 
 ```bash
 # Development
-npm run dev              # Start development server
-npm run build           # Build production version
-npm run start           # Start production server
-npm run lint            # Run ESLint
+npm run dev              # Start Next.js dev server
+npm run lint            # Run ESLint check
 
-# Database
-npm run postinstall     # Generate Prisma client
-npx prisma db push      # Push schema changes to database
-npx prisma studio       # Open database browser
-npx prisma migrate dev  # Create and apply migrations
+# Database (Drizzle)
+npm run db:push         # Push schema changes to the database
+npm run db:studio       # Open Drizzle interactive UI
+npm run db:generate     # Generate migrations
+
+# Deployment (Cloudflare)
+npm run build:worker    # Build for Cloudflare environment
+npm run deploy          # Deploy to Cloudflare Pages
 ```
 
 ## Project Structure
 
 ```
-├── app/                    # Next.js App Router
-│   ├── (routes)/          # Route groups
-│   ├── api/               # API routes
-│   └── actions/           # Server actions
-├── components/            # React components
-│   ├── dashboard/         # Dashboard components
-│   ├── settings/          # Settings dialogs
-│   ├── ui/                # UI components
-│   └── files/             # File management
-├── lib/                   # Utilities and configurations
-├── hooks/                 # Custom React hooks
-├── prisma/                # Database schema
-└── public/                # Static assets
+├── app/                    # Next.js App Router (Pages, API, Server Actions)
+├── components/            # React Components
+│   ├── dashboard/         # Dashboard & Table components
+│   ├── settings/          # Management Dialogs (Users, Projects, Files)
+│   ├── ui/                # Core UI primitives
+│   └── files/             # File Upload & Explorer logic
+├── lib/                   # Database schema, Auth, and Utilities
+├── hooks/                 # Custom React Hooks
+├── public/                # Static assets (Pins, Logos)
+└── scripts/               # Migration and maintenance scripts
 ```
-
-## Key Components
-
-### Dashboard
-- `dashboard-table.tsx`: Main project listing with sorting and filtering
-- `photo-gallery.tsx`: Media display with slideshow functionality
-- `video-gallery.tsx`: Video management interface
-- `project-progress.tsx`: Visual progress indicators
-
-### Settings & Management
-- `project-management-dialog.tsx`: Create, modify, delete projects
-- `media-management-dialog.tsx`: Photo and video organization
-- `file-management-dialog.tsx`: Document and file handling
-- `settings-dialogs.tsx`: User administration
-
-### Maps
-- `project-map.tsx`: Individual project map with fullscreen toggle
-- `projects-map.tsx`: Multi-project global view
-
-## Internationalization
-
-The application is fully localized in French:
-- All user-facing strings in French
-- French date formatting
-- French error messages and notifications
 
 ## Security
 
-- Role-based access control (RBAC)
-- Secure authentication with bcrypt password hashing
-- Input validation with Zod schemas
-- CSRF protection via NextAuth.js
-- Environment variable protection
-
-## Browser Support
-
-- Chrome/Edge (latest)
-- Firefox (latest)
-- Safari (latest)
-- Mobile browsers (iOS Safari, Chrome Mobile)
-
-## License
-
-[Your License Here]
+- Role-based access control (RBAC).
+- Secure password hashing with bcrypt.
+- Input validation via Zod schemas.
+- Edge-compatible authentication.
+- Protected "Admin" core account against accidental deletion.
 
 ## Support
 
-For issues or feature requests, please contact [Your Contact Information].
+Built and maintained for high-performance bridge construction follow-up.
 
 ---
 
-Built with ❤️ using Next.js, React, and TypeScript.
+Built with ❤️ using Next.js and Cloudflare.

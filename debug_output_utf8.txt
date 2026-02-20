@@ -1,6 +1,0 @@
-Sample Image URLs:
-- https://sitematiere-nexjs.pages.dev/api/files/serve/migrated%2Fal-nahrawan%2Fal-nahrawan1.jpg
-- https://sitematiere-nexjs.pages.dev/api/files/serve/migrated%2Fallanoquoich%2Fallanoquoich1.jpg
-- https://sitematiere-nexjs.pages.dev/api/files/serve/migrated%2Fallanoquoich%2Fallanoquoich2.jpg
-- https://sitematiere-nexjs.pages.dev/api/files/serve/migrated%2Fatlantico%2Fatlantico1.jpg
-- https://sitematiere-nexjs.pages.dev/api/files/serve/migrated%2Fattiekoi%2Fattiekoi1.jpg
