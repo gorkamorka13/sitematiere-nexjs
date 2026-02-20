@@ -1,4 +1,4 @@
-import type { Project, User } from "@/lib/db/schema";
+import type { Project } from "@/lib/db/schema";
 import { ProjectStatus, ProjectType } from "@/lib/enums";
 import type { UserRole } from "@/lib/auth-types";
 import { Download, Search, ArrowUpDown, ArrowUpIcon, ArrowDownIcon, Eye, EyeOff } from "lucide-react";
@@ -22,7 +22,7 @@ interface DashboardTableProps {
 }
 
 type SortConfig = {
-    key: keyof Project | 'statusLabel';
+    key: keyof Project | 'statusLabel' | 'owner';
     direction: 'asc' | 'desc';
 } | null;
 
