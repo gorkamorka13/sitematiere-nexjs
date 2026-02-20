@@ -162,12 +162,21 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[1050] flex items-center justify-center p-4 lg:p-8">
+        <div className="fixed inset-0 z-[1050] flex items-start sm:items-center justify-center p-0 sm:p-4 lg:p-8">
             {/* Backdrop */}
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose} />
 
+            {/* Mobile Close Button (Top Right of Screen) */}
+            <button
+                onClick={onClose}
+                className="sm:hidden fixed top-6 right-6 z-[1060] p-2 bg-black/20 hover:bg-black/40 text-white rounded-full backdrop-blur-md transition-all active:scale-95"
+                title="Fermer"
+            >
+                <X className="w-6 h-6" />
+            </button>
+
             {/* Modal Body */}
-            <div className="relative w-full h-full lg:h-[90vh] lg:max-w-6xl bg-white dark:bg-gray-900 lg:rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-300 border border-gray-200 dark:border-gray-800">
+            <div className="relative w-full h-screen sm:h-[90vh] lg:max-w-6xl bg-white dark:bg-gray-900 sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-300 border-x-0 sm:border border-gray-200 dark:border-gray-800">
                 {/* Header */}
                 <div className="px-4 lg:px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-white/80 dark:bg-gray-900/80 backdrop-blur-md sticky top-0 z-10 shrink-0">
                     <div className="flex items-center gap-4">

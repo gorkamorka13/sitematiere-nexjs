@@ -196,29 +196,33 @@ export default function SettingsDialogs({ isAdmin, isOpen, onClose }: SettingsDi
     <>
       {/* Dialog Gestion des utilisateurs */}
       {isOpen && isAdmin && (
-        <div className="fixed inset-0 z-[1050] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[1050] flex items-start sm:items-center justify-center p-4">
           {/* Backdrop */}
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose} />
 
+
+
           {/* Modal Body */}
-          <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col border border-gray-100 dark:border-gray-700 overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-              <div className="flex items-center gap-4">
+          <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col border border-gray-100 dark:border-gray-700 overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800 z-20">
+              <div className="flex items-center gap-2 sm:gap-4 min-w-0">
                 {(isCreateMode || editingUser) && (
                   <button
                     onClick={() => {
                       setIsCreateMode(false);
                       setEditingUser(null);
                     }}
-                    className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                    className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors flex-shrink-0"
                     title="Retour à la liste"
                   >
                     <ChevronLeft className="w-5 h-5 text-gray-500" />
                   </button>
                 )}
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                  <Users className="w-5 h-5" />
-                  {isCreateMode ? "Créer un utilisateur" : editingUser ? `Modifier ${editingUser.username}` : "Gestion des utilisateurs"}
+                <h2 className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 truncate">
+                  <Users className="w-4 h-4 sm:w-5 sm:h-5 hidden xs:block" />
+                  <span className="truncate">
+                    {isCreateMode ? "Créer" : editingUser ? `Modifier ${editingUser.username}` : "Utilisateurs"}
+                  </span>
                 </h2>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
@@ -260,7 +264,7 @@ export default function SettingsDialogs({ isAdmin, isOpen, onClose }: SettingsDi
               </div>
             </div>
 
-            <div className="flex-1 p-4 md:p-6">
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700">
               {isCreateMode || editingUser ? (
                 <form
                   id="user-mgmt-form"
@@ -497,6 +501,14 @@ export default function SettingsDialogs({ isAdmin, isOpen, onClose }: SettingsDi
               )}
             </div>
           </div>
+          {/* Mobile Close Button (Top Right of Screen) */}
+          <button
+            onClick={onClose}
+            className="sm:hidden fixed top-6 right-6 z-[1060] p-2 bg-black/20 hover:bg-black/40 text-white rounded-full backdrop-blur-md transition-all active:scale-95"
+            title="Fermer"
+          >
+            <X className="w-6 h-6" />
+          </button>
         </div>
       )}
     </>
