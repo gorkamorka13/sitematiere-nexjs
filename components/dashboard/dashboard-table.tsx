@@ -6,9 +6,9 @@ import { getStatusLabel } from "@/lib/utils";
 import { useState, useMemo } from "react";
 
 interface DashboardTableProps {
-    filteredProjects: Project[];
+    filteredProjects: (Project & { owner?: { username: string | null; color: string | null } | null })[];
     selectedProject: Project | null;
-    handleProjectSelect: (project: Project) => void;
+    handleProjectSelect: (project: (Project & { owner?: { username: string | null; color: string | null } | null })) => void;
     onExportClick: (e: React.MouseEvent, project: Project) => void;
 
     // Ajout des props de synchronisation
@@ -22,7 +22,7 @@ interface DashboardTableProps {
 }
 
 type SortConfig = {
-    key: keyof Project | 'statusLabel';
+    key: keyof Project | 'statusLabel' | 'owner';
     direction: 'asc' | 'desc';
 } | null;
 
@@ -39,7 +39,7 @@ export function DashboardTable({
 }: DashboardTableProps) {
     const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'name', direction: 'asc' });
 
-    const handleSort = (key: keyof Project | 'statusLabel') => {
+    const handleSort = (key: keyof Project | 'statusLabel' | 'owner') => {
         let direction: 'asc' | 'desc' = 'asc';
         if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
             direction = 'desc';
@@ -61,6 +61,9 @@ export function DashboardTable({
                 if (sortConfig.key === 'statusLabel') {
                     aValue = getStatusLabel(a.status);
                     bValue = getStatusLabel(b.status);
+                } else if (sortConfig.key === 'owner') {
+                    aValue = a.owner?.username || "";
+                    bValue = b.owner?.username || "";
                 } else {
                     const key = sortConfig.key as keyof Project;
                     const valA = a[key];
@@ -85,7 +88,7 @@ export function DashboardTable({
         return result;
     }, [filteredProjects, sortConfig]);
 
-    const SortIcon = ({ columnKey }: { columnKey: keyof Project | 'statusLabel' }) => {
+    const SortIcon = ({ columnKey }: { columnKey: keyof Project | 'statusLabel' | 'owner' }) => {
         if (!sortConfig || sortConfig.key !== columnKey) return <ArrowUpDown className="ml-1 w-3 h-3 opacity-30 group-hover:opacity-100 transition-opacity" />;
         return sortConfig.direction === 'asc'
             ? <ArrowUpIcon className="ml-1 w-3 h-3 text-indigo-500" />
@@ -143,6 +146,17 @@ export function DashboardTable({
                                                 />
                                                 <Search className="absolute left-2 top-1.5 w-3 h-3 text-gray-400 pointer-events-none" />
                                             </div>
+                                        </th>
+
+                                        {/* Owner Column */}
+                                        <th scope="col" className="px-3 py-2 text-left min-w-[120px]">
+                                            <button
+                                                onClick={() => handleSort('owner')}
+                                                className="group inline-flex items-center text-xs font-bold text-gray-400 uppercase tracking-widest hover:text-indigo-500 transition-colors"
+                                            >
+                                                Propriétaire
+                                                <SortIcon columnKey="owner" />
+                                            </button>
                                         </th>
 
                                         {/* Visibility Column */}
@@ -205,6 +219,21 @@ export function DashboardTable({
                                                     </div>
                                                 </td>
                                                 <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400 font-medium">{project.country}</td>
+                                                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
+                                                    {project.owner ? (
+                                                        <div className="flex items-center gap-2">
+                                                            <div
+                                                                className="w-2 h-2 rounded-full shadow-sm"
+                                                                style={{ backgroundColor: project.owner.color || '#CBD5E1' }}
+                                                            />
+                                                            <span className="font-medium text-gray-700 dark:text-gray-300">
+                                                                {project.owner.username}
+                                                            </span>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-gray-400 italic text-xs">Aucun</span>
+                                                    )}
+                                                </td>
                                                 <td className="whitespace-nowrap px-3 py-4 text-sm font-medium">
                                                     {project.visible ? (
                                                         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-700/10 dark:bg-amber-900/30 dark:text-amber-400 text-[10px] font-bold uppercase tracking-wider">
@@ -240,7 +269,7 @@ export function DashboardTable({
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan={5} className="py-8 text-center text-gray-500 dark:text-gray-400 text-sm">
+                                            <td colSpan={7} className="py-8 text-center text-gray-500 dark:text-gray-400 text-sm">
                                                 Aucun projet ne correspond à vos critères.
                                             </td>
                                         </tr>

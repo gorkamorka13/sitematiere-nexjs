@@ -907,8 +907,8 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                           src={formData.pinName && (formData.pinName.startsWith('http') || formData.pinName.startsWith('/'))
                             ? formData.pinName
                             : (formData.status === 'DONE' ? 'https://pub-78c42489fd854dc3a6975810aa00edf2.r2.dev/pins/realise.png'
-                               : formData.status === 'CURRENT' ? 'https://pub-78c42489fd854dc3a6975810aa00edf2.r2.dev/pins/en_cours.png'
-                               : 'https://pub-78c42489fd854dc3a6975810aa00edf2.r2.dev/pins/prospection.png')}
+                              : formData.status === 'CURRENT' ? 'https://pub-78c42489fd854dc3a6975810aa00edf2.r2.dev/pins/en_cours.png'
+                                : 'https://pub-78c42489fd854dc3a6975810aa00edf2.r2.dev/pins/prospection.png')}
                           alt="Pin"
                           width={24}
                           height={24}
@@ -1178,7 +1178,7 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
                           ? createFormData.pinName
                           : (createFormData.status === 'DONE' ? 'https://pub-78c42489fd854dc3a6975810aa00edf2.r2.dev/pins/realise.png'
                             : createFormData.status === 'CURRENT' ? 'https://pub-78c42489fd854dc3a6975810aa00edf2.r2.dev/pins/en_cours.png'
-                            : 'https://pub-78c42489fd854dc3a6975810aa00edf2.r2.dev/pins/prospection.png')}
+                              : 'https://pub-78c42489fd854dc3a6975810aa00edf2.r2.dev/pins/prospection.png')}
                         alt="Pin"
                         width={28}
                         height={28}
@@ -1758,6 +1758,15 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
         </div >
       </div >
 
+      {/* Mobile Close Button (Top Right of Screen) */}
+      <button
+        onClick={onClose}
+        className="sm:hidden fixed top-6 right-6 z-[1060] p-2 bg-black/20 hover:bg-black/40 text-white rounded-full backdrop-blur-md transition-all active:scale-95"
+        title="Fermer"
+      >
+        <X className="w-6 h-6" />
+      </button>
+
       {/* Toast Notification */}
       {
         toast && (
@@ -1769,6 +1778,6 @@ export default function ProjectManagementDialog({ projects, isOpen, onClose, use
           />
         )
       }
-    </div >
+    </div>
   );
 }
