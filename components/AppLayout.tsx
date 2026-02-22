@@ -14,6 +14,7 @@ import {
     ChevronRight,
     Users,
     Presentation,
+    Shield,
     X
 } from 'lucide-react';
 import { SignOutButton } from "@/components/auth/sign-out-button";
@@ -263,7 +264,7 @@ export default function AppLayout({
                                 {!isSidebarCollapsed && <span className="text-sm font-medium group-hover:text-gray-900 dark:group-hover:text-white">Gestion Fichiers</span>}
                             </button>
 
-                            <button
+<button
                                 onClick={() => {
                                     onManageMedia?.('photos');
                                     setIsMobileMenuOpen(false);
@@ -273,6 +274,15 @@ export default function AppLayout({
                                 <Presentation className={`w-5 h-5 transition-colors ${isActive('/slideshow') ? "text-indigo-600 dark:text-indigo-400" : "text-gray-400 group-hover:text-indigo-500"}`} />
                                 {!isSidebarCollapsed && <span className="text-sm">Gestion Média</span>}
                             </button>
+
+                            <Link
+                                href="/permissions"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer ${isActive('/permissions') ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold" : "hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400"} ${isSidebarCollapsed ? "justify-center" : ""}`}
+                            >
+                                <Shield className={`w-5 h-5 transition-colors ${isActive('/permissions') ? "text-indigo-600 dark:text-indigo-400" : "text-gray-400 group-hover:text-indigo-500"}`} />
+                                {!isSidebarCollapsed && <span className="text-sm">Gestion Autorisations</span>}
+                            </Link>
                         </div>
                     )}
                 </nav>

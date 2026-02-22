@@ -6,4 +6,5 @@ export * from './slideshow-images';
 export * from './videos';
 export * from './documents';
 export * from './files';
+export * from './project-permissions';
 export * from './relations';

@@ -1,12 +1,13 @@
-import { auth } from "@/lib/auth";
+import { auth, checkRole } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import { db } from "@/lib/db";
-import { projects, images, documents } from "@/lib/db/schema";
-import { eq, asc } from "drizzle-orm";
+import { projects, images, documents, projectPermissions } from "@/lib/db/schema";
+import { eq, asc, and } from "drizzle-orm";
 import Link from "next/link";
 import Image from "next/image";
 import ProjectMapWrapper from "@/components/ui/project-map-wrapper";
 import { normalizeImageUrl } from "@/lib/utils/image-url";
+import type { UserRole } from "@/lib/auth-types";
 
 type Props = {
     params: Promise<{ id: string }>
@@ -29,6 +30,30 @@ export default async function ProjectDetailPage(props: Props) {
 
     if (!project) {
         notFound();
+    }
+
+    const isAdmin = checkRole(session, ["ADMIN"] as UserRole[]);
+    const isOwner = project.ownerId === session.user.id;
+
+    let hasPermission = isAdmin || isOwner;
+
+    if (!hasPermission) {
+        const permission = await db
+            .select()
+            .from(projectPermissions)
+            .where(
+                and(
+                    eq(projectPermissions.projectId, params.id),
+                    eq(projectPermissions.userId, session.user.id)
+                )
+            )
+            .limit(1);
+
+        hasPermission = permission.length > 0;
+    }
+
+    if (!hasPermission) {
+        redirect("/?error=unauthorized");
     }
 
     const projectImages = await db.select()

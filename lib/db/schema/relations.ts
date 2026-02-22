@@ -6,9 +6,11 @@ import { slideshowImages } from './slideshow-images';
 import { videos } from './videos';
 import { documents } from './documents';
 import { files } from './files';
+import { projectPermissions } from './project-permissions';
 
 export const usersRelations = relations(users, ({ many }) => ({
   projects: many(projects),
+  projectPermissions: many(projectPermissions),
 }));
 
 export const projectsRelations = relations(projects, ({ one, many }) => ({
@@ -21,6 +23,22 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   images: many(images),
   slideshowImages: many(slideshowImages),
   videos: many(videos),
+  permissions: many(projectPermissions),
+}));
+
+export const projectPermissionsRelations = relations(projectPermissions, ({ one }) => ({
+  project: one(projects, {
+    fields: [projectPermissions.projectId],
+    references: [projects.id],
+  }),
+  user: one(users, {
+    fields: [projectPermissions.userId],
+    references: [users.id],
+  }),
+  grantedByUser: one(users, {
+    fields: [projectPermissions.grantedBy],
+    references: [users.id],
+  }),
 }));
 
 export const imagesRelations = relations(images, ({ one, many }) => ({

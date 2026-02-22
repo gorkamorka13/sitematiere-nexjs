@@ -9,3 +9,5 @@ export const projectStatusEnum = pgEnum('project_status', ['DONE', 'CURRENT', 'P
 export const documentTypeEnum = pgEnum('document_type', ['PLAN', 'FLAG', 'CLIENT_LOGO', 'OTHER', 'PIN']);
 
 export const fileTypeEnum = pgEnum('file_type', ['IMAGE', 'DOCUMENT', 'VIDEO', 'AUDIO', 'ARCHIVE', 'OTHER']);
+
+export const permissionLevelEnum = pgEnum('permission_level', ['READ', 'WRITE', 'MANAGE']);

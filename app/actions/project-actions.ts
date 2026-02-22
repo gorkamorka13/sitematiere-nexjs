@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { users, projects, documents, files } from "@/lib/db/schema";
+import { users, projects, documents, files, projectPermissions } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { auth, checkRole } from "@/lib/auth";
 import { hash } from "bcrypt-ts";
@@ -12,6 +12,56 @@ import { deleteFromR2, extractKeyFromUrl } from "@/lib/storage/r2-operations";
 import { logger } from "@/lib/logger";
 import { DocumentType } from "@/lib/enums";
 import { R2_PUBLIC_URL } from "@/lib/constants";
+
+async function checkProjectWritePermission(userId: string, projectId: string, userRole: UserRole): Promise<boolean> {
+  if (userRole === "ADMIN") return true;
+
+  const [project] = await db
+    .select({ ownerId: projects.ownerId })
+    .from(projects)
+    .where(eq(projects.id, projectId))
+    .limit(1);
+
+  if (project?.ownerId === userId) return true;
+
+  const [permission] = await db
+    .select({ level: projectPermissions.level })
+    .from(projectPermissions)
+    .where(
+      and(
+        eq(projectPermissions.projectId, projectId),
+        eq(projectPermissions.userId, userId)
+      )
+    )
+    .limit(1);
+
+  return permission?.level === "WRITE" || permission?.level === "MANAGE";
+}
+
+async function checkProjectDeletePermission(userId: string, projectId: string, userRole: UserRole): Promise<boolean> {
+  if (userRole === "ADMIN") return true;
+
+  const [project] = await db
+    .select({ ownerId: projects.ownerId })
+    .from(projects)
+    .where(eq(projects.id, projectId))
+    .limit(1);
+
+  if (project?.ownerId === userId) return true;
+
+  const [permission] = await db
+    .select({ level: projectPermissions.level })
+    .from(projectPermissions)
+    .where(
+      and(
+        eq(projectPermissions.projectId, projectId),
+        eq(projectPermissions.userId, userId)
+      )
+    )
+    .limit(1);
+
+  return permission?.level === "MANAGE";
+}
 
 export async function updateProject(formData: ProjectUpdateInput) {
   const session = await auth();
@@ -32,12 +82,17 @@ export async function updateProject(formData: ProjectUpdateInput) {
       return { success: false, error: "Projet introuvable." };
     }
 
-    const isAdmin = checkRole(session, ["ADMIN"] as UserRole[]);
-    const isOwner = project.ownerId === session?.user?.id;
+    const hasPermission = await checkProjectWritePermission(
+      session!.user.id,
+      validatedData.id,
+      session!.user.role
+    );
 
-    if (!isAdmin && !isOwner) {
+    if (!hasPermission) {
       return { success: false, error: "Vous n'êtes pas autorisé à modifier ce projet." };
     }
+
+    const isAdmin = checkRole(session, ["ADMIN"] as UserRole[]);
 
     await db.transaction(async (tx) => {
       const updateData: Partial<typeof projects.$inferInsert> = {
@@ -291,8 +346,18 @@ export async function createProject(formData: ProjectCreateInput) {
 export async function deleteProject(projectId: string, confirmName: string) {
   const session = await auth();
 
-  if (!checkRole(session, ["ADMIN"] as UserRole[])) {
-    throw new Error("Action non autorisée. Seuls les administrateurs peuvent supprimer des projets.");
+  if (!session) {
+    throw new Error("Action non autorisée.");
+  }
+
+  const hasPermission = await checkProjectDeletePermission(
+    session.user.id,
+    projectId,
+    session.user.role
+  );
+
+  if (!hasPermission) {
+    throw new Error("Action non autorisée. Vous n'avez pas les droits pour supprimer ce projet.");
   }
 
   try {

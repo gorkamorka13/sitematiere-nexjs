@@ -1,7 +1,7 @@
 import { auth, checkRole } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { projects, documents, videos, users } from "@/lib/db/schema";
+import { projects, documents, videos, users, projectPermissions } from "@/lib/db/schema";
 import { desc, inArray, or, eq, and, ne } from "drizzle-orm";
 import DashboardClient from "./dashboard-client";
 import type { UserRole } from "@/lib/auth-types";
@@ -19,34 +19,62 @@ export default async function DashboardPage() {
   const isAdmin = checkRole(session, ["ADMIN"] as UserRole[]);
   const userId = session.user.id;
 
-  // 1. Fetch filtered projects with owner info
   let allProjects;
   try {
-    const projectQuery = db
-      .select({
-        project: projects,
-        owner: {
-          username: users.username,
-          color: users.color,
-        }
-      })
-      .from(projects)
-      .leftJoin(users, eq(projects.ownerId, users.id));
-
     if (isAdmin) {
+      const projectQuery = db
+        .select({
+          project: projects,
+          owner: {
+            username: users.username,
+            color: users.color,
+          }
+        })
+        .from(projects)
+        .leftJoin(users, eq(projects.ownerId, users.id));
+
       allProjects = await projectQuery.orderBy(desc(projects.createdAt));
     } else {
-      allProjects = await projectQuery
-        .where(
-          and(
-            ne(projects.country, "Système"),
-            or(
-              eq(projects.ownerId, userId),
-              eq(projects.visible, true)
+      const userPermissions = await db
+        .select({ projectId: projectPermissions.projectId })
+        .from(projectPermissions)
+        .where(eq(projectPermissions.userId, userId));
+
+      const permittedProjectIds = userPermissions.map(p => p.projectId);
+
+      const projectQuery = db
+        .select({
+          project: projects,
+          owner: {
+            username: users.username,
+            color: users.color,
+          }
+        })
+        .from(projects)
+        .leftJoin(users, eq(projects.ownerId, users.id));
+
+      if (permittedProjectIds.length > 0) {
+        allProjects = await projectQuery
+          .where(
+            and(
+              ne(projects.country, "Système"),
+              or(
+                eq(projects.ownerId, userId),
+                inArray(projects.id, permittedProjectIds)
+              )
             )
           )
-        )
-        .orderBy(desc(projects.createdAt));
+          .orderBy(desc(projects.createdAt));
+      } else {
+        allProjects = await projectQuery
+          .where(
+            and(
+              ne(projects.country, "Système"),
+              eq(projects.ownerId, userId)
+            )
+          )
+          .orderBy(desc(projects.createdAt));
+      }
     }
   } catch (error) {
     console.error("[DashboardPage] Details of project query failure:", error);
@@ -55,7 +83,6 @@ export default async function DashboardPage() {
 
   const projectIds = allProjects.map((p) => p.project.id);
 
-  // 2. Fetch all documents and videos for all projects in 2 additional queries (Total 3 queries)
   const [allDocuments, allVideos] = await Promise.all([
     projectIds.length > 0
       ? db.select().from(documents).where(inArray(documents.projectId, projectIds))
@@ -65,7 +92,6 @@ export default async function DashboardPage() {
       : []
   ]);
 
-  // 3. Group everything together in memory
   const projectsWithRelations = allProjects.map((row) => ({
     ...row.project,
     owner: row.owner,
