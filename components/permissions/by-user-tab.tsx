@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Plus, Trash2, ChevronDown, ChevronUp, Loader2, Search } from "lucide-react";
 import { PermissionBadge } from "./permission-badge";
 import type { PermissionLevel } from "@/lib/permissions";
@@ -35,18 +35,28 @@ interface Project {
 interface Permission {
   id: string;
   level: PermissionLevel;
-  createdAt: Date;
+  projectId: string;
+  userId: string;
   project: Project;
+  user: User;
 }
 
 interface ByUserTabProps {
   users: User[];
   projects: Project[];
+  permissions: Permission[];
 }
 
-export function ByUserTab({ users, projects }: ByUserTabProps) {
+export function ByUserTab({ users, projects, permissions }: ByUserTabProps) {
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
-  const [permissionsMap, setPermissionsMap] = useState<Map<string, Permission[]>>(new Map());
+  const [permissionsMap, setPermissionsMap] = useState<Map<string, Permission[]>>(() => {
+    const map = new Map<string, Permission[]>();
+    permissions.forEach((p) => {
+      const existing = map.get(p.userId) || [];
+      map.set(p.userId, [...existing, p]);
+    });
+    return map;
+  });
   const [loadingUsers, setLoadingUsers] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogUser, setDialogUser] = useState<User | null>(null);
