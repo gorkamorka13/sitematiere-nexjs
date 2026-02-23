@@ -227,6 +227,7 @@ export function ByProjectTab({ projects, permissions: initialPermissions, onOwne
                   <div className="flex items-center gap-3">
                     {owner && (
                       <div className="flex items-center gap-2">
+                        <Crown className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                         <div
                           className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium"
                           style={{ backgroundColor: owner.color || "#6366f1" }}
@@ -240,7 +241,7 @@ export function ByProjectTab({ projects, permissions: initialPermissions, onOwne
                     )}
                     <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                       <span>{permissions.length}</span>
-                      <span className="hidden sm:inline">membre{permissions.length !== 1 ? "s" : ""}</span>
+                      <span className="hidden sm:inline">membre{permissions.length !== 1 ? "s autorisés" : " autorisé"}</span>
                     </div>
                     {isExpanded ? (
                       <ChevronUp className="w-5 h-5 text-gray-400" />

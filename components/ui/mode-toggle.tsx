@@ -5,11 +5,24 @@ import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 
 export function ModeToggle() {
-    const { setTheme, theme } = useTheme()
+    const [mounted, setMounted] = React.useState(false)
+    const { setTheme, resolvedTheme } = useTheme()
+
+    React.useEffect(() => {
+        setMounted(true)
+    }, [])
+
+    if (!mounted) {
+        return (
+            <div className="inline-flex items-center justify-center rounded-xl p-2 text-gray-500 transition-all opacity-0">
+                <Sun className="h-[1.2rem] w-[1.2rem]" />
+            </div>
+        )
+    }
 
     return (
         <button
-            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+            onClick={() => setTheme(resolvedTheme === "light" ? "dark" : "light")}
             className="inline-flex items-center justify-center rounded-xl p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
             aria-label="Toggle Dark Mode"
         >

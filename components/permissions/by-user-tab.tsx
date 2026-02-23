@@ -217,7 +217,7 @@ export function ByUserTab({ users, projects, permissions }: ByUserTabProps) {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-gray-500 dark:text-gray-400">
-                    {permissions.length} projet{permissions.length !== 1 ? "s" : ""}
+                    {permissions.length} projet{permissions.length !== 1 ? "s autorisés" : " autorisé"}
                   </span>
                   {isExpanded ? (
                     <ChevronUp className="w-5 h-5 text-gray-400" />
