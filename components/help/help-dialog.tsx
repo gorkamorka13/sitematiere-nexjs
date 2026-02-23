@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { X, Shield, HelpCircle, User, Users, Info, FileText, Check, LayoutDashboard, Image as ImageIcon, Globe, Zap, Pencil, Loader2 } from "lucide-react";
+import NextImage from "next/image";
 import { DatabaseImagePicker } from "@/components/image-processor/DatabaseImagePicker";
 import { getAllSystemSettings, updateSystemSetting } from "@/app/actions/settings-actions";
 
 interface HelpDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  user: any;
+  user: { id: string; role: string; name?: string | null };
 }
 
 export default function HelpDialog({ isOpen, onClose, user }: HelpDialogProps) {
@@ -337,10 +338,12 @@ export default function HelpDialog({ isOpen, onClose, user }: HelpDialogProps) {
                       <Loader2 className="w-10 h-10 animate-spin text-gray-200" />
                     ) : rangeImages[`range_image_${activeRange}`] ? (
                       <div className="absolute inset-0">
-                        <img
+                        <NextImage
                           src={rangeImages[`range_image_${activeRange}`]}
                           alt={activeRange}
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
+                          unoptimized
                         />
                         <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/image:opacity-100 transition-opacity" />
                       </div>

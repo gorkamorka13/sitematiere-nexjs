@@ -9,7 +9,7 @@ import "leaflet/dist/leaflet.css";
 // Fix for default Leaflet marker icons in Next.js
 if (typeof window !== 'undefined') {
   try {
-    const DefaultIcon = L.Icon.Default as any;
+    const DefaultIcon = (L.Icon.Default as unknown) as { prototype: { _getIconUrl?: string } };
     if (DefaultIcon.prototype) {
       delete DefaultIcon.prototype._getIconUrl;
       L.Icon.Default.mergeOptions({

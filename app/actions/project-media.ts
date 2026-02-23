@@ -6,7 +6,6 @@ import { eq, and, or, asc, ilike } from "drizzle-orm";
 import { naturalSort } from "@/lib/sort-utils";
 import { auth } from "@/lib/auth";
 import type { UserRole } from "@/lib/auth-types";
-import { logger } from "@/lib/logger";
 
 export async function getProjectMedia(projectName: string, projectId?: string) {
   const folderName = projectName.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -27,7 +26,7 @@ export async function getProjectMedia(projectName: string, projectId?: string) {
       projectId ? eq(projects.id, projectId) : undefined,
       ilike(projects.name, `%${projectName}%`),
       eq(projects.id, folderName)
-    ].filter((c): c is any => !!c);
+    ].filter((c): c is Exclude<typeof c, undefined> => !!c);
 
     const projectRecords = await db.select()
       .from(projects)
