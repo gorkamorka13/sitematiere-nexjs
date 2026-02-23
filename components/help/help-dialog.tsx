@@ -9,7 +9,7 @@ import { getAllSystemSettings, updateSystemSetting } from "@/app/actions/setting
 interface HelpDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  user: { id: string; role: string; name?: string | null };
+  user: { id?: string; role?: string; name?: string | null };
 }
 
 export default function HelpDialog({ isOpen, onClose, user }: HelpDialogProps) {
