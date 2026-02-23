@@ -108,12 +108,16 @@ export default function AppLayout({
                 <div className="flex items-center gap-2">
                     <ModeToggle />
                     <button
-                        onClick={() => setIsMobileMenuOpen(true)}
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                         className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 transition-colors"
-                        aria-label="Ouvrir le menu de navigation"
-                        title="Menu"
+                        aria-label={isMobileMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+                        title={isMobileMenuOpen ? "Fermer" : "Menu"}
                     >
-                        <Menu className="w-6 h-6" aria-hidden="true" />
+                        {isMobileMenuOpen ? (
+                            <X className="w-6 h-6 animate-in spin-in-90 duration-300" aria-hidden="true" />
+                        ) : (
+                            <Menu className="w-6 h-6 animate-in spin-in--90 duration-300" aria-hidden="true" />
+                        )}
                     </button>
                 </div>
             </div>

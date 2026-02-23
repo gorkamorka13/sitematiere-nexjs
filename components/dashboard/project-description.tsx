@@ -18,12 +18,12 @@ function formatDescription(text: string | null | undefined): string {
 export function ProjectDescription({ selectedProject, flagDoc, logoDoc }: ProjectDescriptionProps) {
     return (
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors flex flex-col flex-grow min-h-0">
-            <div className="border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50 px-4 py-3 flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-2">
+            <div className="border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50 px-3 sm:px-4 py-3 flex flex-wrap items-center justify-between gap-y-2 gap-x-4 shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                     <FileText className="w-4 h-4 text-indigo-500" />
                     <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Description</h3>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3 ml-auto">
                     {selectedProject?.owner && (
                         <div className="flex items-center gap-1.5 px-2 py-1 bg-indigo-50/50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800 shadow-sm shrink-0">
                             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: selectedProject.owner.color || '#6366f1' }} />
@@ -40,11 +40,11 @@ export function ProjectDescription({ selectedProject, flagDoc, logoDoc }: Projec
                                     className="object-cover"
                                 />
                             </div>
-                            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-tight hidden sm:inline-block">{selectedProject?.country}</span>
+                            <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-tight hidden sm:inline-block truncate max-w-[80px]">{selectedProject?.country}</span>
                         </div>
                     )}
                     {logoDoc && (
-                        <div className="h-7 px-2 py-1 bg-white/50 dark:bg-black/20 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm flex items-center shrink-0 relative">
+                        <div className="h-7 px-2 py-1 bg-white/50 dark:bg-black/20 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm flex items-center shrink-0 relative max-w-[100px]">
                             <Image
                                 src={normalizeImageUrl(logoDoc.url)}
                                 alt=""

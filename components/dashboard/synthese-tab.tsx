@@ -90,14 +90,14 @@ export function SyntheseTab({ stats }: SyntheseTabProps) {
                     return (
                         <div
                             key={kpi.label}
-                            className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 flex items-center gap-4 transition-colors"
+                            className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 md:p-5 flex items-center gap-3 md:gap-4 transition-colors"
                         >
-                            <div className={`rounded-xl p-3 ${kpi.bg}`}>
-                                <Icon className={`w-6 h-6 ${kpi.color}`} />
+                            <div className={`rounded-xl p-2 md:p-3 ${kpi.bg}`}>
+                                <Icon className={`w-5 h-5 md:w-6 md:h-6 ${kpi.color}`} />
                             </div>
-                            <div>
-                                <p className="text-3xl font-black text-gray-900 dark:text-white">{kpi.value}</p>
-                                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-widest mt-0.5">
+                            <div className="min-w-0">
+                                <p className="text-xl md:text-3xl font-black text-gray-900 dark:text-white truncate">{kpi.value}</p>
+                                <p className="text-[10px] md:text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-tight md:tracking-widest mt-0.5 truncate">
                                     {kpi.label}
                                 </p>
                             </div>

@@ -158,10 +158,10 @@ export default function DashboardClient({ initialProjects, syntheseStats, user }
     }, [filteredProjects, selectedProject]);
 
     // Fetch dynamic media when project changes
-    const fetchMedia = useCallback(async (projectName: string) => {
+    const fetchMedia = useCallback(async (projectName: string, projectId: string) => {
         setIsLoadingMedia(true);
         try {
-            const media = await getProjectMedia(projectName);
+            const media = await getProjectMedia(projectName, projectId);
             setDynamicMedia(media);
         } catch (error) {
             logger.error("Error fetching media:", error);
@@ -175,7 +175,7 @@ export default function DashboardClient({ initialProjects, syntheseStats, user }
 
     useEffect(() => {
         if (selectedProject) {
-            fetchMedia(selectedProject.name);
+            fetchMedia(selectedProject.name, selectedProject.id);
         } else {
             setDynamicMedia({ images: [], pdfs: [] });
         }

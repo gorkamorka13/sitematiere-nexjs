@@ -47,7 +47,7 @@ export default function HelpDialog({ isOpen, onClose, user }: HelpDialogProps) {
       />
 
       {/* Modal Body */}
-      <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-5xl max-h-[85vh] flex flex-col border border-gray-100 dark:border-gray-700 overflow-hidden animate-in zoom-in-95 duration-300">
+      <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] md:max-h-[85vh] flex flex-col border border-gray-100 dark:border-gray-700 overflow-hidden animate-in zoom-in-95 duration-300">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 z-10">
           <div className="flex items-center gap-3">
@@ -72,10 +72,10 @@ export default function HelpDialog({ isOpen, onClose, user }: HelpDialogProps) {
         </div>
 
         {/* Tabs Navigation */}
-        <div className="flex border-b border-gray-50 dark:border-gray-700/50 bg-gray-50/50 dark:bg-gray-900/20 px-4">
+        <div className="flex border-b border-gray-50 dark:border-gray-700/50 bg-gray-50/50 dark:bg-gray-900/20 px-2 md:px-4 overflow-x-auto scrollbar-none">
           <button
             onClick={() => setActiveTab("intro")}
-            className={`px-4 py-3 text-xs font-bold uppercase tracking-widest transition-all border-b-2 ${
+            className={`px-3 md:px-4 py-3 text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all border-b-2 whitespace-nowrap ${
               activeTab === "intro"
                 ? "border-indigo-600 text-indigo-600"
                 : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
@@ -85,7 +85,7 @@ export default function HelpDialog({ isOpen, onClose, user }: HelpDialogProps) {
           </button>
           <button
             onClick={() => setActiveTab("roles")}
-            className={`px-4 py-3 text-xs font-bold uppercase tracking-widest transition-all border-b-2 ${
+            className={`px-3 md:px-4 py-3 text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all border-b-2 whitespace-nowrap ${
               activeTab === "roles"
                 ? "border-indigo-600 text-indigo-600"
                 : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
@@ -95,7 +95,7 @@ export default function HelpDialog({ isOpen, onClose, user }: HelpDialogProps) {
           </button>
           <button
             onClick={() => setActiveTab("gammes")}
-            className={`px-4 py-3 text-xs font-bold uppercase tracking-widest transition-all border-b-2 ${
+            className={`px-3 md:px-4 py-3 text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all border-b-2 whitespace-nowrap ${
               activeTab === "gammes"
                 ? "border-indigo-600 text-indigo-600"
                 : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
@@ -106,7 +106,7 @@ export default function HelpDialog({ isOpen, onClose, user }: HelpDialogProps) {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-6 lg:p-10 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-10 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700">
           {activeTab === "intro" && (
             <div className="max-w-4xl mx-auto space-y-12">
               {/* Hero Section */}
@@ -149,17 +149,17 @@ export default function HelpDialog({ isOpen, onClose, user }: HelpDialogProps) {
               </div>
 
               {/* Steps Section */}
-              <section className="bg-gray-50 dark:bg-gray-900/30 rounded-3xl p-8 border border-gray-100 dark:border-gray-700">
+              <section className="bg-gray-50 dark:bg-gray-900/30 rounded-2xl md:rounded-3xl p-6 md:p-8 border border-gray-100 dark:border-gray-700">
                 <h3 className="text-sm font-black uppercase tracking-widest text-gray-800 dark:text-white mb-6">Cycle de vie des projets</h3>
-                <div className="flex flex-wrap items-center gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                   <PhaseBadge label="Prospection" />
-                  <span className="text-gray-300">→</span>
+                  <span className="hidden sm:inline text-gray-300">→</span>
                   <PhaseBadge label="Études" />
-                  <span className="text-gray-300">→</span>
+                  <span className="hidden sm:inline text-gray-300">→</span>
                   <PhaseBadge label="Fabrication" />
-                  <span className="text-gray-300">→</span>
+                  <span className="hidden sm:inline text-gray-300">→</span>
                   <PhaseBadge label="Transport" />
-                  <span className="text-gray-300">→</span>
+                  <span className="hidden sm:inline text-gray-300">→</span>
                   <PhaseBadge label="Construction" />
                 </div>
               </section>
@@ -259,10 +259,10 @@ export default function HelpDialog({ isOpen, onClose, user }: HelpDialogProps) {
                       <MatrixRow label="Modifier détails Projet" access={[false, false, true, true]} />
                       <MatrixRow label="Gestion des Médias (R2)" access={[false, false, true, true]} />
                       <MatrixRow label="Gérer Permissions / Système" access={[false, false, false, true]} />
-                    </tbody>
-                  </table>
-                </div>
-              </section>
+                  </tbody>
+                </table>
+              </div>
+            </section>
 
             </div>
           )}
@@ -289,17 +289,17 @@ export default function HelpDialog({ isOpen, onClose, user }: HelpDialogProps) {
               {/* Range Content */}
               <div key={activeRange} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                  <div className="lg:col-span-2 space-y-8">
+                  <div className="lg:col-span-2 space-y-6 md:space-y-8">
                     <div>
-                      <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight mb-2">
+                      <h3 className="text-xl md:text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight mb-2 text-center md:text-left">
                         {PROJECT_RANGES[activeRange].name}
                       </h3>
-                      <p className="text-sm font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">
+                      <p className="text-xs md:text-sm font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest text-center md:text-left">
                         {PROJECT_RANGES[activeRange].subtitle}
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
                       <div className="p-5 rounded-2xl bg-gray-50 dark:bg-gray-900/40 border border-gray-100 dark:border-gray-700/50 space-y-3">
                         <div className="flex items-center gap-2 text-gray-900 dark:text-white">
                           <LayoutDashboard className="w-4 h-4 text-indigo-500" />
@@ -332,7 +332,7 @@ export default function HelpDialog({ isOpen, onClose, user }: HelpDialogProps) {
                     </div>
                   </div>
 
-                  <div className="relative bg-gray-50 dark:bg-gray-900/50 rounded-3xl p-6 border border-gray-100 dark:border-gray-800 flex items-center justify-center min-h-[300px] overflow-hidden group/image">
+                  <div className="relative bg-gray-50 dark:bg-gray-900/50 rounded-2xl md:rounded-3xl p-6 border border-gray-100 dark:border-gray-800 flex items-center justify-center min-h-[250px] md:min-h-[300px] overflow-hidden group/image shadow-inner">
                     {loadingSettings ? (
                       <Loader2 className="w-10 h-10 animate-spin text-gray-200" />
                     ) : rangeImages[`range_image_${activeRange}`] ? (
@@ -380,11 +380,11 @@ export default function HelpDialog({ isOpen, onClose, user }: HelpDialogProps) {
         />
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex justify-between items-center">
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Site Matière — Documentation v1.2</span>
+        <div className="p-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <span className="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center sm:text-left">Site Matière — Documentation v1.2</span>
           <button
             onClick={onClose}
-            className="px-6 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-xs font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg"
+            className="w-full sm:w-auto px-6 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-[10px] md:text-xs font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg"
           >
             Fermer
           </button>
