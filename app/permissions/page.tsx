@@ -1,10 +1,9 @@
-import { auth, checkRole } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { projects, users } from "@/lib/db/schema";
 import { desc, eq, ne } from "drizzle-orm";
 import { PermissionTabs } from "@/components/permissions/permission-tabs";
-import type { UserRole } from "@/lib/auth-types";
 import Link from "next/link";
 
 export const dynamic = 'force-dynamic';

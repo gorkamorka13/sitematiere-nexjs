@@ -12,7 +12,7 @@ import { logger } from "@/lib/logger";
 export interface PermissionResult {
   success: boolean;
   error?: string;
-  data?: any;
+  data?: unknown;
 }
 
 export interface PermissionWithUser {

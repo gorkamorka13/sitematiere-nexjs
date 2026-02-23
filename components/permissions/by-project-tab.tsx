@@ -158,7 +158,7 @@ export function ByProjectTab({ projects, permissions: initialPermissions, onOwne
     const result = await changeProjectOwner(ownerDialogProject.id, newOwnerId);
 
     if (result.success && result.data) {
-      setProjectOwners((prev) => new Map(prev).set(ownerDialogProject.id, result.data));
+      setProjectOwners((prev) => new Map(prev).set(ownerDialogProject.id, result.data as any));
       onOwnerChange?.(ownerDialogProject.id, newOwnerId);
       router.refresh();
       setOwnerDialogProject(null);
@@ -390,7 +390,7 @@ export function ByProjectTab({ projects, permissions: initialPermissions, onOwne
           })
         ) : (
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-dashed border-gray-300 dark:border-gray-700 p-8 text-center text-sm">
-            <p className="text-gray-500 dark:text-gray-400 font-medium italic">Aucun projet trouvé pour "{searchQuery}"</p>
+            <p className="text-gray-500 dark:text-gray-400 font-medium italic">Aucun projet trouvé pour &quot;{searchQuery}&quot;</p>
           </div>
         )}
       </div>

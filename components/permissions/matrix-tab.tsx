@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { PermissionBadge } from "./permission-badge";
 import type { PermissionLevel } from "@/lib/permissions";
 
@@ -71,7 +71,7 @@ export function MatrixTab({ users, projects, permissions }: MatrixTabProps) {
   }, [projects, searchProject]);
 
   // Reset page when search changes
-  useMemo(() => {
+  useEffect(() => {
     setCurrentPage(0);
   }, [searchProject]);
 
