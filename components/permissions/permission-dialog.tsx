@@ -65,12 +65,13 @@ export function PermissionDialog({
 
   useEffect(() => {
     if (search.trim() === "") {
-      setFilteredUsers(users.filter((u) => !existingUserIds.includes(u.id)));
+      setFilteredUsers(users.filter((u) => u.role !== "ADMIN" && !existingUserIds.includes(u.id)));
     } else {
       const query = search.toLowerCase();
       setFilteredUsers(
         users.filter(
           (u) =>
+            u.role !== "ADMIN" &&
             !existingUserIds.includes(u.id) &&
             (u.name?.toLowerCase().includes(query) ||
               u.username?.toLowerCase().includes(query) ||

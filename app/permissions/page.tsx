@@ -72,29 +72,33 @@ export default async function PermissionsPage() {
     owner: row.owner || null,
   }));
 
-  const permissions = allPermissions.map((p) => ({
-    id: p.id,
-    level: p.level as "READ" | "WRITE" | "MANAGE",
-    projectId: p.projectId,
-    userId: p.userId,
-    createdAt: p.createdAt,
-    project: {
-      id: p.project.id,
-      name: p.project.name,
-      type: p.project.type,
-      status: p.project.status,
-      country: p.project.country,
-      ownerId: p.project.ownerId,
-    },
-    user: {
-      id: p.user.id,
-      name: p.user.name,
-      username: p.user.username,
-      email: p.user.email,
-      role: p.user.role,
-      color: p.user.color,
-    },
-  }));
+  const permissions = allPermissions
+    .filter((p) => p.user.role !== "ADMIN")
+    .map((p) => ({
+      id: p.id,
+      level: p.level as "READ" | "WRITE" | "MANAGE",
+      projectId: p.projectId,
+      userId: p.userId,
+      createdAt: p.createdAt,
+      project: {
+        id: p.project.id,
+        name: p.project.name,
+        type: p.project.type,
+        status: p.project.status,
+        country: p.project.country,
+        ownerId: p.project.ownerId,
+      },
+      user: {
+        id: p.user.id,
+        name: p.user.name,
+        username: p.user.username,
+        email: p.user.email,
+        role: p.user.role,
+        color: p.user.color,
+      },
+    }));
+
+  const nonAdminUsers = allUsers.filter((u) => u.role !== "ADMIN");
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -113,13 +117,13 @@ export default async function PermissionsPage() {
             Gestion des autorisations
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Gérez les accès aux projets pour chaque utilisateur
+            Gerez les acces aux projets pour chaque utilisateur
           </p>
         </div>
 
         <PermissionTabs
           projects={projectsWithOwners}
-          users={allUsers}
+          users={nonAdminUsers}
           permissions={permissions}
         />
       </div>

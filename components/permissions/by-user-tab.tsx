@@ -66,6 +66,7 @@ export function ByUserTab({ users, projects, permissions }: ByUserTabProps) {
   const logger = useLogger("ByUserTab");
 
   const filteredUsers = users.filter((user) => {
+    if (user.role === "ADMIN") return false;
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     return (
