@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Plus, Trash2, ChevronDown, ChevronUp, Loader2, Search } from "lucide-react";
 import { PermissionBadge } from "./permission-badge";
 import type { PermissionLevel } from "@/lib/permissions";
@@ -29,7 +29,7 @@ interface Project {
     name: string | null;
     username: string | null;
     color: string | null;
-  };
+  } | null;
 }
 
 interface Permission {

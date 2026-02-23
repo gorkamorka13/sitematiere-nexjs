@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { X, Search, Loader2 } from "lucide-react";
 import { PermissionBadge } from "./permission-badge";
 import type { PermissionLevel } from "@/lib/permissions";
@@ -39,7 +39,7 @@ export function PermissionDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const logger = useLogger("PermissionDialog");
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await fetch("/api/users");
@@ -52,7 +52,7 @@ export function PermissionDialog({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [logger]);
 
   useEffect(() => {
     if (isOpen) {
@@ -61,7 +61,7 @@ export function PermissionDialog({
       setSelectedLevel("READ");
       setSearch("");
     }
-  }, [isOpen]);
+  }, [isOpen, fetchUsers]);
 
   useEffect(() => {
     if (search.trim() === "") {

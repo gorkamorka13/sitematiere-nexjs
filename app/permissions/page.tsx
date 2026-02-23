@@ -23,18 +23,27 @@ export default async function PermissionsPage() {
     redirect("/");
   }
 
-  const [allProjects, allUsers, allPermissions] = await Promise.all([
+  const [allProjectsResult, allUsers, allPermissions] = await Promise.all([
     db
       .select({
-        id: projects.id,
-        name: projects.name,
-        type: projects.type,
-        status: projects.status,
-        country: projects.country,
-        ownerId: projects.ownerId,
-        createdAt: projects.createdAt,
+        project: {
+          id: projects.id,
+          name: projects.name,
+          type: projects.type,
+          status: projects.status,
+          country: projects.country,
+          ownerId: projects.ownerId,
+          createdAt: projects.createdAt,
+        },
+        owner: {
+          id: users.id,
+          name: users.name,
+          username: users.username,
+          color: users.color,
+        }
       })
       .from(projects)
+      .leftJoin(users, eq(projects.ownerId, users.id))
       .where(ne(projects.country, "Système"))
       .orderBy(desc(projects.createdAt)),
 
@@ -58,25 +67,10 @@ export default async function PermissionsPage() {
     }),
   ]);
 
-  const projectsWithOwners = await Promise.all(
-    allProjects.map(async (project) => {
-      const [owner] = await db
-        .select({
-          id: users.id,
-          name: users.name,
-          username: users.username,
-          color: users.color,
-        })
-        .from(users)
-        .where(eq(users.id, project.ownerId))
-        .limit(1);
-
-      return {
-        ...project,
-        owner: owner || null,
-      };
-    })
-  );
+  const projectsWithOwners = allProjectsResult.map((row) => ({
+    ...row.project,
+    owner: row.owner || null,
+  }));
 
   const permissions = allPermissions.map((p) => ({
     id: p.id,

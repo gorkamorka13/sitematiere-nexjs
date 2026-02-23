@@ -22,7 +22,7 @@ interface Project {
     name: string | null;
     username: string | null;
     color: string | null;
-  };
+  } | null;
 }
 
 interface Permission {

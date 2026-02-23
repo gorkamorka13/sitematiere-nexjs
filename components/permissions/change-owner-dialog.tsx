@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { X, Loader2, Crown } from "lucide-react";
 import { useLogger } from "@/lib/logger";
 
@@ -36,13 +36,28 @@ export function ChangeOwnerDialog({
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const logger = useLogger("ChangeOwnerDialog");
 
+  const fetchUsers = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/users");
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data);
+      }
+    } catch (error) {
+      logger.error("Erreur lors du chargement des utilisateurs:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [logger]);
+
   useEffect(() => {
     if (isOpen) {
       fetchUsers();
       setSearch("");
       setSelectedUserId("");
     }
-  }, [isOpen]);
+  }, [isOpen, fetchUsers]);
 
   useEffect(() => {
     if (search.trim() === "") {
@@ -60,21 +75,6 @@ export function ChangeOwnerDialog({
       );
     }
   }, [search, users]);
-
-  const fetchUsers = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch("/api/users");
-      if (response.ok) {
-        const data = await response.json();
-        setUsers(data);
-      }
-    } catch (error) {
-      logger.error("Erreur lors du chargement des utilisateurs:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,7 +125,7 @@ export function ChangeOwnerDialog({
               placeholder="Rechercher un utilisateur..."
               className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white text-sm mb-2"
             />
-            
+
             {isLoading ? (
               <div className="flex items-center justify-center py-4">
                 <Loader2 className="w-5 h-5 animate-spin text-gray-400" />

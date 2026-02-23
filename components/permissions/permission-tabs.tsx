@@ -29,7 +29,7 @@ interface Project {
     name: string | null;
     username: string | null;
     color: string | null;
-  };
+  } | null;
 }
 
 interface Permission {
@@ -93,7 +93,7 @@ export function PermissionTabs({ projects, users, permissions }: PermissionTabsP
 
       <div className="mt-4">
         {activeTab === "project" && <ByProjectTab projects={projects} />}
-        {activeTab === "user" && <ByUserTab users={users} projects={projects} permissions={permissions as any} />}
+        {activeTab === "user" && <ByUserTab users={users} projects={projects} permissions={permissions} />}
         {activeTab === "matrix" && <MatrixTab users={users} projects={projects} permissions={permissions} />}
         {activeTab === "responsibilities" && <ResponsibilitiesTab projects={projects} users={users} />}
       </div>

@@ -28,4 +28,5 @@ Prévenir les échecs de build sur Vercel/Cloudflare en imposant une rigueur str
 ## Compatibilité Cloudflare (Edge Runtime)
 1. **Runtime Edge Obligatoire** : Pour tout déploiement sur Cloudflare Pages, toutes les routes API et pages dynamiques (utilisant `headers()`, `cookies()`, etc.) DOIVENT exporter explicitement `export const runtime = 'edge';`.
 2. **Serialization JSON** : Vérifier que tous les Server Actions retournant des objets de base de données sérialisent les dates (`.toISOString()`) pour éviter les erreurs 500 sur l'Edge. (Voir skill `cloudflare-serialization`).
-3. **Commandes de Build** : Utiliser `npm run build:worker` pour Cloudflare.
+3. **Limites de requêtes (N+1)** : Éviter les boucles de requêtes (`map` avec `db.select`) sur les pages Cloudflare. Utiliser des `leftJoin` ou du `batch fetching` (`inArray`) pour ne pas dépasser la limite de 50 requêtes. (Voir skill `cloudflare-performance`).
+4. **Commandes de Build** : Utiliser `npm run build:worker` pour Cloudflare.

@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { users, projects, files, slideshowImages, images, videos, documents } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 
 import Link from "next/link";
@@ -57,21 +57,22 @@ export default async function ExportDatabasePage({
       db.select().from(slideshowImages)
     ]);
 
-    const projectWithRelations = await Promise.all(
-      projectRecords.map(async (project) => {
-        const [projectImages, projectVideos, projectDocuments] = await Promise.all([
-          db.select().from(images).where(eq(images.projectId, project.id)),
-          db.select().from(videos).where(eq(videos.projectId, project.id)),
-          db.select().from(documents).where(eq(documents.projectId, project.id))
-        ]);
-        return {
-          ...project,
-          images: projectImages,
-          videos: projectVideos,
-          documents: projectDocuments
-        };
-      })
-    );
+    const projectIds = projectRecords.map(p => p.id);
+
+    const [allImages, allVideos, allDocuments] = await Promise.all([
+      projectIds.length > 0 ? db.select().from(images).where(inArray(images.projectId, projectIds)) : Promise.resolve([]),
+      projectIds.length > 0 ? db.select().from(videos).where(inArray(videos.projectId, projectIds)) : Promise.resolve([]),
+      projectIds.length > 0 ? db.select().from(documents).where(inArray(documents.projectId, projectIds)) : Promise.resolve([]),
+    ]);
+
+    const projectWithRelations = projectRecords.map((project) => {
+      return {
+        ...project,
+        images: allImages.filter(i => i.projectId === project.id),
+        videos: allVideos.filter(v => v.projectId === project.id),
+        documents: allDocuments.filter(d => d.projectId === project.id)
+      };
+    });
 
     const fullBackup = {
       metadata: {
