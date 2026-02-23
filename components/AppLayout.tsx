@@ -340,7 +340,7 @@ export default function AppLayout({
             </main>
 
             {/* Help Dialog */}
-            <HelpDialog isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
+            <HelpDialog isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} user={user} />
         </div>
     );
 }

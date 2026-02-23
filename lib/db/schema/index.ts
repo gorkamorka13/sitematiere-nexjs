@@ -8,3 +8,4 @@ export * from './documents';
 export * from './files';
 export * from './project-permissions';
 export * from './relations';
+export * from './settings';
