@@ -9,6 +9,13 @@ import type { PermissionLevel } from "@/lib/permissions";
 import { revalidatePath } from "next/cache";
 import { logger } from "@/lib/logger";
 
+export interface ProjectOwner {
+  id: string;
+  name: string | null;
+  username: string | null;
+  color: string | null;
+}
+
 export interface PermissionResult {
   success: boolean;
   error?: string;

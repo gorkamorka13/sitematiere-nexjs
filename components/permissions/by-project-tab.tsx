@@ -6,7 +6,7 @@ import { PermissionBadge } from "./permission-badge";
 import { PermissionDialog } from "./permission-dialog";
 import { ChangeOwnerDialog } from "./change-owner-dialog";
 import type { PermissionLevel } from "@/lib/permissions";
-import { grantPermission, revokePermission, updatePermissionLevel, changeProjectOwner } from "@/app/actions/permission-actions";
+import { grantPermission, revokePermission, updatePermissionLevel, changeProjectOwner, type ProjectOwner } from "@/app/actions/permission-actions";
 import { useLogger } from "@/lib/logger";
 import { useRouter } from "next/navigation";
 
@@ -158,7 +158,7 @@ export function ByProjectTab({ projects, permissions: initialPermissions, onOwne
     const result = await changeProjectOwner(ownerDialogProject.id, newOwnerId);
 
     if (result.success && result.data) {
-      setProjectOwners((prev) => new Map(prev).set(ownerDialogProject.id, result.data as any));
+      setProjectOwners((prev) => new Map(prev).set(ownerDialogProject.id, result.data as ProjectOwner));
       onOwnerChange?.(ownerDialogProject.id, newOwnerId);
       router.refresh();
       setOwnerDialogProject(null);
