@@ -5,6 +5,7 @@ import { projects, documents, videos, users, projectPermissions } from "@/lib/db
 import { desc, inArray, or, eq, and, ne } from "drizzle-orm";
 import DashboardClient from "./dashboard-client";
 import type { UserRole } from "@/lib/auth-types";
+import { getSyntheseStats } from "@/app/actions/synthese-actions";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -83,13 +84,14 @@ export default async function DashboardPage() {
 
   const projectIds = allProjects.map((p) => p.project.id);
 
-  const [allDocuments, allVideos] = await Promise.all([
+  const [allDocuments, allVideos, syntheseStats] = await Promise.all([
     projectIds.length > 0
       ? db.select().from(documents).where(inArray(documents.projectId, projectIds))
       : [],
     projectIds.length > 0
       ? db.select().from(videos).where(inArray(videos.projectId, projectIds))
-      : []
+      : [],
+    getSyntheseStats(),
   ]);
 
   const projectsWithRelations = allProjects.map((row) => ({
@@ -102,6 +104,7 @@ export default async function DashboardPage() {
   return (
     <DashboardClient
       initialProjects={projectsWithRelations}
+      syntheseStats={syntheseStats}
       user={{
         id: session.user?.id,
         name: session.user?.name,

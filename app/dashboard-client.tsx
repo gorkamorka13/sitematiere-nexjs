@@ -6,6 +6,8 @@ import { getProjectMedia } from "@/app/actions/project-media";
 import type { Project, Document as ProjectDocument, Video as ProjectVideo } from "@/lib/db/schema";
 import { ProjectStatus, ProjectType, DocumentType } from "@/lib/enums";
 import { UserRole } from "@/lib/auth-types";
+import type { SyntheseStats } from "@/app/actions/synthese-actions";
+import { SyntheseTab } from "@/components/dashboard/synthese-tab";
 import ProjectsMapWrapper from "@/components/ui/projects-map-wrapper";
 import ProjectMapWrapper from "@/components/ui/project-map-wrapper";
 
@@ -37,10 +39,11 @@ export type ProjectWithRelations = ProjectWithOwner & {
 
 type DashboardClientProps = {
     initialProjects: ProjectWithRelations[];
+    syntheseStats: SyntheseStats;
     user: { id?: string | null; name?: string | null; username?: string | null; role?: UserRole; color?: string | null };
 };
 
-export default function DashboardClient({ initialProjects, user }: DashboardClientProps) {
+export default function DashboardClient({ initialProjects, syntheseStats, user }: DashboardClientProps) {
     // Initialisation avec Sierra-Léone et projet "Sewa" si disponible
     const defaultProject = initialProjects.find(p =>
         p.country === "Sierra-Léone" && p.name === "Sewa"
@@ -338,6 +341,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
     };
 
     const [isDocumentsCollapsed, setIsDocumentsCollapsed] = useState(true);
+    const [activeTab, setActiveTab] = useState<'dashboard' | 'synthese'>('dashboard');
 
     return (
         <AppLayout
@@ -354,13 +358,45 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
             }}
         >
             <div className="mx-auto max-w-[1800px] px-2 sm:px-4 py-6 lg:py-10">
-                <div className="mb-8">
-                    <h1 className="text-3xl font-black tracking-tight text-gray-900 dark:text-white uppercase">Dashboard</h1>
-                    <p className="mt-1 max-w-2xl text-sm leading-6 text-gray-500 dark:text-gray-400">
-                        Recherche et filtrage des projets.
-                    </p>
+                <div className="mb-6 flex flex-col sm:flex-row sm:items-end gap-4">
+                    <div>
+                        <h1 className="text-3xl font-black tracking-tight text-gray-900 dark:text-white uppercase">Dashboard</h1>
+                        <p className="mt-1 max-w-2xl text-sm leading-6 text-gray-500 dark:text-gray-400">
+                            {activeTab === 'dashboard' ? 'Recherche et filtrage des projets.' : 'Statistiques globales et indicateurs clés.'}
+                        </p>
+                    </div>
+                    {/* Tab switcher */}
+                    <div className="flex gap-1 rounded-xl bg-gray-100 dark:bg-gray-800 p-1 border border-gray-200 dark:border-gray-700 self-start sm:ml-auto">
+                        <button
+                            onClick={() => setActiveTab('dashboard')}
+                            className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                                activeTab === 'dashboard'
+                                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                            }`}
+                        >
+                            Dashboard
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('synthese')}
+                            className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                                activeTab === 'synthese'
+                                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                            }`}
+                        >
+                            Synthèse
+                        </button>
+                    </div>
                 </div>
 
+                {/* Synthese Tab */}
+                {activeTab === 'synthese' && (
+                    <SyntheseTab stats={syntheseStats} />
+                )}
+
+                {/* Dashboard Tab */}
+                {activeTab === 'dashboard' && (<>
                 {/* Filters Section */}
                 <DashboardFilters
                     countries={countries}
@@ -502,6 +538,8 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                 <div className="mt-4 text-sm text-gray-500 dark:text-gray-400 text-right">
                     {filteredProjects.length} projets trouvés
                 </div>
+                </>
+                )}
             </div>
 
             {/* Dialogs */}
