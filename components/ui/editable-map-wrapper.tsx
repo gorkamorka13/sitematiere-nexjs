@@ -17,7 +17,7 @@ const EditableMap = dynamic(() => import("./editable-map"), {
 type Props = {
   latitude: number;
   longitude: number;
-  onPositionChange: (lat: number, lng: number) => void;
+  onPositionChange: (lat: number, lng: number, isFinal?: boolean) => void;
   status?: string;
   customPinUrl?: string;
 };

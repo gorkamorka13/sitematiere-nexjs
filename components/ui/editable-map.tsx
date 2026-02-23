@@ -1,21 +1,40 @@
 "use client";
 
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { getIcon } from "@/lib/map-icons";
+import { useMap, useMapEvents, MapContainer, TileLayer, Marker } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 // Fix for default Leaflet marker icons in Next.js
-interface IconDefaultPrototype extends L.Icon.Default {
-  _getIconUrl?: string;
+if (typeof window !== 'undefined') {
+  try {
+    const DefaultIcon = L.Icon.Default as any;
+    if (DefaultIcon.prototype) {
+      delete DefaultIcon.prototype._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      });
+    }
+  } catch (e) {
+    console.warn("Leaflet icon setup warning:", e);
+  }
 }
-delete (L.Icon.Default.prototype as IconDefaultPrototype)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
+
+// Component to handle map resize when triggered
+function MapResizer() {
+  const map = useMap();
+  useEffect(() => {
+    console.log("[EditableMap] MapResizer: invalidating size");
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [map]);
+  return null;
+}
 
 type EditableMapProps = {
   latitude: number;
@@ -39,7 +58,16 @@ function DraggableMarker({
 }) {
   const markerRef = useRef<L.Marker>(null);
 
-  const eventHandlers = {
+  const icon = useMemo(() => {
+    try {
+      return getIcon(status, customPinUrl, true);
+    } catch (e) {
+      console.error("[EditableMap] getIcon error:", e);
+      return new L.Icon.Default();
+    }
+  }, [status, customPinUrl]);
+
+  const eventHandlers = useMemo(() => ({
     drag() {
       const marker = markerRef.current;
       if (marker != null) {
@@ -54,7 +82,7 @@ function DraggableMarker({
         onPositionChange(newPos.lat, newPos.lng, true);
       }
     },
-  };
+  }), [onPositionChange]);
 
   return (
     <Marker
@@ -62,40 +90,39 @@ function DraggableMarker({
       eventHandlers={eventHandlers}
       position={position}
       ref={markerRef}
-      icon={getIcon(status, customPinUrl)}
+      icon={icon}
     />
   );
 }
 
-// Component to handle map view updates
 function MapViewController({ center, zoomRef }: { center: [number, number]; zoomRef: React.MutableRefObject<number | null> }) {
   const map = useMapEvents({
     zoomend() {
-      // Mémoriser le zoom choisi par l'utilisateur
       zoomRef.current = map.getZoom();
     },
   });
 
   useEffect(() => {
-    // Utiliser le zoom mémorisé ou le zoom actuel, mais ne pas changer le zoom
-    const currentZoom = zoomRef.current || map.getZoom();
-    map.setView(center, currentZoom, { animate: true });
+    if (center && center[0] !== undefined && center[1] !== undefined) {
+      const currentZoom = zoomRef.current || map.getZoom() || 13;
+      map.setView(center, currentZoom, { animate: true });
+    }
   }, [center, map, zoomRef]);
 
   return null;
 }
 
 export default function EditableMap({ latitude, longitude, onPositionChange, status, customPinUrl }: EditableMapProps) {
-  const [markerPos, setMarkerPos] = useState<[number, number]>([latitude, longitude]);
-  const [viewCenter, setViewCenter] = useState<[number, number]>([latitude, longitude]);
+  const [markerPos, setMarkerPos] = useState<[number, number]>([latitude || 0, longitude || 0]);
+  const [viewCenter, setViewCenter] = useState<[number, number]>([latitude || 0, longitude || 0]);
   const isDraggingInternal = useRef(false);
   const zoomRef = useRef<number | null>(null);
 
-  // Synchroniser la position du marqueur avec les props
   useEffect(() => {
     if (!isDraggingInternal.current) {
-      setMarkerPos([latitude, longitude]);
-      setViewCenter([latitude, longitude]);
+      console.log(`[EditableMap] Syncing pos: ${latitude}, ${longitude}`);
+      setMarkerPos([latitude || 0, longitude || 0]);
+      setViewCenter([latitude || 0, longitude || 0]);
     }
   }, [latitude, longitude]);
 
@@ -110,6 +137,8 @@ export default function EditableMap({ latitude, longitude, onPositionChange, sta
   const tileUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
   const attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
+  if (typeof window === 'undefined') return null;
+
   return (
     <MapContainer
       center={viewCenter}
@@ -118,6 +147,7 @@ export default function EditableMap({ latitude, longitude, onPositionChange, sta
       className="h-full w-full rounded-lg z-0"
       style={{ height: "300px", width: "100%" }}
     >
+      <MapResizer />
       <MapViewController center={viewCenter} zoomRef={zoomRef} />
       <TileLayer
         attribution={attribution}
