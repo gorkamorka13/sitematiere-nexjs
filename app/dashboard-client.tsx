@@ -456,6 +456,7 @@ export default function DashboardClient({ initialProjects, syntheseStats, user }
                                     projectName={selectedProject.name}
                                     country={selectedProject.country || ""}
                                     popupText={selectedProject.name}
+                                    description={selectedProject.description}
                                     status={selectedProject.status}
                                     customPinUrl={pinDoc?.url}
                                     nonce={mapNonce}

@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { projects, users } from "@/lib/db/schema";
-import { ne, sql } from "drizzle-orm";
+import { ne } from "drizzle-orm";
 
 export type SyntheseStats = {
     totalProjects: number;

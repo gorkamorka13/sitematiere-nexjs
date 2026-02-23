@@ -15,13 +15,12 @@ const PHASE_LABELS: Record<string, string> = {
     construction: "Construction",
 };
 
-const PHASE_COLORS: Record<string, string> = {
-    prospection: "bg-purple-500",
-    studies: "bg-blue-500",
-    fabrication: "bg-amber-500",
-    transport: "bg-orange-500",
-    construction: "bg-green-500",
-};
+function getProgressColor(value: number): string {
+    if (value >= 75) return "bg-green-500";
+    if (value >= 50) return "bg-yellow-400";
+    if (value >= 25) return "bg-orange-500";
+    return "bg-red-500";
+}
 
 const TYPE_COLORS: Record<string, string> = {
     PRS: "bg-sky-500",
@@ -178,7 +177,6 @@ export function SyntheseTab({ stats }: SyntheseTabProps) {
                     </h3>
                     <div className="space-y-4">
                         {Object.entries(averageProgressByPhase).map(([phase, value]) => {
-                            const color = PHASE_COLORS[phase] || "bg-gray-400";
                             return (
                                 <div key={phase}>
                                     <div className="flex items-center justify-between mb-1">
@@ -191,7 +189,7 @@ export function SyntheseTab({ stats }: SyntheseTabProps) {
                                     </div>
                                     <div className="h-2 w-full bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                                         <div
-                                            className={`h-full rounded-full transition-all duration-700 ${color}`}
+                                            className={`h-full rounded-full transition-all duration-700 ${getProgressColor(value)}`}
                                             style={{ width: `${value}%` }}
                                         />
                                     </div>

@@ -13,6 +13,7 @@ type Props = {
     projectName?: string;
     country?: string;
     popupText?: string;
+    description?: string | null;
     status?: string | null;
     customPinUrl?: string;
     nonce?: number;
@@ -26,6 +27,7 @@ export default function ProjectMapWrapper(props: Props) {
             projectName={props.projectName ?? "Projet sans nom"}
             country={props.country ?? ""}
             customPinUrl={props.customPinUrl ?? null}
+            description={props.description ?? null}
         />
     );
 }

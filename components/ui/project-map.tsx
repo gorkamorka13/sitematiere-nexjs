@@ -1,4 +1,4 @@
-import { MapContainer, TileLayer, Marker, Tooltip, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Tooltip, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useEffect, useState } from "react";
 import { getIcon } from "@/lib/map-icons";
@@ -12,6 +12,7 @@ type MapProps = {
     projectName: string;
     country: string;
     popupText?: string;
+    description?: string | null;
     customPinUrl?: string | null;
     nonce?: number;
     isCapture?: boolean;
@@ -29,7 +30,7 @@ function MapResizer({ isFullScreen }: { isFullScreen: boolean }) {
     return null;
 }
 
-export default function ProjectMap({ latitude, longitude, status, projectName, customPinUrl, nonce, isCapture }: MapProps) {
+export default function ProjectMap({ latitude, longitude, status, projectName, description, customPinUrl, nonce, isCapture }: MapProps) {
     const tileUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
     const [isFullScreen, setIsFullScreen] = useState(false);
 
@@ -48,8 +49,8 @@ export default function ProjectMap({ latitude, longitude, status, projectName, c
                 <button
                     onClick={() => setIsFullScreen(!isFullScreen)}
                     className={`absolute right-4 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all transform hover:scale-105 active:scale-95 ${
-                        isFullScreen 
-                            ? "top-16 lg:top-4 z-[1000]" 
+                        isFullScreen
+                            ? "top-16 lg:top-4 z-[1000]"
                             : "top-4 z-[700]"
                     }`}
                     title={isFullScreen ? "Quitter le plein écran" : "Plein écran"}
@@ -80,6 +81,17 @@ export default function ProjectMap({ latitude, longitude, status, projectName, c
                                 {projectName}
                             </div>
                         </Tooltip>
+                    )}
+                    {!isCapture && description && (
+                        <Popup
+                            offset={[0, -28]}
+                            maxWidth={460}
+                            className="project-description-popup"
+                        >
+                            <p style={{ fontSize: "0.6rem", lineHeight: "1.4", width: "420px", maxWidth: "90vw", margin: 0, color: "#374151", whiteSpace: "pre-wrap" }}>
+                                {description}
+                            </p>
+                        </Popup>
                     )}
                 </Marker>
             </MapContainer>
