@@ -29,18 +29,23 @@ export default function LoginPage() {
             redirect: false,
         });
 
-        console.error("[LOGIN_PAGE] SignIn result:", result);
+        console.log("[LOGIN_PAGE] SignIn result:", result);
 
-        if (result?.error) {
-            console.error("[LOGIN_PAGE] Login error:", result.error);
+        if (result?.error || !result?.ok || (result && Object.keys(result).length === 0)) {
+            if (result?.error === "CredentialsSignin") {
+                console.warn("[LOGIN_PAGE] Invalid credentials attempt");
+            } else {
+                console.error("[LOGIN_PAGE] Login technical error:", result?.error || "Empty result");
+            }
             setError("Identifiants invalides");
             setLoading(false);
         } else if (result?.ok) {
-            console.error("[LOGIN_PAGE] Login successful, redirecting...");
+            console.log("[LOGIN_PAGE] Login successful, redirecting...");
             router.push("/");
+            // Note: router.push might take a moment, keep loading state
         } else {
-            console.error("[LOGIN_PAGE] Unexpected result:", result);
-            setError("Erreur de connexion");
+            console.error("[LOGIN_PAGE] Unexpected state:", result);
+            setError("Une erreur inattendue est survenue");
             setLoading(false);
         }
     };

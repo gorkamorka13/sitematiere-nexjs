@@ -480,28 +480,32 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                 )}
 
                 {/* Results Table */}
-                <DashboardTable
-                    filteredProjects={filteredProjects}
-                    selectedProject={selectedProject}
-                    handleProjectSelect={handleProjectSelect}
-                    onExportClick={(e, project) => {
-                        e.stopPropagation();
-                        handleProjectSelect(project);
-                        setProjectToExport(project as ProjectWithRelations);
-                        setIsExportDialogOpen(true);
-                    }}
-                    searchQuery={searchQuery}
-                    setSearchQuery={setSearchQuery}
-                    selectedCountry={selectedCountry}
-                    onCountryChange={handleCountryChange}
-                    selectedTypes={selectedTypes}
-                    selectedStatuses={selectedStatuses}
-                    currentUser={{ id: user.id || undefined, role: user.role }}
-                />
+                {user.role !== "VISITOR" && (
+                    <>
+                        <DashboardTable
+                            filteredProjects={filteredProjects}
+                            selectedProject={selectedProject}
+                            handleProjectSelect={handleProjectSelect}
+                            onExportClick={(e, project) => {
+                                e.stopPropagation();
+                                handleProjectSelect(project);
+                                setProjectToExport(project as ProjectWithRelations);
+                                setIsExportDialogOpen(true);
+                            }}
+                            searchQuery={searchQuery}
+                            setSearchQuery={setSearchQuery}
+                            selectedCountry={selectedCountry}
+                            onCountryChange={handleCountryChange}
+                            selectedTypes={selectedTypes}
+                            selectedStatuses={selectedStatuses}
+                            currentUser={{ id: user.id || undefined, role: user.role }}
+                        />
 
-                <div className="mt-4 text-sm text-gray-500 dark:text-gray-400 text-right">
-                    {filteredProjects.length} projets trouvés
-                </div>
+                        <div className="mt-4 text-sm text-gray-500 dark:text-gray-400 text-right">
+                            {filteredProjects.length} projets trouvés
+                        </div>
+                    </>
+                )}
             </div>
 
             {/* Dialogs */}

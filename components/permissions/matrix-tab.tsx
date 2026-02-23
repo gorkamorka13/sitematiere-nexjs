@@ -45,6 +45,8 @@ interface MatrixTabProps {
 export function MatrixTab({ users, projects, permissions }: MatrixTabProps) {
   const [searchUser, setSearchUser] = useState("");
   const [searchProject, setSearchProject] = useState("");
+  const [currentPage, setCurrentPage] = useState(0);
+  const PROJECTS_PER_PAGE = 10;
 
   const filteredUsers = useMemo(() => {
     if (!searchUser) return users.filter((u) => u.role !== "ADMIN");
@@ -57,6 +59,8 @@ export function MatrixTab({ users, projects, permissions }: MatrixTabProps) {
   }, [users, searchUser]);
 
   const filteredProjects = useMemo(() => {
+    // Reset page when searching
+    setCurrentPage(0);
     if (!searchProject) return projects;
     const query = searchProject.toLowerCase();
     return projects.filter(
@@ -66,6 +70,12 @@ export function MatrixTab({ users, projects, permissions }: MatrixTabProps) {
         p.type.toLowerCase().includes(query)
     );
   }, [projects, searchProject]);
+
+  const totalPages = Math.ceil(filteredProjects.length / PROJECTS_PER_PAGE);
+  const paginatedProjects = useMemo(() => {
+    const start = currentPage * PROJECTS_PER_PAGE;
+    return filteredProjects.slice(start, start + PROJECTS_PER_PAGE);
+  }, [filteredProjects, currentPage]);
 
   const getPermissionLevel = (userId: string, projectId: string): PermissionLevel | "OWNER" | null => {
     const project = projects.find((p) => p.id === projectId);
@@ -124,10 +134,36 @@ export function MatrixTab({ users, projects, permissions }: MatrixTabProps) {
         <table className="min-w-full border-collapse">
           <thead>
             <tr>
-              <th className="sticky left-0 z-20 bg-white dark:bg-gray-800 px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-200 dark:border-gray-700 min-w-[150px]">
-                Utilisateur
+              <th className="sticky left-0 z-20 bg-white dark:bg-gray-800 px-4 py-3 text-left border-b border-gray-200 dark:border-gray-700 min-w-[150px]">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Utilisateur</span>
+                  {totalPages > 1 && (
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                        disabled={currentPage === 0}
+                        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded disabled:opacity-30"
+                        title="Précédent"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
+                        disabled={currentPage === totalPages - 1}
+                        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded disabled:opacity-30"
+                        title="Suivant"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </th>
-              {filteredProjects.slice(0, 10).map((project) => (
+              {paginatedProjects.map((project) => (
                 <th
                   key={project.id}
                   className="px-3 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-200 dark:border-gray-700 min-w-[100px]"
@@ -150,9 +186,14 @@ export function MatrixTab({ users, projects, permissions }: MatrixTabProps) {
                   )}
                 </th>
               ))}
-              {filteredProjects.length > 10 && (
+              {currentPage < totalPages - 1 && (
                 <th className="px-3 py-3 text-left text-xs text-gray-400 border-b border-gray-200 dark:border-gray-700">
-                  +{filteredProjects.length - 10} autres
+                  <button
+                    onClick={() => setCurrentPage(prev => prev + 1)}
+                    className="hover:text-indigo-600 transition-colors whitespace-nowrap"
+                  >
+                    +{filteredProjects.length - (currentPage + 1) * PROJECTS_PER_PAGE} autres
+                  </button>
                 </th>
               )}
             </tr>
@@ -178,7 +219,7 @@ export function MatrixTab({ users, projects, permissions }: MatrixTabProps) {
                     </div>
                   </div>
                 </td>
-                {filteredProjects.slice(0, 10).map((project) => (
+                {paginatedProjects.map((project) => (
                   <td
                     key={project.id}
                     className="px-3 py-3 border-b border-gray-200 dark:border-gray-700 text-center"
@@ -186,7 +227,7 @@ export function MatrixTab({ users, projects, permissions }: MatrixTabProps) {
                     {getCellContent(user.id, project.id)}
                   </td>
                 ))}
-                {filteredProjects.length > 10 && (
+                {currentPage < totalPages - 1 && (
                   <td className="px-3 py-3 border-b border-gray-200 dark:border-gray-700 text-center text-gray-400 text-xs">
                     ...
                   </td>
@@ -197,27 +238,32 @@ export function MatrixTab({ users, projects, permissions }: MatrixTabProps) {
         </table>
       </div>
 
-      <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
-        <span className="font-medium">Légende:</span>
-        <div className="flex items-center gap-2">
-          <PermissionBadge level="OWNER" />
-          <span>Propriétaire</span>
+      <div className="flex flex-wrap items-center justify-between gap-4 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
+        <div className="flex flex-wrap items-center gap-4">
+          <span className="font-medium">Légende:</span>
+          <div className="flex items-center gap-2">
+            <PermissionBadge level="OWNER" />
+            <span>Propriétaire</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <PermissionBadge level="READ" />
+            <span>Lecture</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <PermissionBadge level="WRITE" />
+            <span>Écriture</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <PermissionBadge level="MANAGE" />
+            <span>Gestion</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-gray-300">—</span>
+            <span>Pas d&apos;accès</span>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <PermissionBadge level="READ" />
-          <span>Lecture</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <PermissionBadge level="WRITE" />
-          <span>Écriture</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <PermissionBadge level="MANAGE" />
-          <span>Gestion</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-gray-300">—</span>
-          <span>Pas d&apos;accès</span>
+        <div>
+          Page {currentPage + 1} sur {totalPages} ({filteredProjects.length} projets)
         </div>
       </div>
     </div>

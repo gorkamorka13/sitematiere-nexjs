@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
@@ -91,9 +91,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                         };
                     } else {
                         logger.warn("[Auth_Authorize] FAILURE: Password mismatch for user:", username);
+                        throw new CredentialsSignin("Identifiants invalides");
                     }
                 } catch (error) {
+                    if (error instanceof CredentialsSignin) throw error;
                     logger.error("[Auth_Authorize] CRITICAL ERROR during authorization process:", error);
+                    throw new CredentialsSignin("Erreur technique de connexion");
                 }
 
                 return null;
