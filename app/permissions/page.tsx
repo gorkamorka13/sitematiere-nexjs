@@ -77,6 +77,7 @@ export default async function PermissionsPage() {
     level: p.level as "READ" | "WRITE" | "MANAGE",
     projectId: p.projectId,
     userId: p.userId,
+    createdAt: p.createdAt,
     project: {
       id: p.project.id,
       name: p.project.name,

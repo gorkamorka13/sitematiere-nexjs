@@ -28,6 +28,7 @@ interface Project {
 interface Permission {
   id: string;
   level: PermissionLevel;
+  projectId: string;
   createdAt: Date;
   user: {
     id: string;
@@ -41,12 +42,20 @@ interface Permission {
 
 interface ByProjectTabProps {
   projects: Project[];
+  permissions: Permission[];
   onOwnerChange?: (projectId: string, newOwnerId: string) => void;
 }
 
-export function ByProjectTab({ projects, onOwnerChange }: ByProjectTabProps) {
+export function ByProjectTab({ projects, permissions: initialPermissions, onOwnerChange }: ByProjectTabProps) {
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
-  const [permissionsMap, setPermissionsMap] = useState<Map<string, Permission[]>>(new Map());
+  const [permissionsMap, setPermissionsMap] = useState<Map<string, Permission[]>>(() => {
+    const map = new Map<string, Permission[]>();
+    initialPermissions.forEach((p) => {
+      const existing = map.get(p.projectId) || [];
+      map.set(p.projectId, [...existing, p]);
+    });
+    return map;
+  });
   const [loadingProjects, setLoadingProjects] = useState<Set<string>>(new Set());
   const [dialogProject, setDialogProject] = useState<Project | null>(null);
   const [ownerDialogProject, setOwnerDialogProject] = useState<Project | null>(null);

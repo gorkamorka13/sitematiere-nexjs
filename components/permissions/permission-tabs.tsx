@@ -37,6 +37,7 @@ interface Permission {
   level: PermissionLevel;
   projectId: string;
   userId: string;
+  createdAt: Date;
   project: {
     id: string;
     name: string;
@@ -92,7 +93,7 @@ export function PermissionTabs({ projects, users, permissions }: PermissionTabsP
       </div>
 
       <div className="mt-4">
-        {activeTab === "project" && <ByProjectTab projects={projects} />}
+        {activeTab === "project" && <ByProjectTab projects={projects} permissions={permissions} />}
         {activeTab === "user" && <ByUserTab users={users} projects={projects} permissions={permissions} />}
         {activeTab === "matrix" && <MatrixTab users={users} projects={projects} permissions={permissions} />}
         {activeTab === "responsibilities" && <ResponsibilitiesTab projects={projects} users={users} />}
