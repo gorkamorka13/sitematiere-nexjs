@@ -73,7 +73,7 @@ export default function HelpDialog({ isOpen, onClose, user }: HelpDialogProps) {
         </div>
 
         {/* Tabs Navigation */}
-        <div className="flex border-b border-gray-50 dark:border-gray-700/50 bg-gray-50/50 dark:bg-gray-900/20 px-2 md:px-4 overflow-x-auto scrollbar-none">
+        <div className="flex flex-none border-b border-gray-50 dark:border-gray-700/50 bg-gray-50/50 dark:bg-gray-900/20 px-2 md:px-4 overflow-x-auto scrollbar-none pt-2 pb-0.5">
           <button
             onClick={() => setActiveTab("intro")}
             className={`px-3 md:px-4 py-3 text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all border-b-2 whitespace-nowrap ${
