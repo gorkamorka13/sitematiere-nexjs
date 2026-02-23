@@ -1,0 +1,358 @@
+"use client";
+
+import { useState } from "react";
+import { X, Shield, HelpCircle, User, Users, Info, FileText, Check, AlertCircle, LayoutDashboard, Image as ImageIcon, Globe, Zap } from "lucide-react";
+
+interface HelpDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function HelpDialog({ isOpen, onClose }: HelpDialogProps) {
+  const [activeTab, setActiveTab] = useState<"intro" | "roles">("intro");
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[1050] flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
+        onClick={onClose}
+      />
+
+      {/* Modal Body */}
+      <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-5xl max-h-[85vh] flex flex-col border border-gray-100 dark:border-gray-700 overflow-hidden animate-in zoom-in-95 duration-300">
+        {/* Header */}
+        <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 z-10">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-indigo-50 dark:bg-indigo-900/40 rounded-xl">
+              <HelpCircle className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            </div>
+            <div>
+              <h2 className="text-xl font-black text-gray-900 dark:text-white leading-tight uppercase tracking-tight">
+                Centre d&apos;Aide
+              </h2>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
+                Guide et documentation technique
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-all"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        {/* Tabs Navigation */}
+        <div className="flex border-b border-gray-50 dark:border-gray-700/50 bg-gray-50/50 dark:bg-gray-900/20 px-4">
+          <button
+            onClick={() => setActiveTab("intro")}
+            className={`px-4 py-3 text-xs font-bold uppercase tracking-widest transition-all border-b-2 ${
+              activeTab === "intro"
+                ? "border-indigo-600 text-indigo-600"
+                : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+            }`}
+          >
+            Introduction
+          </button>
+          <button
+            onClick={() => setActiveTab("roles")}
+            className={`px-4 py-3 text-xs font-bold uppercase tracking-widest transition-all border-b-2 ${
+              activeTab === "roles"
+                ? "border-indigo-600 text-indigo-600"
+                : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+            }`}
+          >
+            Rôles & Permissions
+          </button>
+        </div>
+
+        {/* Content Area */}
+        <div className="flex-1 overflow-y-auto p-6 lg:p-10 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700">
+          {activeTab === "intro" && (
+            <div className="max-w-4xl mx-auto space-y-12">
+              {/* Hero Section */}
+              <div className="text-center space-y-4">
+                <h1 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tight">
+                  Bienvenue sur <span className="text-indigo-600">Site Matière</span>
+                </h1>
+                <p className="text-gray-500 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed font-medium">
+                  Une plateforme complète pour la gestion de projets de construction de ponts,
+                  allant de la prospection à la mise en service.
+                </p>
+              </div>
+
+              {/* Grid Features */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FeatureCard
+                  icon={<LayoutDashboard className="w-6 h-6" />}
+                  title="Tableau de Bord de Pilotage"
+                  description="Suivre l'avancement global via des cartes interactives et une synthèse statistique détaillée par pays, type et statut."
+                  color="text-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                />
+                <FeatureCard
+                  icon={<Globe className="w-6 h-6" />}
+                  title="Cartographie Intégrée"
+                  description="Visualiser chaque projet sur une carte mondiale avec des marqueurs personnalisés selon l'état actuel (Prospection, Études, Chantier...)."
+                  color="text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
+                />
+                <FeatureCard
+                  icon={<ImageIcon className="w-6 h-6" />}
+                  title="Gestion de Médias & Fichiers"
+                  description="Explorer et gérer les galeries photos, vidéos et documents techniques (PDF, plans) au sein d'un explorateur unifié."
+                  color="text-amber-500 bg-amber-50 dark:bg-amber-900/20"
+                />
+                <FeatureCard
+                  icon={<Zap className="w-6 h-6" />}
+                  title="Performance & Sécurité"
+                  description="Une interface fluide et optimisée, sécurisée par un système de permissions granulaire pour garantir la protection des données."
+                  color="text-indigo-500 bg-indigo-50 dark:bg-indigo-900/20"
+                />
+              </div>
+
+              {/* Steps Section */}
+              <section className="bg-gray-50 dark:bg-gray-900/30 rounded-3xl p-8 border border-gray-100 dark:border-gray-700">
+                <h3 className="text-sm font-black uppercase tracking-widest text-gray-800 dark:text-white mb-6">Cycle de vie des projets</h3>
+                <div className="flex flex-wrap items-center gap-4">
+                  <PhaseBadge label="Prospection" />
+                  <span className="text-gray-300">→</span>
+                  <PhaseBadge label="Études" />
+                  <span className="text-gray-300">→</span>
+                  <PhaseBadge label="Fabrication" />
+                  <span className="text-gray-300">→</span>
+                  <PhaseBadge label="Transport" />
+                  <span className="text-gray-300">→</span>
+                  <PhaseBadge label="Construction" />
+                </div>
+              </section>
+
+              {/* System Note */}
+              <div className="flex items-center gap-2 justify-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                <Shield className="w-3 h-3" />
+                Système optimisé pour Cloudflare Workers & Neon Database
+              </div>
+            </div>
+          )}
+
+          {activeTab === "roles" && (
+            <div className="max-w-4xl mx-auto space-y-12">
+              {/* Intro Section */}
+              <section>
+                <div className="flex items-center gap-2 mb-4">
+                  <Info className="w-4 h-4 text-indigo-500" />
+                  <h3 className="text-sm font-black uppercase tracking-widest text-gray-800 dark:text-white">
+                    1. Rôles Système (Globaux)
+                  </h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <RoleCard
+                    role="ADMIN"
+                    title="Administrateur"
+                    description="Accès total à tous les projets, médias et réglages système."
+                    color="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400"
+                    icon={<Shield className="w-5 h-5" />}
+                  />
+                  <RoleCard
+                    role="USER"
+                    title="Utilisateur"
+                    description="Accès aux projets possédés ou autorisés explicitement."
+                    color="bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400"
+                    icon={<User className="w-5 h-5" />}
+                  />
+                  <RoleCard
+                    role="VISITOR"
+                    title="Visiteur"
+                    description="Lecture seule sur les projets. Accès restreint aux documents PDF."
+                    color="bg-gray-50 dark:bg-gray-900/40 text-gray-500 dark:text-gray-400"
+                    icon={<Users className="w-5 h-5" />}
+                  />
+                </div>
+              </section>
+
+              {/* Levels Section */}
+              <section>
+                <div className="flex items-center gap-2 mb-4">
+                  <FileText className="w-4 h-4 text-indigo-500" />
+                  <h3 className="text-sm font-black uppercase tracking-widest text-gray-800 dark:text-white">
+                    2. Niveaux par Projet
+                  </h3>
+                </div>
+                <div className="bg-white dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden shadow-sm">
+                  <table className="min-w-full divide-y divide-gray-100 dark:divide-gray-700/50">
+                    <thead className="bg-gray-50 dark:bg-gray-900/50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Niveau</th>
+                        <th className="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Droits</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50 dark:divide-gray-700/50">
+                      <PermissionRow level="READ" label="Lecture" rights="Consulter le projet, voir les cartes et la galerie média." />
+                      <PermissionRow level="WRITE" label="Écriture" rights="Lecture + modification détails projet & ajout de médias." />
+                      <PermissionRow level="MANAGE" label="Gestion" rights="Écriture + suppression de médias & gestion des accès." />
+                      <PermissionRow level="OWNER" label="Propriétaire" rights="Identique à MANAGE, définit le responsable principal." />
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+
+              {/* Matrix Section */}
+              <section>
+                <div className="flex items-center gap-2 mb-4">
+                  <Shield className="w-4 h-4 text-indigo-500" />
+                  <h3 className="text-sm font-black uppercase tracking-widest text-gray-800 dark:text-white">
+                    3. Matrice de Capacités
+                  </h3>
+                </div>
+                <div className="overflow-x-auto rounded-2xl border border-gray-100 dark:border-gray-700">
+                  <table className="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-900/50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Action</th>
+                        <th className="px-2 py-3 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">Visitor</th>
+                        <th className="px-2 py-3 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">User (Read)</th>
+                        <th className="px-2 py-3 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">User (Write)</th>
+                        <th className="px-2 py-3 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">Admin</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50 dark:divide-gray-700/50 text-xs">
+                      <MatrixRow label="Consulter Cartes & Détails" access={[true, true, true, true]} />
+                      <MatrixRow label="Galerie Photos / Vidéos" access={[true, true, true, true]} />
+                      <MatrixRow label="Accès Documents PDF" access={[false, true, true, true]} />
+                      <MatrixRow label="Modifier détails Projet" access={[false, false, true, true]} />
+                      <MatrixRow label="Gestion des Médias (R2)" access={[false, false, true, true]} />
+                      <MatrixRow label="Gérer Permissions / Système" access={[false, false, false, true]} />
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+
+              {/* Note Section */}
+              <div className="p-4 bg-amber-50 dark:bg-amber-900/10 rounded-xl border border-amber-100 dark:border-amber-900/30 flex gap-3">
+                <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-800 dark:text-amber-200 italic leading-relaxed">
+                  <strong>Note Technique :</strong> Les Administrateurs by-passent toutes les vérifications de permissions par projet.
+                  L&apos;accès aux documents PDF est strictement désactivé pour les profils Visiteurs (VISITOR).
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="p-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex justify-between items-center">
+          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Site Matière — Documentation v1.2</span>
+          <button
+            onClick={onClose}
+            className="px-6 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-xs font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg"
+          >
+            Fermer
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface FeatureCardProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  color: string;
+}
+
+function FeatureCard({ icon, title, description, color }: FeatureCardProps) {
+  return (
+    <div className="p-6 rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800/10 hover:shadow-lg transition-all group">
+      <div className={`p-3 rounded-xl w-fit mb-4 ${color}`}>
+        {icon}
+      </div>
+      <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight mb-2 group-hover:text-indigo-600 transition-colors">
+        {title}
+      </h3>
+      <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
+        {description}
+      </p>
+    </div>
+  );
+}
+
+interface PhaseBadgeProps {
+  label: string;
+}
+
+function PhaseBadge({ label }: PhaseBadgeProps) {
+  return (
+    <div className="px-3 py-1.5 bg-white dark:bg-gray-800 rounded-lg text-[10px] font-black uppercase tracking-tighter text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 shadow-sm">
+      {label}
+    </div>
+  );
+}
+
+interface RoleCardProps {
+  role: string;
+  title: string;
+  description: string;
+  color: string;
+  icon: React.ReactNode;
+}
+
+function RoleCard({ role, title, description, color, icon }: RoleCardProps) {
+  return (
+    <div className={`p-5 rounded-2xl border border-transparent hover:border-current/10 transition-all ${color}`}>
+      <div className="flex items-center gap-3 mb-3">
+        {icon}
+        <span className="text-sm font-black uppercase tracking-tighter">{title}</span>
+      </div>
+      <p className="text-xs font-medium leading-relaxed opacity-80">{description}</p>
+      <div className="mt-4 text-[10px] font-bold uppercase tracking-widest px-2 py-1 bg-white/50 dark:bg-black/20 rounded-lg w-fit">
+        Role: {role}
+      </div>
+    </div>
+  );
+}
+
+interface PermissionRowProps {
+  level: string;
+  label: string;
+  rights: string;
+}
+
+function PermissionRow({ level, label, rights }: PermissionRowProps) {
+  return (
+    <tr className="hover:bg-gray-50/50 dark:hover:bg-gray-700/10 transition-colors">
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className="flex flex-col">
+          <span className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-tight">{label}</span>
+          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{level}</span>
+        </div>
+      </td>
+      <td className="px-6 py-4">
+        <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed font-medium">{rights}</p>
+      </td>
+    </tr>
+  );
+}
+
+function MatrixRow({ label, access }: { label: string; access: boolean[] }) {
+  return (
+    <tr className="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
+      <td className="px-4 py-3 font-medium text-gray-700 dark:text-gray-300">{label}</td>
+      {access.map((hasAccess, i) => (
+        <td key={i} className="px-2 py-3 text-center">
+          {hasAccess ? (
+            <div className="inline-flex items-center justify-center w-5 h-5 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full">
+              <Check className="w-3 h-3" strokeWidth={3} />
+            </div>
+          ) : (
+            <div className="inline-flex items-center justify-center w-5 h-5 bg-gray-100 dark:bg-gray-700/50 text-gray-400 dark:text-gray-600 rounded-full">
+              <X className="w-3 h-3" strokeWidth={3} />
+            </div>
+          )}
+        </td>
+      ))}
+    </tr>
+  );
+}

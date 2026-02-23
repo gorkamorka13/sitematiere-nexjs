@@ -21,8 +21,10 @@ interface DashboardTableProps {
     currentUser: { id?: string; role?: UserRole };
 }
 
+type SortKey = keyof Project | 'statusLabel' | 'owner' | 'prospection' | 'studies' | 'fabrication' | 'transport' | 'construction';
+
 type SortConfig = {
-    key: keyof Project | 'statusLabel' | 'owner' | 'prospection' | 'studies' | 'fabrication' | 'transport' | 'construction';
+    key: SortKey;
     direction: 'asc' | 'desc';
 } | null;
 
@@ -39,7 +41,7 @@ export function DashboardTable({
 }: DashboardTableProps) {
     const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'name', direction: 'asc' });
 
-    const handleSort = (key: any) => {
+    const handleSort = (key: SortKey) => {
         let direction: 'asc' | 'desc' = 'asc';
         if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
             direction = 'desc';
@@ -55,8 +57,8 @@ export function DashboardTable({
         // Sort
         if (sortConfig) {
             result.sort((a, b) => {
-                let aValue: any;
-                let bValue: any;
+                let aValue: string | number | boolean | Date | null | undefined;
+                let bValue: string | number | boolean | Date | null | undefined;
 
                 const currentKey = sortConfig?.key;
                 if (!currentKey) return 0;
@@ -75,6 +77,13 @@ export function DashboardTable({
                 if (aValue === null || aValue === undefined) return 1;
                 if (bValue === null || bValue === undefined) return -1;
 
+                // Handle Date comparison
+                if (aValue instanceof Date && bValue instanceof Date) {
+                    return sortConfig.direction === 'asc'
+                        ? aValue.getTime() - bValue.getTime()
+                        : bValue.getTime() - aValue.getTime();
+                }
+
                 if (aValue < bValue) {
                     return sortConfig.direction === 'asc' ? -1 : 1;
                 }
@@ -88,7 +97,7 @@ export function DashboardTable({
         return result;
     }, [filteredProjects, sortConfig]);
 
-    const SortIcon = ({ columnKey }: { columnKey: SortConfig['key'] }) => {
+    const SortIcon = ({ columnKey }: { columnKey: SortKey }) => {
         if (!sortConfig || sortConfig.key !== columnKey) return <ArrowUpDown className="ml-1 w-3 h-3 opacity-30 group-hover:opacity-100 transition-opacity" />;
         return sortConfig.direction === 'asc'
             ? <ArrowUpIcon className="ml-1 w-3 h-3 text-indigo-500" />
@@ -130,7 +139,7 @@ export function DashboardTable({
                                         {(['prospection', 'studies', 'fabrication', 'transport', 'construction'] as const).map((phase) => (
                                             <th key={phase} scope="col" className="px-2 py-3.5 text-center min-w-[100px]">
                                                 <button
-                                                    onClick={() => handleSort(phase as any)}
+                                                onClick={() => handleSort(phase)}
                                                     className="group inline-flex items-center text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-indigo-500 transition-colors"
                                                 >
                                                     {phase === 'studies' ? 'Études' : phase.charAt(0).toUpperCase() + phase.slice(1)}
@@ -186,7 +195,7 @@ export function DashboardTable({
                                         {/* Type Column */}
                                         <th scope="col" className="hidden sm:table-cell px-3 py-3.5 text-left">
                                             <button
-                                                onClick={() => handleSort('type' as any)}
+                                                onClick={() => handleSort('type')}
                                                 className="group inline-flex items-center text-xs font-bold text-gray-400 uppercase tracking-widest hover:text-indigo-500 transition-colors"
                                             >
                                                 Type

@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { users, projects, documents, files, projectPermissions } from "@/lib/db/schema";
+import { users, projects, documents, files } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { auth, checkRole } from "@/lib/auth";
 import { hash } from "bcrypt-ts";

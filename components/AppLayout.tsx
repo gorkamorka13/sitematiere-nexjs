@@ -15,7 +15,8 @@ import {
     Users,
     Presentation,
     Shield,
-    X
+    X,
+    HelpCircle
 } from 'lucide-react';
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import UserBadge from "@/components/settings/user-badge";
@@ -23,6 +24,7 @@ import { ModeToggle } from "@/components/ui/mode-toggle";
 import { UserRole } from "@/lib/auth-types";
 import { useSwipe } from '@/hooks/use-swipe';
 import packageInfo from '../package.json';
+import HelpDialog from './help/help-dialog';
 const version = packageInfo.version;
 
 interface User {
@@ -65,6 +67,7 @@ export default function AppLayout({
 }: AppLayoutProps) {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isHelpOpen, setIsHelpOpen] = useState(false);
     const pathname = usePathname();
 
     const swipeHandlers = useSwipe({
@@ -285,6 +288,23 @@ export default function AppLayout({
                             </Link>
                         </div>
                     )}
+
+                    {/* Section Aide (ADMIN & USER only) */}
+                    {(user.role === 'ADMIN' || user.role === 'USER') && (
+                        <div className="pt-4 mt-6 border-t border-gray-100 dark:border-gray-700/50">
+                            {!isSidebarCollapsed && <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-3 mb-2 block">Assistance</span>}
+                            <button
+                                onClick={() => {
+                                    setIsHelpOpen(true);
+                                    setIsMobileMenuOpen(false);
+                                }}
+                                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 transition-all group cursor-pointer"
+                            >
+                                <HelpCircle className={`w-5 h-5 ${isSidebarCollapsed ? "mx-auto" : ""} text-indigo-500`} />
+                                {!isSidebarCollapsed && <span className="text-sm font-bold truncate">Aide & Guide</span>}
+                            </button>
+                        </div>
+                    )}
                 </nav>
 
                 {/* Sidebar Actions */}
@@ -318,6 +338,9 @@ export default function AppLayout({
                     {children}
                 </div>
             </main>
+
+            {/* Help Dialog */}
+            <HelpDialog isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
         </div>
     );
 }

@@ -149,12 +149,14 @@ export default function MediaManagementDialog({ isOpen, onClose, projects, defau
     }, [projects]);
 
     const filteredProjects = useMemo(() => {
-        return projects.filter(p => {
-            if (p.country === "Système") return false;
-            const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
-            const matchesCountry = !selectedCountry || p.country === selectedCountry;
-            return matchesSearch && matchesCountry;
-        });
+        return projects
+            .filter(p => {
+                if (p.country === "Système") return false;
+                const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+                const matchesCountry = !selectedCountry || p.country === selectedCountry;
+                return matchesSearch && matchesCountry;
+            })
+            .sort((a, b) => a.name.localeCompare(b.name));
     }, [projects, searchQuery, selectedCountry]);
 
     const selectedProject = projects.find(p => p.id === selectedProjectId);
