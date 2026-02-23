@@ -197,6 +197,26 @@ export function SyntheseTab({ stats }: SyntheseTabProps) {
                             );
                         })}
                     </div>
+
+                    {/* Color Legend */}
+                    <div className="mt-8 flex flex-wrap gap-x-4 gap-y-2 pt-5 border-t border-gray-100 dark:border-gray-700">
+                        <div className="flex items-center gap-1.5">
+                            <div className="w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">≥ 75%</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <div className="w-2.5 h-2.5 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.4)]" />
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">≥ 50%</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <div className="w-2.5 h-2.5 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.4)]" />
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">≥ 25%</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <div className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]" />
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">&lt; 25%</span>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Users by Role */}

@@ -73,7 +73,7 @@ export default function ProjectMap({ latitude, longitude, status, projectName, d
                 <TileLayer url={tileUrl} />
                 <Marker
                     position={[latitude, longitude]}
-                    icon={getIcon(status, customPinUrl)}
+                    icon={getIcon(status, customPinUrl, true)}
                 >
                     {!isCapture && (
                         <Tooltip direction="top" offset={[0, -32]} opacity={1}>
@@ -88,9 +88,14 @@ export default function ProjectMap({ latitude, longitude, status, projectName, d
                             maxWidth={460}
                             className="project-description-popup"
                         >
-                            <p style={{ fontSize: "0.6rem", lineHeight: "1.4", width: "420px", maxWidth: "90vw", margin: 0, color: "#374151", whiteSpace: "pre-wrap" }}>
-                                {description}
-                            </p>
+                            <div style={{ width: "420px", maxWidth: "90vw" }}>
+                                <div className="font-bold text-xs uppercase tracking-wider mb-1.5 text-indigo-600 dark:text-indigo-400 border-b border-gray-100 dark:border-gray-800 pb-1">
+                                    {projectName}
+                                </div>
+                                <p style={{ fontSize: "0.6rem", lineHeight: "1.4", margin: 0, color: "#374151", whiteSpace: "pre-wrap" }} className="dark:text-gray-300">
+                                    {description}
+                                </p>
+                            </div>
                         </Popup>
                     )}
                 </Marker>

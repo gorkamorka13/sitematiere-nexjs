@@ -91,8 +91,8 @@ export default function ProjectsMap({ projects, onSelectProject, selectedProject
                 <button
                     onClick={() => setIsFullScreen(!isFullScreen)}
                     className={`absolute right-4 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all transform hover:scale-105 active:scale-95 ${
-                        isFullScreen 
-                            ? "top-16 lg:top-4 z-[1000]" 
+                        isFullScreen
+                            ? "top-16 lg:top-4 z-[1000]"
                             : "top-4 z-[700]"
                     }`}
                     title={isFullScreen ? "Quitter le plein écran" : "Plein écran"}
@@ -120,7 +120,11 @@ export default function ProjectsMap({ projects, onSelectProject, selectedProject
                     <Marker
                         key={project.id}
                         position={[project.latitude, project.longitude]}
-                        icon={getIcon(project.status, project.documents?.find(d => d.type === 'PIN')?.url)}
+                        icon={getIcon(
+                            project.status,
+                            project.documents?.find(d => d.type === 'PIN')?.url,
+                            project.id === selectedProjectId
+                        )}
                         zIndexOffset={project.id === selectedProjectId ? 1000 : 0}
                         eventHandlers={{
                             click: () => onSelectProject?.(project),

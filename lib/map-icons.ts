@@ -5,7 +5,7 @@ import { R2_PUBLIC_URL } from "@/lib/constants";
  * Recupere l'icone Leaflet correspondante au statut du projet
  * Centralise les visuels pour garantir la coherence entre toutes les cartes.
  */
-export const getIcon = (status: string | null | undefined, customPinUrl?: string | null) => {
+export const getIcon = (status: string | null | undefined, customPinUrl?: string | null, isSelected?: boolean) => {
   let iconUrl = customPinUrl;
   const r2PublicUrl = R2_PUBLIC_URL;
 
@@ -27,10 +27,13 @@ export const getIcon = (status: string | null | undefined, customPinUrl?: string
     iconUrl = `${r2PublicUrl}/pins/${iconUrl}`;
   }
 
+  const size: [number, number] = isSelected ? [42, 42] : [32, 32];
+
   return L.icon({
     iconUrl: iconUrl,
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -32],
+    iconSize: size,
+    iconAnchor: [size[0] / 2, size[1]],
+    popupAnchor: [0, -size[1]],
+    className: isSelected ? 'selected-project-marker' : '',
   });
 };

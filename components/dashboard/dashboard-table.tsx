@@ -22,7 +22,7 @@ interface DashboardTableProps {
 }
 
 type SortConfig = {
-    key: keyof Project | 'statusLabel' | 'owner';
+    key: keyof Project | 'statusLabel' | 'owner' | 'prospection' | 'studies' | 'fabrication' | 'transport' | 'construction';
     direction: 'asc' | 'desc';
 } | null;
 
@@ -39,7 +39,7 @@ export function DashboardTable({
 }: DashboardTableProps) {
     const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'name', direction: 'asc' });
 
-    const handleSort = (key: keyof Project | 'statusLabel' | 'owner') => {
+    const handleSort = (key: any) => {
         let direction: 'asc' | 'desc' = 'asc';
         if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
             direction = 'desc';
@@ -55,21 +55,21 @@ export function DashboardTable({
         // Sort
         if (sortConfig) {
             result.sort((a, b) => {
-                let aValue: string | number | boolean | null | undefined;
-                let bValue: string | number | boolean | null | undefined;
+                let aValue: any;
+                let bValue: any;
 
-                if (sortConfig.key === 'statusLabel') {
+                const currentKey = sortConfig?.key;
+                if (!currentKey) return 0;
+
+                if (currentKey === 'statusLabel') {
                     aValue = getStatusLabel(a.status);
                     bValue = getStatusLabel(b.status);
-                } else if (sortConfig.key === 'owner') {
+                } else if (currentKey === 'owner') {
                     aValue = a.owner?.username || "";
                     bValue = b.owner?.username || "";
                 } else {
-                    const key = sortConfig.key as keyof Project;
-                    const valA = a[key];
-                    const valB = b[key];
-                    aValue = (typeof valA === 'string' || typeof valA === 'number' || typeof valA === 'boolean' || valA === null) ? valA : String(valA);
-                    bValue = (typeof valB === 'string' || typeof valB === 'number' || typeof valB === 'boolean' || valB === null) ? valB : String(valB);
+                    aValue = a[currentKey as keyof Project];
+                    bValue = b[currentKey as keyof Project];
                 }
 
                 if (aValue === null || aValue === undefined) return 1;
@@ -88,7 +88,7 @@ export function DashboardTable({
         return result;
     }, [filteredProjects, sortConfig]);
 
-    const SortIcon = ({ columnKey }: { columnKey: keyof Project | 'statusLabel' | 'owner' }) => {
+    const SortIcon = ({ columnKey }: { columnKey: SortConfig['key'] }) => {
         if (!sortConfig || sortConfig.key !== columnKey) return <ArrowUpDown className="ml-1 w-3 h-3 opacity-30 group-hover:opacity-100 transition-opacity" />;
         return sortConfig.direction === 'asc'
             ? <ArrowUpIcon className="ml-1 w-3 h-3 text-indigo-500" />
@@ -105,7 +105,7 @@ export function DashboardTable({
                                 <thead className="bg-gray-50 dark:bg-gray-900 sticky top-0 z-10 shadow-sm transition-colors">
                                     <tr>
                                         {/* Name Column */}
-                                        <th scope="col" className="py-2 pl-4 pr-3 text-left sm:pl-6 min-w-[150px]">
+                                        <th scope="col" className="py-2 pl-4 pr-3 text-left sm:pl-6 min-w-[200px]">
                                             <button
                                                 onClick={() => handleSort('name')}
                                                 className="group inline-flex items-center text-xs font-bold text-gray-400 uppercase tracking-widest hover:text-indigo-500 transition-colors"
@@ -125,6 +125,19 @@ export function DashboardTable({
                                                 <Search className="absolute left-2 top-1.5 w-3 h-3 text-gray-400 pointer-events-none" />
                                             </div>
                                         </th>
+
+                                        {/* Phase Columns */}
+                                        {(['prospection', 'studies', 'fabrication', 'transport', 'construction'] as const).map((phase) => (
+                                            <th key={phase} scope="col" className="px-2 py-3.5 text-center min-w-[100px]">
+                                                <button
+                                                    onClick={() => handleSort(phase as any)}
+                                                    className="group inline-flex items-center text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-indigo-500 transition-colors"
+                                                >
+                                                    {phase === 'studies' ? 'Études' : phase.charAt(0).toUpperCase() + phase.slice(1)}
+                                                    <SortIcon columnKey={phase} />
+                                                </button>
+                                            </th>
+                                        ))}
 
                                         {/* Country Column */}
                                         <th scope="col" className="px-3 py-2 text-left min-w-[120px]">
@@ -149,7 +162,7 @@ export function DashboardTable({
                                         </th>
 
                                         {/* Owner Column */}
-                                        <th scope="col" className="px-3 py-2 text-left min-w-[120px]">
+                                        <th scope="col" className="px-3 py-2 text-left min-w-[150px]">
                                             <button
                                                 onClick={() => handleSort('owner')}
                                                 className="group inline-flex items-center text-xs font-bold text-gray-400 uppercase tracking-widest hover:text-indigo-500 transition-colors"
@@ -173,7 +186,7 @@ export function DashboardTable({
                                         {/* Type Column */}
                                         <th scope="col" className="hidden sm:table-cell px-3 py-3.5 text-left">
                                             <button
-                                                onClick={() => handleSort('type')}
+                                                onClick={() => handleSort('type' as any)}
                                                 className="group inline-flex items-center text-xs font-bold text-gray-400 uppercase tracking-widest hover:text-indigo-500 transition-colors"
                                             >
                                                 Type
@@ -218,6 +231,23 @@ export function DashboardTable({
                                                         )}
                                                     </div>
                                                 </td>
+
+                                                {/* Phase Progress Cells */}
+                                                {(['prospection', 'studies', 'fabrication', 'transport', 'construction'] as const).map((phase) => {
+                                                    const value = project[phase] || 0;
+                                                    const colorClass = value >= 75 ? 'text-green-600 dark:text-green-400' :
+                                                                     value >= 50 ? 'text-yellow-600 dark:text-yellow-400' :
+                                                                     value >= 25 ? 'text-orange-600 dark:text-orange-400' :
+                                                                     'text-red-600 dark:text-red-400';
+                                                    return (
+                                                        <td key={phase} className="whitespace-nowrap px-2 py-4 text-center">
+                                                            <span className={`text-xs font-bold ${colorClass}`}>
+                                                                {value}%
+                                                            </span>
+                                                        </td>
+                                                    );
+                                                })}
+
                                                 <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400 font-medium">{project.country}</td>
                                                 <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
                                                     {project.owner ? (
