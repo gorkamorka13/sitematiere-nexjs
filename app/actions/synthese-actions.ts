@@ -3,6 +3,7 @@
 import { db } from "@/lib/db";
 import { projects, users } from "@/lib/db/schema";
 import { ne } from "drizzle-orm";
+import { auth } from "@/lib/auth";
 
 export type SyntheseStats = {
     totalProjects: number;
@@ -20,6 +21,11 @@ export type SyntheseStats = {
 };
 
 export async function getSyntheseStats(): Promise<SyntheseStats> {
+    const session = await auth();
+    if (!session) {
+        throw new Error("Accès non autorisé.");
+    }
+
     // Fetch all real projects (exclude "Système")
     const allProjects = await db
         .select()

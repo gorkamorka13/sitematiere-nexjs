@@ -12,62 +12,24 @@ import { deleteFromR2, extractKeyFromUrl } from "@/lib/storage/r2-operations";
 import { logger } from "@/lib/logger";
 import { DocumentType } from "@/lib/enums";
 import { R2_PUBLIC_URL } from "@/lib/constants";
+import { getProjectAccess } from "@/lib/permissions";
+import { rateLimit } from "@/lib/rate-limit";
 
-async function checkProjectWritePermission(userId: string, projectId: string, userRole: UserRole): Promise<boolean> {
-  if (userRole === "ADMIN") return true;
+// Fix #2: Removed checkProjectWritePermission and checkProjectDeletePermission.
+// All permission checks now use the centralized getProjectAccess from lib/permissions.ts.
 
-  const [project] = await db
-    .select({ ownerId: projects.ownerId })
-    .from(projects)
-    .where(eq(projects.id, projectId))
-    .limit(1);
-
-  if (project?.ownerId === userId) return true;
-
-  const [permission] = await db
-    .select({ level: projectPermissions.level })
-    .from(projectPermissions)
-    .where(
-      and(
-        eq(projectPermissions.projectId, projectId),
-        eq(projectPermissions.userId, userId)
-      )
-    )
-    .limit(1);
-
-  return permission?.level === "WRITE" || permission?.level === "MANAGE";
-}
-
-async function checkProjectDeletePermission(userId: string, projectId: string, userRole: UserRole): Promise<boolean> {
-  if (userRole === "ADMIN") return true;
-
-  const [project] = await db
-    .select({ ownerId: projects.ownerId })
-    .from(projects)
-    .where(eq(projects.id, projectId))
-    .limit(1);
-
-  if (project?.ownerId === userId) return true;
-
-  const [permission] = await db
-    .select({ level: projectPermissions.level })
-    .from(projectPermissions)
-    .where(
-      and(
-        eq(projectPermissions.projectId, projectId),
-        eq(projectPermissions.userId, userId)
-      )
-    )
-    .limit(1);
-
-  return permission?.level === "MANAGE";
-}
 
 export async function updateProject(formData: ProjectUpdateInput) {
   const session = await auth();
 
   if (!checkRole(session, ["ADMIN", "USER"] as UserRole[])) {
     throw new Error("Action non autorisée. Seuls les administrateurs et utilisateurs autorisés peuvent modifier les projets.");
+  }
+
+  // Fix #3: Rate limiting
+  const isAllowed = await rateLimit(`updateProject:${session!.user.id}`);
+  if (!isAllowed) {
+    return { success: false, error: "Trop de requêtes. Veuillez patienter une minute." };
   }
 
   const validatedData = ProjectUpdateSchema.parse(formData);
@@ -82,14 +44,16 @@ export async function updateProject(formData: ProjectUpdateInput) {
       return { success: false, error: "Projet introuvable." };
     }
 
-    const hasPermission = await checkProjectWritePermission(
+    // Fix #2: use centralized getProjectAccess
+    const access = await getProjectAccess(
       session!.user.id,
+      session!.user.role,
       validatedData.id,
-      session!.user.role
+      project.ownerId
     );
 
-    if (!hasPermission) {
-      return { success: false, error: "Vous n'êtes pas autorisé à modifier ce projet." };
+    if (!access.canWrite) {
+      return { success: false, error: "Vous n'\u00eates pas autoris\u00e9 \u00e0 modifier ce projet." };
     }
 
     const isAdmin = checkRole(session, ["ADMIN"] as UserRole[]);
@@ -222,8 +186,9 @@ export async function updateProject(formData: ProjectUpdateInput) {
     revalidatePath("/");
     return { success: true };
   } catch (error) {
-    logger.error("Erreur lors de la mise à jour du projet:", error);
-    return { success: false, error: "Erreur lors de la mise à jour en base de données." };
+    // Fix #4: log details server-side only, return generic message to client
+    logger.error("Erreur lors de la mise \u00e0 jour du projet:", error);
+    return { success: false, error: "Une erreur est survenue. Veuillez r\u00e9essayer." };
   }
 }
 
@@ -232,6 +197,12 @@ export async function createProject(formData: ProjectCreateInput) {
 
   if (!checkRole(session, ["ADMIN"] as UserRole[])) {
     throw new Error("Action non autorisée. Seuls les administrateurs peuvent créer des projets.");
+  }
+
+  // Fix #3: Rate limiting
+  const isAllowed = await rateLimit(`createProject:${session!.user.id}`);
+  if (!isAllowed) {
+    return { success: false, error: "Trop de requêtes. Veuillez patienter une minute." };
   }
 
   const validatedData = ProjectCreateSchema.parse(formData);
@@ -335,11 +306,11 @@ export async function createProject(formData: ProjectCreateInput) {
     });
 
     revalidatePath("/");
-
     return { success: true, projectId: result.id };
   } catch (error) {
-    logger.error("Erreur lors de la création du projet:", error);
-    return { success: false, error: "Erreur lors de la création en base de données." };
+    // Fix #4: log details server-side only, return generic message to client
+    logger.error("Erreur lors de la cr\u00e9ation du projet:", error);
+    return { success: false, error: "Une erreur est survenue. Veuillez r\u00e9essayer." };
   }
 }
 
@@ -350,14 +321,32 @@ export async function deleteProject(projectId: string, confirmName: string) {
     throw new Error("Action non autorisée.");
   }
 
-  const hasPermission = await checkProjectDeletePermission(
+  // Fix #3: Rate limiting
+  const isAllowed = await rateLimit(`deleteProject:${session.user.id}`);
+  if (!isAllowed) {
+    throw new Error("Trop de requêtes. Veuillez patienter une minute.");
+  }
+
+  // Fix #2: use centralized getProjectAccess
+  const [projectForPerm] = await db
+    .select({ ownerId: projects.ownerId })
+    .from(projects)
+    .where(eq(projects.id, projectId))
+    .limit(1);
+
+  if (!projectForPerm) {
+    throw new Error("Projet introuvable.");
+  }
+
+  const access = await getProjectAccess(
     session.user.id,
+    session.user.role,
     projectId,
-    session.user.role
+    projectForPerm.ownerId
   );
 
-  if (!hasPermission) {
-    throw new Error("Action non autorisée. Vous n'avez pas les droits pour supprimer ce projet.");
+  if (!access.canDelete) {
+    throw new Error("Action non autoris\u00e9e.");
   }
 
   try {
@@ -394,7 +383,8 @@ export async function deleteProject(projectId: string, confirmName: string) {
 
     return { success: true };
   } catch (error) {
+    // Fix #4: log details server-side only, return generic message to client
     logger.error("Erreur lors de la suppression du projet:", error);
-    return { success: false, error: "Erreur lors de la suppression." };
+    return { success: false, error: "Une erreur est survenue. Veuillez r\u00e9essayer." };
   }
 }

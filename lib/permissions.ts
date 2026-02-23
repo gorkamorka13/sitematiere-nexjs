@@ -248,10 +248,18 @@ export async function checkPermission(
   projectId: string,
   requiredLevel: 'READ' | 'WRITE' | 'MANAGE'
 ): Promise<boolean> {
-  const access = await getProjectAccess(userId, userRole, projectId, '');
+  // Fix #1: fetch the real ownerId so owner-based access is correctly evaluated
+  const [project] = await db
+    .select({ ownerId: projects.ownerId })
+    .from(projects)
+    .where(eq(projects.id, projectId))
+    .limit(1);
+
+  if (!project) return false;
+
+  const access = await getProjectAccess(userId, userRole, projectId, project.ownerId);
 
   if (!access.hasAccess) return false;
-
   if (requiredLevel === 'READ') return access.canRead;
   if (requiredLevel === 'WRITE') return access.canWrite;
   if (requiredLevel === 'MANAGE') return access.canDelete;

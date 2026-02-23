@@ -8,11 +8,13 @@ Site Matière is a Next.js-based project management system designed specifically
 
 ## Features
 
-### Project Management
-- **Interactive Map Visualization**: View all projects on an interactive map with custom pins and filtering.
+### Dashboard
+- **Dual-tab interface**: Switch between the **Dashboard** (interactive maps + project table) and the **Synthèse** tab (global KPIs and statistics).
+- **Synthèse Tab**: Displays key indicators — number of projects, countries, users, completions — with breakdown by type, status, and color-coded average phase progression (green ≥75%, yellow ≥50%, orange ≥25%, red <25%).
+- **Interactive Map Visualization**: View all projects on an interactive global map with custom pins and filtering.
+- **Project Detail Popup**: Click a project pin in the project map to open a description popup (small font, respects line breaks).
 - **Project Lifecycle Tracking**: Track projects through phases: Prospection → Studies → Fabrication → Transport → Construction.
-- **Detailed Project Views**: Access comprehensive project information including coordinates, descriptions, and progress tracking.
-- **Pins System**: Custom map pins based on project status or type.
+- **Advanced Filtering**: Filter by country, name, type, and status with live search and autocomplete.
 
 ### Media & Document Management
 - **Photo Gallery**: Slideshow functionality with fullscreen viewing and dynamic loading from Cloudflare R2.
@@ -20,15 +22,17 @@ Site Matière is a Next.js-based project management system designed specifically
 - **Document Explorer**: Global file management system with folder structures and integrated PDF viewer.
 - **Image Processing**: Built-in image retouching, cropping, and optimization tools.
 
-### User Management
+### User & Permission Management
 - **Role-Based Access**: Three-tier system (Admin, User, Visitor) with strictly enforced permissions.
+- **Granular Project Permissions**: Admins can grant per-project READ or WRITE access to individual users/visitors.
 - **Account Protection**: Built-in protection against deletion of core administrative accounts.
 - **Authentication**: Secure login system with NextAuth.js v5.
 
 ### Modern Interface & Responsive Design
-- **adaptive Dialogs**: Management modals optimized for all screen sizes with sticky headers and scrolling content.
+- **Adaptive Dialogs**: Management modals optimized for all screen sizes with sticky headers and scrolling content.
 - **Floating Controls**: Intelligent floating close buttons and action triggers for mobile usability.
 - **Glassmorphism**: Premium UI aesthetics using backdrop blurs and modern color palettes.
+- **Dark Mode**: Full dark/light theme support across all components.
 
 ## Tech Stack
 
@@ -78,36 +82,38 @@ R2_BUCKET_NAME="your-bucket-name"
 ```bash
 # Development
 npm run dev              # Start Next.js dev server
-npm run lint            # Run ESLint check
+npm run lint             # Run ESLint check
 
 # Database (Drizzle)
-npm run db:push         # Push schema changes to the database
-npm run db:studio       # Open Drizzle interactive UI
-npm run db:generate     # Generate migrations
+npm run db:push          # Push schema changes to the database
+npm run db:studio        # Open Drizzle interactive UI
+npm run db:generate      # Generate migrations
 
 # Deployment (Cloudflare)
-npm run build:worker    # Build for Cloudflare environment
-npm run deploy          # Deploy to Cloudflare Pages
+npm run build:worker     # Build for Cloudflare environment
+npm run deploy           # Deploy to Cloudflare Pages
 ```
 
 ## Project Structure
 
 ```
 ├── app/                    # Next.js App Router (Pages, API, Server Actions)
-├── components/            # React Components
-│   ├── dashboard/         # Dashboard & Table components
-│   ├── settings/          # Management Dialogs (Users, Projects, Files)
-│   ├── ui/                # Core UI primitives
-│   └── files/             # File Upload & Explorer logic
-├── lib/                   # Database schema, Auth, and Utilities
-├── hooks/                 # Custom React Hooks
-├── public/                # Static assets (Pins, Logos)
-└── scripts/               # Migration and maintenance scripts
+│   └── actions/            # Server Actions (projects, permissions, synthèse stats…)
+├── components/             # React Components
+│   ├── dashboard/          # Dashboard, Synthèse Tab, Table, Gallery…
+│   ├── permissions/        # Project permission management UI
+│   ├── settings/           # Management Dialogs (Users, Projects, Files, Media)
+│   ├── ui/                 # Core UI primitives & map wrappers
+│   └── files/              # File Upload & Explorer logic
+├── lib/                    # Database schema, Auth, and Utilities
+├── hooks/                  # Custom React Hooks
+├── public/                 # Static assets (Pins, Logos)
+└── scripts/                # Migration and maintenance scripts
 ```
 
 ## Security
 
-- Role-based access control (RBAC).
+- Role-based access control (RBAC) with per-project granular permissions.
 - Secure password hashing with bcrypt.
 - Input validation via Zod schemas.
 - Edge-compatible authentication.
