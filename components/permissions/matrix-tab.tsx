@@ -59,8 +59,7 @@ export function MatrixTab({ users, projects, permissions }: MatrixTabProps) {
   }, [users, searchUser]);
 
   const filteredProjects = useMemo(() => {
-    // Reset page when searching
-    setCurrentPage(0);
+    // Reset page when searching is handled by useEffect or by resetting here but carefully
     if (!searchProject) return projects;
     const query = searchProject.toLowerCase();
     return projects.filter(
@@ -70,6 +69,11 @@ export function MatrixTab({ users, projects, permissions }: MatrixTabProps) {
         p.type.toLowerCase().includes(query)
     );
   }, [projects, searchProject]);
+
+  // Reset page when search changes
+  useMemo(() => {
+    setCurrentPage(0);
+  }, [searchProject]);
 
   const totalPages = Math.ceil(filteredProjects.length / PROJECTS_PER_PAGE);
   const paginatedProjects = useMemo(() => {

@@ -12,7 +12,7 @@ import { logger } from "@/lib/logger";
 export interface PermissionResult {
   success: boolean;
   error?: string;
-  data?: typeof projectPermissions.$inferSelect;
+  data?: any;
 }
 
 export interface PermissionWithUser {
@@ -350,9 +350,81 @@ export async function changeProjectOwner(projectId: string, newOwnerId: string):
 
     revalidatePath("/permissions");
     revalidatePath("/");
-    return { success: true };
+    return {
+      success: true,
+      data: {
+        id: newOwner.id,
+        name: newOwner.name,
+        username: newOwner.username,
+        color: newOwner.color
+      }
+    };
   } catch (error) {
     logger.error("Erreur lors du changement de propriétaire:", error);
     return { success: false, error: "Erreur lors du changement de propriétaire." };
+  }
+}
+
+export async function grantBatchPermissions(
+  userId: string,
+  level: PermissionLevel | "NONE"
+): Promise<PermissionResult> {
+  const session = await auth();
+
+  if (!checkRole(session, ["ADMIN"] as UserRole[])) {
+    return { success: false, error: "Action non autorisée." };
+  }
+
+  try {
+    const allProjects = await db.select({ id: projects.id }).from(projects);
+
+    if (level === "NONE") {
+      // Remove all permissions for this user
+      await db.delete(projectPermissions).where(eq(projectPermissions.userId, userId));
+    } else {
+      // Grant specified level to all projects
+      await db.transaction(async (tx) => {
+        for (const project of allProjects) {
+          // Skip if owner
+          const [proj] = await tx
+            .select({ ownerId: projects.ownerId })
+            .from(projects)
+            .where(eq(projects.id, project.id))
+            .limit(1);
+          if (proj?.ownerId === userId) continue;
+
+          const [existing] = await tx
+            .select()
+            .from(projectPermissions)
+            .where(
+              and(
+                eq(projectPermissions.projectId, project.id),
+                eq(projectPermissions.userId, userId)
+              )
+            )
+            .limit(1);
+
+          if (existing) {
+            await tx
+              .update(projectPermissions)
+              .set({ level, updatedAt: new Date() })
+              .where(eq(projectPermissions.id, existing.id));
+          } else {
+            await tx.insert(projectPermissions).values({
+              projectId: project.id,
+              userId,
+              level,
+              grantedBy: session!.user.id,
+            });
+          }
+        }
+      });
+    }
+
+    revalidatePath("/permissions");
+    return { success: true };
+  } catch (error) {
+    logger.error("Erreur lors de la gestion batch des permissions:", error);
+    return { success: false, error: "Erreur lors de la gestion batch des permissions." };
   }
 }

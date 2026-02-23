@@ -255,15 +255,17 @@ export function DashboardTable({
                                                     </span>
                                                 </td>
                                                 <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                                                    <button
-                                                        onClick={(e) => onExportClick(e, project)}
-                                                        className="flex items-center gap-1.5 ml-auto text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/40 px-3 py-1.5 rounded-lg transition-colors group"
-                                                        title="Générer Rapport PDF"
-                                                        aria-label={`Générer le rapport PDF du projet ${project.name}`}
-                                                    >
-                                                        <Download className="w-4 h-4 group-hover:scale-110 transition-transform" aria-hidden="true" />
-                                                        <span className="font-bold">PDF</span>
-                                                    </button>
+                                                    {currentUser.role !== 'VISITOR' && (
+                                                        <button
+                                                            onClick={(e) => onExportClick(e, project)}
+                                                            className="flex items-center gap-1.5 ml-auto text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/40 px-3 py-1.5 rounded-lg transition-colors group"
+                                                            title="Générer Rapport PDF"
+                                                            aria-label={`Générer le rapport PDF du projet ${project.name}`}
+                                                        >
+                                                            <Download className="w-4 h-4 group-hover:scale-110 transition-transform" aria-hidden="true" />
+                                                            <span className="font-bold">PDF</span>
+                                                        </button>
+                                                    )}
                                                 </td>
                                             </tr>
                                         ))

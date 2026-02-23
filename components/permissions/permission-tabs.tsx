@@ -59,11 +59,12 @@ interface PermissionTabsProps {
   projects: Project[];
   users: User[];
   permissions: Permission[];
+  currentUserRole: string;
 }
 
 type TabType = "project" | "user" | "matrix" | "responsibilities";
 
-export function PermissionTabs({ projects, users, permissions }: PermissionTabsProps) {
+export function PermissionTabs({ projects, users, permissions, currentUserRole }: PermissionTabsProps) {
   const [activeTab, setActiveTab] = useState<TabType>("project");
 
   const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
@@ -93,7 +94,13 @@ export function PermissionTabs({ projects, users, permissions }: PermissionTabsP
       </div>
 
       <div className="mt-4">
-        {activeTab === "project" && <ByProjectTab projects={projects} permissions={permissions} />}
+        {activeTab === "project" && (
+          <ByProjectTab
+            projects={projects}
+            permissions={permissions}
+            currentUserRole={currentUserRole}
+          />
+        )}
         {activeTab === "user" && <ByUserTab users={users} projects={projects} permissions={permissions} />}
         {activeTab === "matrix" && <MatrixTab users={users} projects={projects} permissions={permissions} />}
         {activeTab === "responsibilities" && <ResponsibilitiesTab projects={projects} users={users} />}

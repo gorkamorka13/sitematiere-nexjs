@@ -17,9 +17,10 @@ export default async function PermissionsPage() {
     redirect("/login");
   }
 
-  const isAdmin = checkRole(session, ["ADMIN"] as UserRole[]);
-
-  if (!isAdmin) {
+  // On autorise maintenant les USER qui sont OWNER ou MANAGE à voir la page,
+  // mais ils auront des droits de modification restreints par le composant client.
+  // Cependant, les VISITORS sont toujours redirigés.
+  if (session.user.role === "VISITOR") {
     redirect("/");
   }
 
@@ -45,7 +46,7 @@ export default async function PermissionsPage() {
       .from(projects)
       .leftJoin(users, eq(projects.ownerId, users.id))
       .where(ne(projects.country, "Système"))
-      .orderBy(desc(projects.createdAt)),
+      .orderBy(projects.name),
 
     db
       .select({
@@ -125,6 +126,7 @@ export default async function PermissionsPage() {
           projects={projectsWithOwners}
           users={nonAdminUsers}
           permissions={permissions}
+          currentUserRole={session.user.role || ""}
         />
       </div>
     </div>

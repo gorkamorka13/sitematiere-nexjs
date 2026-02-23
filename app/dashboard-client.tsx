@@ -455,7 +455,7 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                 </div>
 
                 {/* Documents */}
-                {dynamicMedia.pdfs.length > 0 && (
+                {user.role !== "VISITOR" && dynamicMedia.pdfs.length > 0 && (
                     <div className="grid grid-cols-1 gap-6 mb-6">
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-all duration-300">
                             <button
@@ -480,32 +480,28 @@ export default function DashboardClient({ initialProjects, user }: DashboardClie
                 )}
 
                 {/* Results Table */}
-                {user.role !== "VISITOR" && (
-                    <>
-                        <DashboardTable
-                            filteredProjects={filteredProjects}
-                            selectedProject={selectedProject}
-                            handleProjectSelect={handleProjectSelect}
-                            onExportClick={(e, project) => {
-                                e.stopPropagation();
-                                handleProjectSelect(project);
-                                setProjectToExport(project as ProjectWithRelations);
-                                setIsExportDialogOpen(true);
-                            }}
-                            searchQuery={searchQuery}
-                            setSearchQuery={setSearchQuery}
-                            selectedCountry={selectedCountry}
-                            onCountryChange={handleCountryChange}
-                            selectedTypes={selectedTypes}
-                            selectedStatuses={selectedStatuses}
-                            currentUser={{ id: user.id || undefined, role: user.role }}
-                        />
+                <DashboardTable
+                    filteredProjects={filteredProjects}
+                    selectedProject={selectedProject}
+                    handleProjectSelect={handleProjectSelect}
+                    onExportClick={(e, project) => {
+                        e.stopPropagation();
+                        handleProjectSelect(project);
+                        setProjectToExport(project as ProjectWithRelations);
+                        setIsExportDialogOpen(true);
+                    }}
+                    searchQuery={searchQuery}
+                    setSearchQuery={setSearchQuery}
+                    selectedCountry={selectedCountry}
+                    onCountryChange={handleCountryChange}
+                    selectedTypes={selectedTypes}
+                    selectedStatuses={selectedStatuses}
+                    currentUser={{ id: user.id || undefined, role: user.role }}
+                />
 
-                        <div className="mt-4 text-sm text-gray-500 dark:text-gray-400 text-right">
-                            {filteredProjects.length} projets trouvés
-                        </div>
-                    </>
-                )}
+                <div className="mt-4 text-sm text-gray-500 dark:text-gray-400 text-right">
+                    {filteredProjects.length} projets trouvés
+                </div>
             </div>
 
             {/* Dialogs */}

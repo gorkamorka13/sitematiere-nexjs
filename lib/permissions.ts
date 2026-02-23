@@ -12,6 +12,7 @@ export interface ProjectAccess {
   canWrite: boolean;
   canDelete: boolean;
   canManagePermissions: boolean;
+  canViewPdfs: boolean;
 }
 
 export const PermissionLevelConfig = {
@@ -22,6 +23,7 @@ export const PermissionLevelConfig = {
     canWrite: false,
     canDelete: false,
     canManagePermissions: false,
+    canViewPdfs: true,
   },
   WRITE: {
     label: 'Écriture',
@@ -30,6 +32,7 @@ export const PermissionLevelConfig = {
     canWrite: true,
     canDelete: false,
     canManagePermissions: false,
+    canViewPdfs: true,
   },
   MANAGE: {
     label: 'Gestion',
@@ -37,7 +40,8 @@ export const PermissionLevelConfig = {
     canRead: true,
     canWrite: true,
     canDelete: true,
-    canManagePermissions: true,
+    canManagePermissions: false,
+    canViewPdfs: true,
   },
   OWNER: {
     label: 'Propriétaire',
@@ -45,7 +49,8 @@ export const PermissionLevelConfig = {
     canRead: true,
     canWrite: true,
     canDelete: true,
-    canManagePermissions: true,
+    canManagePermissions: false,
+    canViewPdfs: true,
   },
   ADMIN: {
     label: 'Administrateur',
@@ -54,12 +59,13 @@ export const PermissionLevelConfig = {
     canWrite: true,
     canDelete: true,
     canManagePermissions: true,
+    canViewPdfs: true,
   },
 } as const;
 
 export function getAccessConfig(level: PermissionLevel | 'OWNER' | 'ADMIN' | null) {
   if (!level) return null;
-  return PermissionLevelConfig[level];
+  return PermissionLevelConfig[level as keyof typeof PermissionLevelConfig];
 }
 
 export async function getProjectAccess(
@@ -76,6 +82,7 @@ export async function getProjectAccess(
       canWrite: true,
       canDelete: true,
       canManagePermissions: true,
+      canViewPdfs: true,
     };
   }
 
@@ -86,7 +93,8 @@ export async function getProjectAccess(
       canRead: true,
       canWrite: true,
       canDelete: true,
-      canManagePermissions: true,
+      canManagePermissions: false,
+      canViewPdfs: userRole === 'VISITOR' ? false : true,
     };
   }
 
@@ -109,6 +117,7 @@ export async function getProjectAccess(
       canWrite: false,
       canDelete: false,
       canManagePermissions: false,
+      canViewPdfs: false,
     };
   }
 
@@ -122,6 +131,7 @@ export async function getProjectAccess(
     canWrite: config.canWrite,
     canDelete: config.canDelete,
     canManagePermissions: config.canManagePermissions,
+    canViewPdfs: userRole === 'VISITOR' ? false : config.canViewPdfs,
   };
 }
 
@@ -140,6 +150,7 @@ export async function getAccessibleProjectIds(
         canWrite: true,
         canDelete: true,
         canManagePermissions: true,
+        canViewPdfs: true,
       },
     }));
   }
@@ -165,7 +176,8 @@ export async function getAccessibleProjectIds(
         canRead: true,
         canWrite: true,
         canDelete: true,
-        canManagePermissions: true,
+        canManagePermissions: false,
+        canViewPdfs: userRole === 'VISITOR' ? false : true,
       },
     });
   }
@@ -182,6 +194,7 @@ export async function getAccessibleProjectIds(
           canWrite: config.canWrite,
           canDelete: config.canDelete,
           canManagePermissions: config.canManagePermissions,
+          canViewPdfs: userRole === 'VISITOR' ? false : config.canViewPdfs,
         },
       });
     }
@@ -236,12 +249,12 @@ export async function checkPermission(
   requiredLevel: 'READ' | 'WRITE' | 'MANAGE'
 ): Promise<boolean> {
   const access = await getProjectAccess(userId, userRole, projectId, '');
-  
+
   if (!access.hasAccess) return false;
-  
+
   if (requiredLevel === 'READ') return access.canRead;
   if (requiredLevel === 'WRITE') return access.canWrite;
   if (requiredLevel === 'MANAGE') return access.canDelete;
-  
+
   return false;
 }

@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2, ChevronDown, ChevronUp, Loader2, Search } from "lucide-react";
+import { Plus, Trash2, Pencil, ChevronDown, ChevronUp, Loader2, Search } from "lucide-react";
 import { PermissionBadge } from "./permission-badge";
 import type { PermissionLevel } from "@/lib/permissions";
-import { grantPermission, revokePermission } from "@/app/actions/permission-actions";
+import { grantPermission, revokePermission, grantBatchPermissions, updatePermissionLevel } from "@/app/actions/permission-actions";
 import { useLogger } from "@/lib/logger";
 import { useRouter } from "next/navigation";
 
@@ -62,6 +62,7 @@ export function ByUserTab({ users, projects, permissions }: ByUserTabProps) {
   const [dialogUser, setDialogUser] = useState<User | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [selectedLevel, setSelectedLevel] = useState<PermissionLevel>("READ");
+  const [editingPermissionId, setEditingPermissionId] = useState<string | null>(null);
   const router = useRouter();
   const logger = useLogger("ByUserTab");
 
@@ -114,15 +115,26 @@ export function ByUserTab({ users, projects, permissions }: ByUserTabProps) {
   const handleAddPermission = async () => {
     if (!dialogUser || !selectedProjectId) return;
 
-    const result = await grantPermission(selectedProjectId, dialogUser.id, selectedLevel);
+    let result;
+    if (editingPermissionId) {
+      result = await updatePermissionLevel(editingPermissionId, selectedLevel);
+    } else if (selectedProjectId === "ALL") {
+      result = await grantBatchPermissions(dialogUser.id, selectedLevel);
+    } else if (selectedProjectId === "NONE") {
+      result = await grantBatchPermissions(dialogUser.id, "NONE");
+    } else {
+      result = await grantPermission(selectedProjectId, dialogUser.id, selectedLevel);
+    }
+
     if (result.success) {
       await fetchUserPermissions(dialogUser.id);
       setDialogUser(null);
       setSelectedProjectId("");
       setSelectedLevel("READ");
+      setEditingPermissionId(null);
       router.refresh();
     } else {
-      alert(result.error || "Erreur lors de l'ajout de la permission");
+      alert(result.error || (editingPermissionId ? "Erreur lors de la modification" : "Erreur lors de l'ajout"));
     }
   };
 
@@ -243,6 +255,18 @@ export function ByUserTab({ users, projects, permissions }: ByUserTabProps) {
                               <div className="flex items-center gap-2">
                                 <PermissionBadge level={permission.level} />
                                 <button
+                                  onClick={() => {
+                                    setEditingPermissionId(permission.id);
+                                    setSelectedProjectId(permission.projectId);
+                                    setSelectedLevel(permission.level);
+                                    setDialogUser(user);
+                                  }}
+                                  className="p-1 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                                  title="Modifier"
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                </button>
+                                <button
                                   onClick={() => handleDeletePermission(permission.id, user.id)}
                                   className="p-1 text-red-600 hover:text-red-800 dark:text-red-400"
                                   title="Supprimer"
@@ -281,7 +305,7 @@ export function ByUserTab({ users, projects, permissions }: ByUserTabProps) {
           <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-gray-700 overflow-hidden">
             <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Ajouter un projet à {dialogUser.name || dialogUser.username}
+                {editingPermissionId ? "Modifier l'autorisation" : `Ajouter un projet à ${dialogUser.name || dialogUser.username}`}
               </h2>
               <button onClick={() => setDialogUser(null)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1">
                 ×
@@ -296,16 +320,31 @@ export function ByUserTab({ users, projects, permissions }: ByUserTabProps) {
                 <select
                   value={selectedProjectId}
                   onChange={(e) => setSelectedProjectId(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white text-sm"
+                  disabled={!!editingPermissionId}
+                  className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white text-sm disabled:opacity-50 disabled:bg-gray-50 dark:disabled:bg-gray-900"
                 >
                   <option value="">Sélectionner un projet</option>
-                  {projects
-                    .filter((p) => !existingProjectIds.includes(p.id))
-                    .map((project) => (
-                      <option key={project.id} value={project.id}>
-                        {project.name} ({project.country})
-                      </option>
-                    ))}
+                  {!editingPermissionId && (
+                    <optgroup label="Actions Batch">
+                      <option value="ALL">Tous les projets (accorder)</option>
+                      <option value="NONE">Tous les projets (révoquer)</option>
+                    </optgroup>
+                  )}
+                  {editingPermissionId ? (
+                    <option value={selectedProjectId}>
+                      {projects.find(p => p.id === selectedProjectId)?.name}
+                    </option>
+                  ) : (
+                    <optgroup label="Projets individuels">
+                      {projects
+                        .filter((p) => !existingProjectIds.includes(p.id))
+                        .map((project) => (
+                          <option key={project.id} value={project.id}>
+                            {project.name} ({project.country})
+                          </option>
+                        ))}
+                    </optgroup>
+                  )}
                 </select>
               </div>
 
@@ -349,9 +388,14 @@ export function ByUserTab({ users, projects, permissions }: ByUserTabProps) {
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <button
+                 <button
                   type="button"
-                  onClick={() => setDialogUser(null)}
+                  onClick={() => {
+                    setDialogUser(null);
+                    setEditingPermissionId(null);
+                    setSelectedProjectId("");
+                    setSelectedLevel("READ");
+                  }}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 transition-all"
                 >
                   Annuler
