@@ -33,7 +33,20 @@ export interface ProjectVideo {
   updatedAt: Date;
 }
 
-// Extended Project with relations
+import type { Project, Document as SchemaDocument, Video as SchemaVideo } from "./db/schema";
+
+// Extended Project type with owner info
+export type ProjectWithOwner = Project & {
+    owner?: { username: string | null; color: string | null } | null;
+};
+
+// Extended Project type with owner info and media relations  
+export type ProjectWithRelations = ProjectWithOwner & {
+    documents?: SchemaDocument[];
+    videos?: SchemaVideo[];
+};
+
+// Extended Project with full relations (matches other contexts if needed)
 export interface ExtendedProject {
   id: string;
   name: string;

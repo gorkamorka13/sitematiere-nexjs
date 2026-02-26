@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
-import { getProjectMedia } from "@/app/actions/project-media";
+import { useState, useMemo } from "react";
+import { useDashboardState } from "@/hooks/use-dashboard-state";
 
 import type { Project, Document as ProjectDocument, Video as ProjectVideo } from "@/lib/db/schema";
-import { ProjectStatus, ProjectType, DocumentType } from "@/lib/enums";
+import { DocumentType } from "@/lib/enums";
 import { UserRole } from "@/lib/auth-types";
 import type { SyntheseStats } from "@/app/actions/synthese-actions";
 import { SyntheseTab } from "@/components/dashboard/synthese-tab";
@@ -18,7 +18,6 @@ import ProjectManagementDialog from "@/components/settings/project-management-di
 import FileManagementDialog from "@/components/settings/file-management-dialog";
 import MediaManagementDialog from "@/components/settings/media-management-dialog";
 import SettingsDialogs from "@/components/settings/settings-dialogs";
-import { useLogger } from "@/lib/logger";
 
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import { ProjectProgress } from "@/components/dashboard/project-progress";
@@ -26,16 +25,7 @@ import { ProjectDescription } from "@/components/dashboard/project-description";
 import { PhotoGallery } from "@/components/dashboard/photo-gallery";
 import { PdfViewer } from "@/components/dashboard/pdf-viewer";
 import { DashboardTable } from "@/components/dashboard/dashboard-table";
-
-// Extended Project type with owner info and media relations
-export type ProjectWithOwner = Project & {
-    owner?: { username: string | null; color: string | null } | null;
-};
-
-export type ProjectWithRelations = ProjectWithOwner & {
-    documents?: ProjectDocument[];
-    videos?: ProjectVideo[];
-};
+import type { ProjectWithOwner, ProjectWithRelations } from "@/lib/types";
 
 type DashboardClientProps = {
     initialProjects: ProjectWithRelations[];
@@ -44,31 +34,44 @@ type DashboardClientProps = {
 };
 
 export default function DashboardClient({ initialProjects, syntheseStats, user }: DashboardClientProps) {
-    // Initialisation avec Sierra-Léone et projet "Sewa" si disponible
-    const defaultProject = initialProjects.find(p =>
-        p.country === "Sierra-Léone" && p.name === "Sewa"
-    ) || initialProjects.find(p => p.country === "Sierra-Léone") || initialProjects[0];
+    const {
+        searchQuery, setSearchQuery,
+        showSuggestions, setShowSuggestions,
+        focusedSuggestionIndex, setFocusedSuggestionIndex,
+        selectedCountry, setSelectedCountry,
+        selectedName, setSelectedName,
+        selectedTypes, setSelectedTypes,
+        selectedStatuses, setSelectedStatuses,
+        selectedProject,
+        dynamicMedia,
+        isLoadingMedia,
+        mapNonce,
+        fitNonce,
+        globalCenterNonce,
+        globalCenterPoint,
 
-    // State for search (declared first to avoid TDZ issues)
-    const [searchQuery, setSearchQuery] = useState<string>("");
-    const [showSuggestions, setShowSuggestions] = useState(false);
-    const [focusedSuggestionIndex, setFocusedSuggestionIndex] = useState<number>(-1);
+        // Derived state
+        countries,
+        types,
+        statuses,
+        filteredProjects,
+        mapProjects,
+        availableNames,
+        searchSuggestions,
 
-    // State for filters
-    const [selectedCountry, setSelectedCountry] = useState<string>(defaultProject?.country || initialProjects[0]?.country || "");
-    const [selectedName, setSelectedName] = useState<string>("");
-    const [selectedTypes, setSelectedTypes] = useState<ProjectType[]>([]);
-    const [selectedStatuses, setSelectedStatuses] = useState<ProjectStatus[]>([]);
+        // Actions
+        triggerFit,
+        handleProjectSelect,
+        toggleType,
+        toggleStatus,
+        resetFilters,
+        handleSearchSelect,
+        handleKeyDown,
+        handleCountryChange,
+        handleNameChange
+    } = useDashboardState(initialProjects);
 
-    // State for Selected Project (for right map)
-    const [selectedProject, setSelectedProject] = useState<ProjectWithRelations | null>(defaultProject as ProjectWithRelations || initialProjects[0] as ProjectWithRelations || null);
-
-    // State for dynamic media from filesystem
-    const [dynamicMedia, setDynamicMedia] = useState<{
-        images: { url: string; name: string }[],
-        pdfs: { url: string; name: string }[]
-    }>({ images: [], pdfs: [] });
-    const [isLoadingMedia, setIsLoadingMedia] = useState(false);
+    // Dialog & UI State (kept here because it's purely UI presentation within this component)
     const [isProjectManagementOpen, setIsProjectManagementOpen] = useState(false);
     const [projectManagementDefaultTab, setProjectManagementDefaultTab] = useState<'create' | 'modify' | 'delete'>('modify');
     const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
@@ -77,57 +80,6 @@ export default function DashboardClient({ initialProjects, syntheseStats, user }
     const [activeMediaTab, setActiveMediaTab] = useState<'photos' | 'videos' | 'edit'>('photos');
     const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
     const [projectToExport, setProjectToExport] = useState<ProjectWithRelations | null>(null);
-    const [mapNonce, setMapNonce] = useState<number>(0);
-    const [fitNonce, setFitNonce] = useState<number>(0);
-    const [globalCenterNonce, setGlobalCenterNonce] = useState<number>(0);
-    const [globalCenterPoint, setGlobalCenterPoint] = useState<[number, number] | null>(null);
-    const logger = useLogger('DashboardClient');
-
-    const triggerFit = useCallback(() => setFitNonce(prev => prev + 1), []);
-    const triggerGlobalCenter = useCallback((lat: number, lng: number) => {
-        setGlobalCenterPoint([lat, lng]);
-        setGlobalCenterNonce(prev => prev + 1);
-    }, []);
-
-    // Extract unique values for dropdowns
-    const countries = useMemo(() => {
-        const uniqueCountries = new Set(
-            initialProjects
-                .map(p => p.country)
-                .filter(Boolean)
-                .filter(c => c !== "Système")
-        );
-        return Array.from(uniqueCountries).sort();
-    }, [initialProjects]);
-
-    const types = Object.values(ProjectType);
-    const statuses = Object.values(ProjectStatus);
-
-    // Dependent Filter Logic
-    const filteredProjects = useMemo(() => {
-        return initialProjects.filter(project => {
-            // Exclure les projets système
-            if (project.country === "Système") return false;
-
-            // Filtrage par Pays
-            if (selectedCountry && project.country !== selectedCountry) return false;
-
-            // Note: On ne filtre plus par selectedName ici pour que le tableau
-            // affiche toujours la liste complète des résultats filtrés par catégorie.
-            // selectedName sert uniquement à la sélection/mise en évidence.
-
-            // Filtrage par Recherche globale (cohérent avec le champ NOM du tableau)
-            if (searchQuery.trim() && !project.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-
-            // Filtrage par Type
-            if (selectedTypes.length > 0 && !selectedTypes.includes(project.type as unknown as ProjectType)) return false;
-
-            // Filtrage par Statut
-            if (selectedStatuses.length > 0 && !selectedStatuses.includes(project.status as unknown as ProjectStatus)) return false;
-
-            return true;
-        });
-    }, [initialProjects, selectedCountry, searchQuery, selectedTypes, selectedStatuses]);
 
     // Extraire le drapeau et le logo du client pour le projet sélectionné
     const { flagDoc, logoDoc, pinDoc } = useMemo(() => {
@@ -138,207 +90,6 @@ export default function DashboardClient({ initialProjects, syntheseStats, user }
             pinDoc: docs.find((d: ProjectDocument) => d.type === DocumentType.PIN)
         };
     }, [selectedProject]);
-
-    // Auto-select first project when filtered list changes significantly
-    useEffect(() => {
-        if (filteredProjects.length > 0) {
-            const isSelectedStillValid = selectedProject && filteredProjects.some(p => p.id === selectedProject.id);
-            if (!selectedProject || !isSelectedStillValid) {
-                setSelectedProject(filteredProjects[0]);
-            } else {
-                // Allows updating the selected project if its data changes (e.g. status status)
-                const currentInFiltered = filteredProjects.find(p => p.id === selectedProject.id);
-                if (currentInFiltered && currentInFiltered !== selectedProject) {
-                    setSelectedProject(currentInFiltered);
-                }
-            }
-        } else {
-            setSelectedProject(null);
-        }
-    }, [filteredProjects, selectedProject]);
-
-    // Fetch dynamic media when project changes
-    const fetchMedia = useCallback(async (projectName: string, projectId: string) => {
-        setIsLoadingMedia(true);
-        try {
-            const media = await getProjectMedia(projectName, projectId);
-            setDynamicMedia(media);
-        } catch (error) {
-            logger.error("Error fetching media:", error);
-            setDynamicMedia({ images: [], pdfs: [] });
-        } finally {
-            setIsLoadingMedia(false);
-        }
-    }, [logger]);
-
-
-
-    useEffect(() => {
-        if (selectedProject) {
-            fetchMedia(selectedProject.name, selectedProject.id);
-        } else {
-            setDynamicMedia({ images: [], pdfs: [] });
-        }
-    }, [selectedProject, fetchMedia]);
-
-    // Dependent Names List (based on country selection)
-    const availableNames = useMemo(() => {
-        let projects = initialProjects.filter(p => p.country !== "Système");
-        if (selectedCountry) {
-            projects = projects.filter(p => p.country === selectedCountry);
-        }
-        return projects.map(p => p.name).sort();
-    }, [initialProjects, selectedCountry]);
-
-
-
-
-
-    // Map Projects for Global Map (Reflects country, type, status filters but NOT name filter)
-    const mapProjects = useMemo(() => {
-        return initialProjects.filter(project => {
-            // Exclure système
-            if (project.country === "Système") return false;
-
-            if (selectedCountry && project.country !== selectedCountry) return false;
-            // Note: We intentionally do NOT filter by selectedName here
-            if (selectedTypes.length > 0 && !selectedTypes.includes(project.type as unknown as ProjectType)) return false;
-            if (selectedStatuses.length > 0 && !selectedStatuses.includes(project.status as unknown as ProjectStatus)) return false;
-            return true;
-        });
-    }, [initialProjects, selectedCountry, selectedTypes, selectedStatuses]);
-
-    // Handlers
-    const handleProjectSelect = useCallback((project: ProjectWithRelations) => {
-        setSelectedProject(project);
-        setSelectedCountry(project.country || "");
-        // On synchronise le nom pour mettre à jour le menu déroulant
-        setSelectedName(project.name);
-        setMapNonce(Date.now());
-    }, []);
-
-    const toggleType = (type: ProjectType) => {
-        setSelectedTypes(prev => {
-            if (prev.includes(type)) {
-                if (prev.length === 1) return prev;
-                return prev.filter(t => t !== type);
-            }
-            return [...prev, type];
-        });
-        triggerFit();
-    };
-
-    const toggleStatus = (status: ProjectStatus) => {
-        setSelectedStatuses(prev => {
-            if (prev.includes(status)) {
-                if (prev.length === 1) return prev;
-                return prev.filter(s => s !== status);
-            }
-            return [...prev, status];
-        });
-        triggerFit();
-    };
-
-    const resetFilters = () => {
-        setSelectedCountry("");
-        setSelectedName("");
-        setSelectedTypes(Object.values(ProjectType));
-        setSelectedStatuses(Object.values(ProjectStatus));
-        setSearchQuery("");
-        triggerFit();
-    };
-
-    // Filter projects based on search query
-    const searchSuggestions = useMemo(() => {
-        if (!searchQuery.trim()) return [];
-        return initialProjects
-            .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
-            .slice(0, 5); // Limit to 5 suggestions
-    }, [searchQuery, initialProjects]);
-
-    const handleSearchSelect = (project: Project) => {
-        const isSameCountry = project.country === selectedCountry;
-
-        setSearchQuery("");
-        setSelectedName(project.name);
-        setSelectedCountry(project.country || "");
-        setSelectedProject(project);
-
-        if (project.status) setSelectedStatuses([project.status as unknown as ProjectStatus]);
-        if (project.type) setSelectedTypes([project.type as unknown as ProjectType]);
-
-        setMapNonce(Date.now());
-
-        if (isSameCountry) {
-            triggerGlobalCenter(project.latitude, project.longitude);
-        } else {
-            triggerFit();
-        }
-
-        setShowSuggestions(false);
-        setFocusedSuggestionIndex(-1);
-    };
-
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (!showSuggestions || searchSuggestions.length === 0) return;
-
-        if (e.key === "ArrowDown") {
-            e.preventDefault();
-            setFocusedSuggestionIndex(prev => (prev + 1) % searchSuggestions.length);
-        } else if (e.key === "ArrowUp") {
-            e.preventDefault();
-            setFocusedSuggestionIndex(prev => (prev - 1 + searchSuggestions.length) % searchSuggestions.length);
-        } else if (e.key === "Enter") {
-            e.preventDefault();
-            if (focusedSuggestionIndex >= 0) {
-                handleSearchSelect(searchSuggestions[focusedSuggestionIndex]);
-            }
-        } else if (e.key === "Escape") {
-            setShowSuggestions(false);
-        }
-    };
-
-
-    const handleCountryChange = (newCountry: string) => {
-        setSelectedCountry(newCountry);
-        setSelectedName(""); // Reset name selection when country changes
-        setSelectedProject(null); // Reset selected project for detailed view
-        setSearchQuery("");
-
-        // Reset type and status filters to show all projects of the new country
-        setSelectedTypes(Object.values(ProjectType));
-        setSelectedStatuses(Object.values(ProjectStatus));
-
-        triggerFit();
-    };
-
-    const handleNameChange = (projectName: string) => {
-        setSelectedName(projectName);
-        const project = initialProjects.find(p => p.name === projectName);
-        if (project) {
-            const isSameCountry = project.country === selectedCountry;
-            setSelectedProject(project);
-            setSelectedCountry(project.country || "");
-
-            // Focus on this specific project's status and type
-            if (project.status) setSelectedStatuses([project.status as unknown as ProjectStatus]);
-            if (project.type) setSelectedTypes([project.type as unknown as ProjectType]);
-
-            setMapNonce(Date.now());
-
-            if (isSameCountry) {
-                triggerGlobalCenter(project.latitude, project.longitude);
-            } else {
-                triggerFit();
-            }
-        } else {
-            setSearchQuery("");
-            setSelectedProject(null);
-            // If "All projects" is selected, reset status/type filters
-            setSelectedStatuses(Object.values(ProjectStatus));
-            setSelectedTypes(Object.values(ProjectType));
-        }
-    };
 
     const [isDocumentsCollapsed, setIsDocumentsCollapsed] = useState(true);
     const [activeTab, setActiveTab] = useState<'dashboard' | 'synthese'>('dashboard');

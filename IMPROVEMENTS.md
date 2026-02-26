@@ -1,125 +1,76 @@
-# Plan d'améliorations — Site Matière
+# Plan d'améliorations (Mis à jour) — Site Matière
 
-Audit complet du code source. Propositions classées par catégorie.
+Après un audit de l'avancement, j'ai constaté que de nombreuses améliorations de sécurité (#1-#5) et d'interface utilisateur (#14-#18) ont **déjà été implémentées** avec succès ! 🎉
 
----
-
-## 🔴 Sécurité
-
-### 1. `checkPermission` ne passe pas le `projectOwnerId`
-`lib/permissions.ts` — `checkPermission()` appelle `getProjectAccess` avec `''` comme `projectOwnerId`, court-circuitant la vérification du propriétaire.
-**Fix :** Récupérer le projet en base avant d'appeler `getProjectAccess`.
-
-### 2. Duplication de la logique de permission
-`app/actions/project-actions.ts` — `checkProjectWritePermission` / `checkProjectDeletePermission` recréent la logique déjà centralisée dans `lib/permissions.ts`.
-**Fix :** Remplacer par des appels à `getProjectAccess()`.
-
-### 3. Pas de rate-limiting sur les Server Actions sensibles
-Aucun mécanisme de rate-limiting sur `createProject`, `deleteProject`, `updateProject`.
-**Fix :** Implémenter via Cloudflare Rate Limiting ou `@upstash/ratelimit`.
-
-### 4. Messages d'erreur trop verbeux
-Certains `throw new Error(...)` renvoient des détails métier au client.
-**Fix :** Logger côté serveur, retourner un message générique au client.
-
-### 5. `getSyntheseStats()` sans vérification d'authentification
-`app/actions/synthese-actions.ts` — la server action ne vérifie pas la session.
-**Fix :** Ajouter `const session = await auth(); if (!session) throw new Error("Non autorisé");`.
+Voici la liste actualisée des améliorations techniques et fonctionnalités restantes, classées par ordre de priorité pour la suite du développement.
 
 ---
 
-## 🟠 Performance
+## 🟠 Performance & Optimisation
 
-### 6. `getSyntheseStats` charge tout en mémoire
-Agrégations faites en JS au lieu de requêtes SQL (`COUNT`, `AVG`, `GROUP BY`).
-**Fix :** Utiliser des requêtes agrégées Drizzle.
+### 1. `getSyntheseStats` charge tout en mémoire
+Dans `app/actions/synthese-actions.ts`, les agrégations sont faites en Javascript après avoir récupéré toutes les lignes de la table `projects`.
+**Fix :** Utiliser des requêtes agrégées Drizzle SQL (`COUNT`, `AVG`, `GROUP BY`) pour améliorer la performance sur de gros volumes de données.
 
-### 7. Pas de cache côté client pour les médias
-`fetchMedia` est appelé à chaque changement de projet sélectionné, sans cache.
-**Fix :** Mémoriser les résultats dans un `Map<projectId, media>` via `useRef`.
+### 2. Pas de cache côté client pour les médias
+`fetchMedia` est appelé à chaque changement de projet sélectionné dans le Dashboard, et ce sans cache.
+**Fix :** Mémoriser les résultats dans une `Map<projectId, media>` (ex: via un store Zustand ou un objet `useRef`) afin d'éviter les appels réseau multiples au même bucket.
 
-### 8. Deux `useMemo` quasi-identiques (`mapProjects` / `filteredProjects`)
-**Fix :** Calculer `mapProjects` comme dérivé de `filteredProjects` (sans le filtre `searchQuery`).
+### 3. Deux `useMemo` pour le filtrage
+`dashboard-client.tsx` utilise deux `useMemo` quasi identiques pour `mapProjects` et `filteredProjects`.
+**Fix :** Calculer `mapProjects` comme dérivé temporel ou combiner la logique.
 
-### 9. Images non optimisées
-Photos de projets servies depuis R2 sans conversion WebP ni redimensionnement.
-**Fix :** Utiliser `<Image>` Next.js avec `remotePatterns` configurés.
-
----
-
-## 🟡 Refactorisation
-
-### 10. `dashboard-client.tsx` trop volumineux (550+ lignes)
-**Fix :** Extraire :
-- `useDashboardFilters` → hook custom
-- `useDashboardMedia` → hook custom
-- `<DashboardTabBar>` → composant onglets
-- `<DashboardDialogs>` → tous les dialogs regroupés
-
-### 11. Logique de pin par statut dupliquée
-Le switch `status → pinUrl` apparaît deux fois dans `project-actions.ts`.
-**Fix :** Extraire `getDefaultPinUrl(status: string): string`.
-
-### 12. Types `ProjectWithOwner` / `ProjectWithRelations` dans un fichier client
-**Fix :** Déplacer dans `lib/types.ts`.
-
-### 13. Enums dupliqués
-`lib/enums.ts` et `lib/db/schema/enums.ts` — deux sources de vérité.
-**Fix :** Unifier dans un seul fichier.
+### 4. [NEW] Loading States & Suspense
+Actuellement la requête dans `page.tsx` bloque le rendu initial jusqu'à ce que tous les projets et statuts soient parsés.
+**Fix :** Wrap the dashboard client behind a Next.js `<Suspense fallback={<DashboardSkeleton />}>` border to show the UI immediately.
 
 ---
 
-## 🔵 UI/UX
+## 🟡 Refactorisation & Code Quality
 
-### 14. Popup projet : pas de titre
-La popup Leaflet affiche la description sans en-tête.
-**Fix :** Ajouter le nom du projet en bold en haut du popup.
+### 5. `dashboard-client.tsx` trop volumineux (~600 lignes)
+Le composant a été un peu factorisé (ex: `DashboardFilters`) mais toute la logique d'état (filtres, debounce, maps, selection) est toujours définie nativement dans le composant principal.
+**Fix :** Extraire la logique d'état dans des hooks customs tels que `useMapState` et `useDashboardState`.
 
-### 15. Carte globale : pas de mise en évidence du projet sélectionné
-**Fix :** Utiliser un `DivIcon` custom (pin plus grand ou avec anneau coloré) pour le projet sélectionné.
+### 6. Types métiers dans les composants UI
+Les types comme `ProjectWithRelations` et `ProjectWithOwner` sont définis en haut de `dashboard-client.tsx`.
+**Fix :** Déplacer ces définitions dans `lib/types.ts` pour qu'elles soient réutilisables n'importe où.
 
-### 16. Tableau de projets : pas de tri par colonne
-**Fix :** Ajouter un tri côté client avec icônes `ChevronUp/Down` sur chaque en-tête.
+### 7. Duplication de la définition des statuts/pins
+La logique d'affectation automatique de l'url du pin (`/pins/en_cours.png`, `/pins/realise.png`) est dupliquée manuellement entre `createProject` et `updateProject` dans `project-actions.ts`.
+**Fix :** Extraire une fonction utilitaire métier `getDefaultPinUrl(status: ProjectStatus)`.
 
-### 17. Synthèse : légende manquante pour les couleurs de progression
-**Fix :** Ajouter une légende compacte (vert ≥75%, jaune ≥50%, orange ≥25%, rouge <25%).
-
-### 18. Pas de page 404 personnalisée
-**Fix :** Créer `app/not-found.tsx` avec un design cohérent.
-
----
-
-## 🟢 Nouvelles fonctionnalités
-
-### 19. Audit Log
-Table `project_history` — qui a modifié quoi et quand. Affichable dans le dialog de modification.
-
-### 20. Notifications in-app
-Alerter les utilisateurs quand un projet assigné change de statut ou de phase.
-
-### 21. Export Excel / CSV
-Exporter le tableau filtré en `.xlsx` (via `exceljs`).
-
-### 22. Mode comparaison de projets
-Sélectionner 2–3 projets et comparer côte-à-côte (phases, statut, localisation).
-
-### 23. Clustering sur la carte globale
-Regrouper les pins proches via `react-leaflet-cluster`.
-
-### 24. Palette de commandes (`Ctrl+K`)
-Recherche rapide projets + navigation + actions admin via _cmdk_.
-
-### 25. Onglet Timeline / Gantt simplifié
-Visualiser les projets sur une timeline selon leurs phases actives.
+### 8. [NEW] State Management URL
+Actuellement, les filtres du Dashboard empêchent le partage via un lien (par exemple pour partager la vue de tous les projets "PEB" en "Serra-Léone").
+**Fix :** Migrer les états de filtres (`useState`) vers des Search Parameters d'URL (`nuqs` ou composant interne Next.js).
 
 ---
 
-## Priorisation suggérée
+## 🟢 Nouvelles Fonctionnalités (Roadmap)
 
-| Priorité | Items |
-|----------|-------|
-| 🔴 Critique (sécurité) | #1, #2, #5 |
-| 🟠 Important (perf) | #6, #7, #8 |
-| 🟡 Moyen terme (refacto) | #10, #11, #12 |
-| 🔵 UX rapide | #14, #15, #16, #17 |
-| 🟢 Roadmap | #19, #21, #23, #24 |
+### 9. Audit Log
+Table `project_history` — enregistrer qui a modifié quoi et quand. Affichable sous la vue projet ou en tooltip.
+
+### 10. Notifications in-app
+Informer les utilisateurs lorsqu'un projet qui leur est assigné change de statut ou de phase.
+
+### 11. Export Global vers Excel / CSV
+Exporter tout le tableau filtré directement en format tableur (`.xlsx`).
+
+### 12. Clustering sur la carte globale
+Sur de faibles niveaux de zoom (vue monde complète), les pins de projet surchargent la carte.
+**Fix :** Implémenter le regroupement de clusters Leaflet via `react-leaflet-cluster`.
+
+### 13. Onglet Timeline / Gantt simplifié
+Pour la gestion macro, créer un "Vue Calendrier" pour tous les projets selon leurs phases temporelles.
+
+---
+
+## Priorisation suggérée pour la session de travail :
+
+| Priorité | Actions |
+|----------|---------|
+| ⭐ Recommandé | Extraire les _Hooks_ et types de `dashboard-client.tsx` pour cleaner la base (#5, #6). |
+| 🚀 UX Avancée | Implémenter le partage d'URL de filtre au lieu de simple _states_ React (#8). |
+| ⚡ Performance | Optimiser l'agrégation de `getSyntheseStats` côté BD pour être paré pour la prod (#1). |
+| 🗺️ Nouvelle Feature | Ajouter le Clustering visuel sur la carte monde côté Client (#12). |
