@@ -54,6 +54,12 @@ function getDbInstance() {
     globalForDb.db = dbInstance;
   }
 
+  // Workaround for Neon sometimes not setting the search path properly
+  // This causes 'relation "table" does not exist' errors
+  dbInstance.execute('SET search_path TO public').catch(err => {
+    console.error('[DB] Failed to set search_path:', err);
+  });
+
   return dbInstance;
 }
 

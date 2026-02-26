@@ -25,7 +25,7 @@ import { ProjectDescription } from "@/components/dashboard/project-description";
 import { PhotoGallery } from "@/components/dashboard/photo-gallery";
 import { PdfViewer } from "@/components/dashboard/pdf-viewer";
 import { DashboardTable } from "@/components/dashboard/dashboard-table";
-import type { ProjectWithOwner, ProjectWithRelations } from "@/lib/types";
+import type { ProjectWithRelations } from "@/lib/types";
 
 type DashboardClientProps = {
     initialProjects: ProjectWithRelations[];
