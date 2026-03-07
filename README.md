@@ -1,128 +1,133 @@
-# Site Matière - Bridge Construction Management System
+# Matière 🏗️
 
-A comprehensive web application for managing bridge construction projects with geolocation, media management, and team collaboration features.
+**Matière** est une plateforme avancée de gestion et de suivi technique de projets B2B. Elle permet de centraliser les données terrain, de suivre l'avancement des études et travaux, de gérer des galeries médias via Cloudflare R2 et de générer des rapports techniques complets.
 
-## Overview
+## ✨ Fonctionnalités Clés
 
-Site Matière is a Next.js-based project management system designed specifically for bridge construction companies. It provides tools for tracking projects across different phases (prospection, studies, fabrication, transport, construction), managing media assets, handling document workflows, and coordinating team activities.
+- **Dashboard Interactif** : Cartographie mondiale et par projet (Leaflet) avec indicateurs d'avancement.
+- **Suivi des Projets** : Gestion granulaire des étapes (Prospection, Études, Travaux) et détails techniques.
+- **Galerie Média Intelligente** : Traitement et stockage d'images/vidéos sur Cloudflare R2 avec migration fluide.
+- **Gestion Documentaire** : Lecteur PDF intégré et export de rapports de synthèse automatiques.
+- **Système de Permissions Avancé** : Rôles globaux (Admin, User, Visitor) et autorisations par projet (Owner, Manage, Write, Read).
 
-## Features
+## 🛠️ Stack Technique
 
-### Dashboard
-- **Dual-tab interface**: Switch between the **Dashboard** (interactive maps + project table) and the **Synthèse** tab (global KPIs and statistics).
-- **Synthèse Tab**: Displays key indicators — number of projects, countries, users, completions — with breakdown by type, status, and color-coded average phase progression (green ≥75%, yellow ≥50%, orange ≥25%, red <25%).
-- **Interactive Map Visualization**: View all projects on an interactive global map with custom pins and filtering.
-- **Project Detail Popup**: Click a project pin in the project map to open a description popup (small font, respects line breaks).
-- **Project Lifecycle Tracking**: Track projects through phases: Prospection → Studies → Fabrication → Transport → Construction.
-- **Advanced Filtering**: Filter by country, name, type, and status with live search and autocomplete.
+- **Framework** : [Next.js 15](https://nextjs.org/) (App Router)
+- **Langage** : TypeScript
+- **Base de Données** : [Neon](https://neon.tech/) (Serverless PostgreSQL)
+- **ORM** : [Drizzle ORM](https://orm.drizzle.team/)
+- **Authentification** : [NextAuth.js v5](https://authjs.dev/)
+- **Style** : Tailwind CSS 4 & Radix UI
+- **Infrastructure** : Cloudflare (Workers, Pages, R2, KV via OpenNext)
+- **Cartographie** : Leaflet & React-Leaflet
+- **Génération PDF** : jsPDF & html2canvas
 
-### Media & Document Management
-- **Photo Gallery**: Slideshow functionality with fullscreen viewing and dynamic loading from Cloudflare R2.
-- **Video Management**: Organize and preview project-related videos with optimized streaming.
-- **Document Explorer**: Global file management system with folder structures and integrated PDF viewer.
-- **Image Processing**: Built-in image retouching, cropping, and optimization tools.
+## 🚀 Démarrage Rapide
 
-### User & Permission Management
-- **Role-Based Access**: Three-tier system (Admin, User, Visitor) with strictly enforced permissions.
-- **Granular Project Permissions**: Admins can grant per-project READ or WRITE access to individual users/visitors.
-- **Account Protection**: Built-in protection against deletion of core administrative accounts.
-- **Authentication**: Secure login system with NextAuth.js v5.
+### 1. Prérequis
 
-### Modern Interface & Responsive Design
-- **Adaptive Dialogs**: Management modals optimized for all screen sizes with sticky headers and scrolling content.
-- **Floating Controls**: Intelligent floating close buttons and action triggers for mobile usability.
-- **Glassmorphism**: Premium UI aesthetics using backdrop blurs and modern color palettes.
-- **Dark Mode**: Full dark/light theme support across all components.
-
-## Tech Stack
-
-- **Framework**: [Next.js 15+](https://nextjs.org/) (App Router)
-- **Edge Runtime**: Fully compatible with Cloudflare Workers/Pages
-- **Language**: TypeScript (Strict Mode)
-- **Database**: PostgreSQL via [Neon](https://neon.tech/)
-- **ORM**: [Drizzle ORM](https://orm.drizzle.team/)
-- **Storage**: [Cloudflare R2](https://www.cloudflare.com/products/r2/) for assets and documents
-- **Authentication**: [NextAuth.js v5 (Auth.js)](https://authjs.dev/)
-- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
-- **Icons**: [Lucide React](https://lucide.dev/)
-- **Maps**: [React-Leaflet](https://react-leaflet.js.org/)
-
-## Getting Started
-
-### Prerequisites
 - Node.js 20+
-- Neon Database (PostgreSQL)
-- Cloudflare R2 Bucket
-- npm or yarn
+- Un compte [Neon.tech](https://neon.tech/) pour la base de données.
+- Un compte Cloudflare avec R2 activé (pour le stockage média).
 
-### Installation
+### 2. Installation
 
-1. Clone the repository:
 ```bash
 git clone <repository-url>
 cd sitematiere-nexjs
-```
-
-2. Install dependencies:
-```bash
 npm install
 ```
 
-3. Set up environment variables:
-Create a `.env` file based on your environment:
-```env
-DATABASE_URL="postgresql://user:password@hostname/dbname?sslmode=require"
-NEXTAUTH_SECRET="your-secret-key"
-R2_BUCKET_NAME="your-bucket-name"
-# ... other R2 and Auth configs
+### 3. Configuration
+
+Copiez le fichier d'exemple et remplissez les variables :
+```bash
+cp .env .env.local
 ```
 
-### Development Commands
+| Variable | Description |
+| :--- | :--- |
+| `DATABASE_URL` | URL de connexion Neon PostgreSQL. |
+| `AUTH_SECRET` | Secret pour NextAuth (généré via `npx auth secret`). |
+| `CLOUDFLARE_R2_BUCKET` | Nom du bucket R2 pour les médias. |
+| `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | Configuration Cloudinary pour l'optimisation d'images. |
+
+### 4. Base de données
 
 ```bash
-# Development
-npm run dev              # Start Next.js dev server
-npm run lint             # Run ESLint check
+# Générer les migrations
+npm run db:generate
 
-# Database (Drizzle)
-npm run db:push          # Push schema changes to the database
-npm run db:studio        # Open Drizzle interactive UI
-npm run db:generate      # Generate migrations
+# Pousser le schéma vers Neon
+npm run db:push
 
-# Deployment (Cloudflare)
-npm run build:worker     # Build for Cloudflare environment
-npm run deploy           # Deploy to Cloudflare Pages
+# Lancer Drizzle Studio pour explorer les données
+npm run db:studio
 ```
 
-## Project Structure
+### 5. Lancement
 
-```
-├── app/                    # Next.js App Router (Pages, API, Server Actions)
-│   └── actions/            # Server Actions (projects, permissions, synthèse stats…)
-├── components/             # React Components
-│   ├── dashboard/          # Dashboard, Synthèse Tab, Table, Gallery…
-│   ├── permissions/        # Project permission management UI
-│   ├── settings/           # Management Dialogs (Users, Projects, Files, Media)
-│   ├── ui/                 # Core UI primitives & map wrappers
-│   └── files/              # File Upload & Explorer logic
-├── lib/                    # Database schema, Auth, and Utilities
-├── hooks/                  # Custom React Hooks
-├── public/                 # Static assets (Pins, Logos)
-└── scripts/                # Migration and maintenance scripts
+```bash
+# Développement local
+npm run dev
+
+# Développement via Wrangler (Cloudflare)
+npm run dev:worker
 ```
 
-## Security
+### Architecture du Projet
 
-- Role-based access control (RBAC) with per-project granular permissions.
-- Secure password hashing with bcrypt.
-- Input validation via Zod schemas.
-- Edge-compatible authentication.
-- Protected "Admin" core account against accidental deletion.
+```text
+├── app/                # Root Layout, (auth), api, et pages du dashboard
+├── components/         # Composants UI (Dashboard, Project, Layout)
+├── drizzle/            # Schémas et fichiers de migration
+├── lib/                # Logique métier, utilitaires (db, auth, permissions)
+├── public/             # Assets statiques
+├── scripts/            # Scripts de migration (R2), backup et automation
+└── wrangler.toml       # Configuration Cloudflare Workers
+```
 
-## Support
+### 🔄 Flux de Données & Cycle de vie
 
-Built and maintained for high-performance bridge construction follow-up.
+1. **Requête Client** : L'utilisateur interagit avec le Dashboard (Next.js Client Components).
+2. **Couche API / Actions** : Les requêtes transitent par les `Server Actions` ou `Route Handlers` (`app/api`).
+3. **Middleware** : Vérification systématique de la session et des permissions (`middleware.ts`).
+4. **Logique Métier** : Traitement dans `lib/` (validation Zod, calcul de coordonnées, filtrage de permissions).
+5. **Couche Données** : Interaction avec Neon via Drizzle ORM.
+6. **Stockage Média** : Les fichiers sont uploadés/récupérés vers Cloudflare R2 avec transformation Cloudinary.
+
+### 🔐 Gestion des Permissions
+
+Le système repose sur une matrice de droits croisés :
+`Rôle Global (DB) + Autorisation Projet (DB) = Capacité d'Action (UI/API)`
+
+## 🧪 Tests & Linting
+
+```bash
+# Vérification complète (Types + Lint + Build)
+npm test
+
+# Lancer uniquement le linter
+npm run lint
+```
+
+## 📦 Déploiement
+
+Le projet utilise **OpenNext** pour un déploiement optimisé sur Cloudflare Workers/Pages.
+
+```bash
+# Construire le worker
+npm run build:worker
+
+# Déployer sur Cloudflare
+npm run deploy
+```
+
+## 📂 Documentation Additionnelle
+
+- [Guide des Rôles & Permissions](ROLES_PERMISSIONS.md)
+- [Guide de Sauvegarde](BACKUP_GUIDE.md)
+- [Guide de Build & Déploiement](BUILD_GUIDE.md)
 
 ---
-
-Built with ❤️ using Next.js and Cloudflare.
+*Développé pour une gestion technique rigoureuse et performante.*
